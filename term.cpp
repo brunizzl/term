@@ -110,93 +110,102 @@ Term::Term(std::string name, Term* parent, bool negative, double exponent)
 	:parent(parent), exponent(exponent), negative(negative)
 {
 	std::cout << "constructing term   minus:" << negative << " exponent: " << exponent << " name: " << name << '\n';
+	while (true) {
+		//finding the "highest layer" of parentheses
+		std::vector<Pos_Pars> pos_pars;
+		find_pars(name, pos_pars);
 
-	//finding the "highest layer" of parentheses
-	std::vector<Pos_Pars> pos_pars;
-	find_pars(name, pos_pars);
+		//splitting name at operator (^)
+		std::size_t op = find_last_of_skip_pars(name, "^", pos_pars);
+		if (find_last_of_skip_pars(name, "+-*/", pos_pars) == std::string::npos && op != std::string::npos) {
+			if (name.find_first_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", op) != std::string::npos) {
+				std::cout << "Error: can not have variables or terms as exponent :(\n";
+			}
+			else {
+				std::stringstream stream;
+				stream << name.substr(op + (name[op + 1] == '(' ? 2 : 1));
+				double new_exponent;
+				stream >> new_exponent;
+				this->exponent *= new_exponent;
+			}
+			name.resize(op);
+			if (name[0] == '(' && name.back() == ')') {
+				name.erase(name.size() - 1);
+				name.erase(0, 1);
+			}
+			pos_pars.clear();
+			find_pars(name, pos_pars);
+			//no return
+		}
 
-	//splitting name at operator (^)
-	std::size_t op = find_last_of_skip_pars(name, "^", pos_pars);
-	if (find_last_of_skip_pars(name, "+-*/", pos_pars) == std::string::npos && op != std::string::npos) {
-		if (name.find_first_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz*/", op) != std::string::npos) {
-			std::cout << "Error: can not have variables or terms as exponent :(\n";
+		//splitting name at operators (+-)
+		op = find_last_of_skip_pars(name, "+-", pos_pars);
+		if (op != std::string::npos) {
+			this->state = list_sum;
+			//split in subterms
+			while (op != std::string::npos) {
+				std::string subterm_str;
+				bool op_minus = name[op] == '-';
+				cut_subterm_from_name(name, subterm_str, pos_pars, op);
+				//call new constructor:
+				this->subterms.push_back(new Term(subterm_str, this, op_minus, 1));
+				op = find_last_of_skip_pars(name, "+-", pos_pars);
+			}
+			if (name.size() > 0) {
+				this->subterms.push_back(new Term(name, this, false, 1));
+			}
+			this->subterms.reverse();
+			return;
+		}
+
+		//splitting name at operators (*/)
+		op = find_last_of_skip_pars(name, "*/", pos_pars);
+		if (op != std::string::npos) {
+			this->state = list_product;
+			//split in subterms
+			while (op != std::string::npos) {
+				std::string subterm_str;
+				bool op_divisor = name[op] == '/';
+				cut_subterm_from_name(name, subterm_str, pos_pars, op);
+				//call new constructor:
+				this->subterms.push_back(new Term(subterm_str, this, false, op_divisor ? -1 : 1));
+				op = find_last_of_skip_pars(name, "*/", pos_pars);
+			}
+			this->subterms.push_back(new Term(name, this, false, 1));
+			this->subterms.reverse();
+			return;
+		}
+
+		//store value / var	
+		if (find_last_of_skip_pars(name, "1234567890", pos_pars) != std::string::npos) {
+			double buffer_exponent = exponent;
+			this->state = val;
+			std::stringstream stream;
+			stream << name;
+			stream >> this->value;
+			this->value = pow(this->value, buffer_exponent);
+			if (this->negative) {
+				this->value *= -1;
+				this->negative = false;
+			}
+			return;
+		}
+		else if (find_last_of_skip_pars(name, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz", pos_pars) != std::string::npos) {
+			this->state = var;
+			this->var_name = name;
+			return;
 		}
 		else {
-			std::stringstream stream;
-			stream << name.substr(op + (name[op + 1] == '(' ? 2 : 1));
-			double new_exponent;
-			stream >> new_exponent;
-			this->exponent *= new_exponent;
-		}
-		name.resize(op);
-		if (name[0] == '(' && name.back() == ')') {
-			name.erase(name.size() - 1);
+			name.pop_back();
 			name.erase(0, 1);
 		}
-		pos_pars.clear();
-		find_pars(name, pos_pars);
-		//no return
 	}
-
-	//splitting name at operators (+-)
-	op = find_last_of_skip_pars(name, "+-", pos_pars);
-	if (op != std::string::npos) {
-		this->state = list_sum;
-		//split in subterms
-		while (op != std::string::npos) {
-			std::string subterm_str;
-			bool op_minus = name[op] == '-';
-			cut_subterm_from_name(name, subterm_str, pos_pars, op);
-			//call new constructor:
-			this->subterms.push_back(new Term(subterm_str, this, op_minus, 1));
-			op = find_last_of_skip_pars(name, "+-", pos_pars);
-		}
-		if (name.size() > 0) {
-			this->subterms.push_back(new Term(name, this, false, 1));
-		}
-		return;
-	}
-
-	//splitting name at operators (*/)
-	op = find_last_of_skip_pars(name, "*/", pos_pars);
-	if (op != std::string::npos) {
-		this->state = list_product;
-		//split in subterms
-		while (op != std::string::npos) {
-			std::string subterm_str;
-			bool op_divisor = name[op] == '/';
-			cut_subterm_from_name(name, subterm_str, pos_pars, op);
-			//call new constructor:
-			this->subterms.push_back(new Term(subterm_str, this, false, op_divisor ? -1 : 1));
-			op = find_last_of_skip_pars(name, "*/", pos_pars);
-		}
-		this->subterms.push_back(new Term(name, this, false, 1));
-		return;
-	}
-
-	//store value / var
-	if (name.find_first_of("1234567890") == 0) {
-		double buffer_exponent = exponent;
-		this->state = val;
-		std::stringstream stream;
-		stream << name;
-		stream >> this->value;
-		this->value = pow(this->value, buffer_exponent);
-		if (this->negative) {
-			this->value *= -1;
-			this->negative = false;
-		}
-	}
-	else {
-		this->state = var;
-		this->var_name = name;
-	}
-	
 }
 
 void bruno::Term::to_str_intern(std::string& buffer, bool first_subterm_of_parent) const
 {
-	bool parentheses = ((state != val && exponent != 1) || this->subterms.size() > 1);
+	bool parentheses = ((this->state == list_sum || exponent != 1) && this->subterms.size() > 1) && this->parent != nullptr;
+	//((state != val && exponent != 1) || (this->subterms.size() > 1 && this->state == list_sum));		
 	if (parentheses) {
 		buffer.push_back('(');
 	}
@@ -206,11 +215,11 @@ void bruno::Term::to_str_intern(std::string& buffer, bool first_subterm_of_paren
 	case list_product:
 		for (auto it : this->subterms) {
 			if (!first_subterm) {
-				if (it->exponent == 1) {
-					buffer.push_back('*');
-				}
-				else if (it->exponent == -1) {
+				if (it->exponent == -1) {
 					buffer.push_back('/');
+				}
+				else {
+					buffer.push_back('*');
 				}
 			}
 			it->to_str_intern(buffer, first_subterm);
@@ -243,12 +252,7 @@ void bruno::Term::to_str_intern(std::string& buffer, bool first_subterm_of_paren
 
 	case val:
 		std::stringstream stream;
-		if (first_subterm_of_parent) {
-			stream << value;
-		}
-		else {
-			stream << std::showpos << value;
-		}
+		stream << value;
 		buffer.append(stream.str());
 		break;
 	}

@@ -83,7 +83,7 @@ void bruno::cut_subterm_from_name(std::string & name, std::string & subterm_str,
 	if (!pos_pars.empty()) {
 		if (pos_pars.back().start == op + 1 && pos_pars.back().end == name.length() - 1) {
 			//only parentheses after operator
-			subterm_str = name.substr(pos_pars.back().start + 1, pos_pars.back().end - pos_pars.back().start - 1);
+			subterm_str = name.substr(pos_pars.back().start, pos_pars.back().end - pos_pars.back().start + 1);
 			name.erase(op);
 			pos_pars.pop_back();
 		}

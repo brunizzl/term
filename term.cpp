@@ -30,7 +30,7 @@ std::size_t bruno::find_closed_par(std::size_t open_par, std::string& name)
 	}
 }
 
-void bruno::find_pars(std::string & name, std::vector<Pos_Substr>& pos_pars)
+void bruno::find_pars(std::string & name, std::vector<Pos_Pars>& pos_pars)
 {
 	std::size_t open_par = name.find_first_of('(');
 	while (open_par != std::string::npos) {
@@ -46,7 +46,7 @@ void bruno::find_pars(std::string & name, std::vector<Pos_Substr>& pos_pars)
 	return;
 }
 
-std::size_t bruno::find_last_of_skip_pars(std::string& name, const char* characters, std::vector<Pos_Substr>& pars) 
+std::size_t bruno::find_last_of_skip_pars(std::string& name, const char* characters, std::vector<Pos_Pars>& pars) 
 {
 	std::size_t found = name.size() - 1;
 	int skipped_pars = pars.size() - 1;
@@ -65,7 +65,7 @@ std::size_t bruno::find_last_of_skip_pars(std::string& name, const char* charact
 	return found;
 }
 
-void bruno::del_pars_after(std::vector<Pos_Substr> pos_pars, std::string& name)
+void bruno::del_pars_after(std::vector<Pos_Pars> pos_pars, std::string& name)
 {
 	int new_end = pos_pars.size();
 	for (int i = 0; i < pos_pars.size(); i++) {
@@ -78,7 +78,7 @@ void bruno::del_pars_after(std::vector<Pos_Substr> pos_pars, std::string& name)
 	return;
 }
 
-void bruno::cut_subterm_from_name(std::string & name, std::string & subterm_str, std::vector<Pos_Substr>& pos_pars, std::size_t op)
+void bruno::cut_subterm_from_name(std::string & name, std::string & subterm_str, std::vector<Pos_Pars>& pos_pars, std::size_t op)
 {
 	if (!pos_pars.empty()) {
 		if (pos_pars.back().start == op + 1 && pos_pars.back().end == name.length() - 1) {
@@ -112,7 +112,7 @@ Term::Term(std::string name, Term* parent, bool negative, double exponent)
 	std::cout << "constructing term   minus:" << negative << " exponent: " << exponent << " name: " << name << '\n';
 
 	//finding the "highest layer" of parentheses
-	std::vector<Pos_Substr> pos_pars;
+	std::vector<Pos_Pars> pos_pars;
 	find_pars(name, pos_pars);
 
 	//splitting name at operator (^)
@@ -141,7 +141,7 @@ Term::Term(std::string name, Term* parent, bool negative, double exponent)
 	//splitting name at operators (+-)
 	op = find_last_of_skip_pars(name, "+-", pos_pars);
 	if (op != std::string::npos) {
-		this->state = set_sum;
+		this->state = list_sum;
 		//split in subterms
 		while (op != std::string::npos) {
 			std::string subterm_str;
@@ -160,7 +160,7 @@ Term::Term(std::string name, Term* parent, bool negative, double exponent)
 	//splitting name at operators (*/)
 	op = find_last_of_skip_pars(name, "*/", pos_pars);
 	if (op != std::string::npos) {
-		this->state = set_product;
+		this->state = list_product;
 		//split in subterms
 		while (op != std::string::npos) {
 			std::string subterm_str;
@@ -175,7 +175,7 @@ Term::Term(std::string name, Term* parent, bool negative, double exponent)
 	}
 
 	//store value / var
-	if (name.find_first_of("1234567890-") == 0) {
+	if (name.find_first_of("1234567890") == 0) {
 		double buffer_exponent = exponent;
 		this->state = val;
 		std::stringstream stream;
@@ -189,10 +189,6 @@ Term::Term(std::string name, Term* parent, bool negative, double exponent)
 	}
 	else {
 		this->state = var;
-		if (name[0] == '-') {
-			this->negative = true;
-			name.erase(0, 1);
-		}
 		this->var_name = name;
 	}
 	
@@ -206,9 +202,9 @@ void bruno::Term::to_str_intern(std::string& buffer, bool first_subterm_of_paren
 	}
 
 	bool first_subterm = true;
-	switch (state) {	
-	case set_product:
-		for (auto it : subterms) {
+	switch (this->state) {	
+	case list_product:
+		for (auto it : this->subterms) {
 			if (!first_subterm) {
 				if (it->exponent == 1) {
 					buffer.push_back('*');
@@ -222,8 +218,8 @@ void bruno::Term::to_str_intern(std::string& buffer, bool first_subterm_of_paren
 		}
 		break;
 
-	case set_sum:
-		for (auto it : subterms) {
+	case list_sum:
+		for (auto it : this->subterms) {
 			if (it->state != val) {
 				switch (it->negative) {
 				case true:
@@ -274,10 +270,24 @@ void bruno::Term::to_str_intern(std::string& buffer, bool first_subterm_of_paren
 	}
 }
 
-std::string& bruno::Term::to_str(std::string& str) const
+void bruno::Term::simplify()
 {
-	this->to_str_intern(str, true);
-	return str;
+	//if this and term in this->subterms have same state: add subterms of subterm to this->subterms directly
+	switch (this->state)
+	{
+	case list_product:
+	case list_sum:
+		for (auto it : this->subterms) {
+
+		}
+	}
+}
+
+std::string& bruno::Term::to_str() const
+{
+	std::string* str = new std::string;
+	this->to_str_intern(*str, true);
+	return *str;
 }
 
 bruno::Term::Term(std::string name)
@@ -287,15 +297,13 @@ bruno::Term::Term(std::string name)
 
 Term::~Term() {
 	std::cout << "destructor of: " << *this << '\n';
-	for (auto it : subterms) {
+	for (auto it : this->subterms) {
 		delete it;
 	}
 }
 
 std::ostream& operator<<(std::ostream& stream, const Term& term)
 {
-	std::string term_str;
-	term_str = term.to_str(term_str);
-	stream << term_str;
+	stream << term.to_str();
 	return stream;
 }

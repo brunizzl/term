@@ -10,16 +10,16 @@
 
 namespace bruno {
 
-//contains position of subtherm in constructor string
-struct Pos_Substr {
+//contains position of parentheses in constructor string
+struct Pos_Pars {
 	std::size_t start;	//position of '('
 	std::size_t end;	//position of ')'
 };
 
 //specifies whether the set, the double or the Variable contains the therm
 enum State {
-	set_product,
-	set_sum,
+	list_product,
+	list_sum,
 	val,
 	var
 };
@@ -30,16 +30,16 @@ enum State {
 std::size_t find_closed_par(std::size_t open_par, std::string& name);
 
 //finds the highest level of parentheses in name
-void find_pars(std::string& name, std::vector<Pos_Substr>& pos_pars);
+void find_pars(std::string& name, std::vector<Pos_Pars>& pos_pars);
 
 //skips parentheses, else finds_first_of characters in name like std::string function
-std::size_t find_last_of_skip_pars(std::string& name, const char* characters, std::vector<Pos_Substr>& pars);
+std::size_t find_last_of_skip_pars(std::string& name, const char* characters, std::vector<Pos_Pars>& pars);
 
 //deletes parentheses of parentheses list, which start after the end of the name
-void del_pars_after(std::vector<Pos_Substr> pos_pars, std::string& name);
+void del_pars_after(std::vector<Pos_Pars> pos_pars, std::string& name);
 
 //used in constructor to split subterm of name
-void cut_subterm_from_name(std::string& name, std::string& subterm_str, std::vector<Pos_Substr>& pos_pars, std::size_t op);
+void cut_subterm_from_name(std::string& name, std::string& subterm_str, std::vector<Pos_Pars>& pos_pars, std::size_t op);
 
 //main class:
 
@@ -51,19 +51,25 @@ private:
     std::list<Term*> subterms;   //contains summands or factors
 	union {
 		double value;		//used if state == val
-		double exponent;	//used if state == set or var
+		double exponent;	//used if state == list or var
 	};
 	std::string var_name;
 	bool negative;			//used as sign of var
+
 	Term(std::string name, Term* parent, bool negative, double pow);	//parent is one layer above (nullptr is highest layer)
+
 	void to_str_intern(std::string& buffer, bool first_subterm_in_parent) const;
 
 public:
-	std::string& to_str(std::string& str) const;
 	Term(std::string name);
 	~Term();
+
+	std::string& to_str() const;	//returns this written as string
+	void simplify();	//tries to mathematically simplify this
 };
 
 }//namespace bruno
 
 std::ostream& operator<<(std::ostream& stream, const bruno::Term& term);
+
+

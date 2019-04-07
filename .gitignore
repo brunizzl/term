@@ -33,7 +33,7 @@
 
 #ordner
 .vs/
-.Debug/
+Debug/
 
 #dateien
 *.sln

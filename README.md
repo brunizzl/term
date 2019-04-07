@@ -1,2 +1,2 @@
 # term
-class to store an compute mahematical expressions
+class to store an compute mathematical expressions

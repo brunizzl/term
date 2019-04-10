@@ -18,8 +18,8 @@ struct Pos_Pars {
 
 //specifies whether the set, the double or the Variable contains the therm
 enum State {
-	list_product,
-	list_sum,
+	product,
+	sum,
 	val,
 	var
 };
@@ -43,34 +43,49 @@ void cut_subterm_from_name(std::string& name, std::string& subterm_str, std::vec
 
 //main class:
 
-class Term {
-private:
-	State state;
-	Term* parent;
-
-    std::list<Term*> subterms;   //contains summands or factors
-	union {
-		double value;		//used if state == val
-		double exponent;	//used if state == list or var
-	};
-	std::string var_name;
-	bool negative;			//used as sign of var
-
-	Term(std::string name, Term* parent_, bool negative_, double exponent_);	//parent is one layer above (this == parent is highest layer)
-	Term(double value_, Term* parent_);
-
-	void to_str_intern(std::string& buffer, bool first_subterm_in_parent) const;
+class Basic_Term 
+{
+protected:
+	Basic_Term* parent;
 
 public:
-	Term(std::string name);
-	~Term();
+	Basic_Term(std::string name);
+	~Basic_Term();
+};
 
-	std::string& to_str() const;	//returns this written as string
-	void simplify();	//tries to mathematically simplify this
+class Product : public Therm
+{
+private:
+	std::list<Basic_Term*> factors;
+public:
+};
+
+class Sum : public Therm
+{
+private:
+	std::list<Basic_Term*> summands;
+public:
+};
+
+class Variable : public Therm
+{
+private:
+	std::string name;
+	bool negative;
+	double exponent;
+	double factor;
+public:
+};
+
+class Value : public Therm
+{
+private:
+	double value;
+public:
 };
 
 }//namespace bruno
 
-std::ostream& operator<<(std::ostream& stream, const bmath::Term& term);
+std::ostream& operator<<(std::ostream& stream, const bmath::Basic_Term& term);
 
 

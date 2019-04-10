@@ -2,9 +2,9 @@
 
 #include <iostream>
 
-using namespace bruno;
+using namespace bmath;
 
-std::size_t bruno::find_closed_par(std::size_t open_par, std::string& name) 
+std::size_t bmath::find_closed_par(std::size_t open_par, std::string& name) 
 {	//par for parethesis
 	int deeper_open_par = 0;
 	std::size_t nxt_par = open_par;
@@ -30,7 +30,7 @@ std::size_t bruno::find_closed_par(std::size_t open_par, std::string& name)
 	}
 }
 
-void bruno::find_pars(std::string & name, std::vector<Pos_Pars>& pos_pars)
+void bmath::find_pars(std::string & name, std::vector<Pos_Pars>& pos_pars)
 {
 	std::size_t open_par = name.find_first_of('(');
 	while (open_par != std::string::npos) {
@@ -46,7 +46,7 @@ void bruno::find_pars(std::string & name, std::vector<Pos_Pars>& pos_pars)
 	return;
 }
 
-std::size_t bruno::find_last_of_skip_pars(std::string& name, const char* characters, std::vector<Pos_Pars>& pars) 
+std::size_t bmath::find_last_of_skip_pars(std::string& name, const char* characters, std::vector<Pos_Pars>& pars) 
 {
 	std::size_t found = name.size() - 1;
 	int skipped_pars = pars.size() - 1;
@@ -65,7 +65,7 @@ std::size_t bruno::find_last_of_skip_pars(std::string& name, const char* charact
 	return found;
 }
 
-void bruno::del_pars_after(std::vector<Pos_Pars> pos_pars, std::string& name)
+void bmath::del_pars_after(std::vector<Pos_Pars> pos_pars, std::string& name)
 {
 	int new_end = pos_pars.size();
 	for (int i = 0; i < pos_pars.size(); i++) {
@@ -78,7 +78,7 @@ void bruno::del_pars_after(std::vector<Pos_Pars> pos_pars, std::string& name)
 	return;
 }
 
-void bruno::cut_subterm_from_name(std::string & name, std::string & subterm_str, std::vector<Pos_Pars>& pos_pars, std::size_t op)
+void bmath::cut_subterm_from_name(std::string & name, std::string & subterm_str, std::vector<Pos_Pars>& pos_pars, std::size_t op)
 {
 	if (!pos_pars.empty()) {
 		if (pos_pars.back().start == op + 1 && pos_pars.back().end == name.length() - 1) {
@@ -106,8 +106,8 @@ void bruno::cut_subterm_from_name(std::string & name, std::string & subterm_str,
 }
 
 
-Term::Term(std::string name, Term* parent, bool negative, double exponent)
-	:parent(parent), exponent(exponent), negative(negative)
+Term::Term(std::string name, Term* parent_, bool negative_, double exponent_)
+	:parent(parent_), exponent(exponent_), negative(negative_)
 {
 	std::cout << "constructing term   minus:" << negative << " exponent: " << exponent << " name: " << name << '\n';
 	while (true) {
@@ -202,10 +202,14 @@ Term::Term(std::string name, Term* parent, bool negative, double exponent)
 	}
 }
 
-void bruno::Term::to_str_intern(std::string& buffer, bool first_subterm_of_parent) const
+bmath::Term::Term(double value_, Term * parent_)
+	:value(value_), parent(parent_), state(val)
 {
-	bool parentheses = ((this->state == list_sum || exponent != 1) && this->subterms.size() > 1) && this->parent != nullptr;
-	//((state != val && exponent != 1) || (this->subterms.size() > 1 && this->state == list_sum));		
+}
+
+void bmath::Term::to_str_intern(std::string& buffer, bool first_subterm_of_parent) const
+{
+	bool parentheses = ((this->state == list_sum || exponent != 1) && this->subterms.size() > 1) && this->parent != this;
 	if (parentheses) {
 		buffer.push_back('(');
 	}
@@ -252,55 +256,93 @@ void bruno::Term::to_str_intern(std::string& buffer, bool first_subterm_of_paren
 
 	case val:
 		std::stringstream stream;
-		stream << value;
+		if (first_subterm_of_parent || this->parent->state == list_product) {
+			stream << value;
+		}
+		else {
+			stream << std::showpos << value;
+		}
 		buffer.append(stream.str());
 		break;
 	}
 
 	if (parentheses) {
 		buffer.push_back(')');
-		if (this->exponent != 1 && (this->exponent != -1 || first_subterm_of_parent)) {
-			buffer.push_back('^');
-			if (exponent < 0) {
-				buffer.push_back('(');
-			}
-			std::stringstream stream;
-			stream << exponent;
-			buffer.append(stream.str());
-			if (exponent < 0) {
-				buffer.push_back(')');
-			}
+	}
+	if (this->state != val && this->exponent != 1 && (this->exponent != -1 || first_subterm_of_parent)) {
+		buffer.push_back('^');
+		if (exponent < 0) {
+			buffer.push_back('(');
+		}
+		std::stringstream stream;
+		stream << exponent;
+		buffer.append(stream.str());
+		if (exponent < 0) {
+			buffer.push_back(')');
 		}
 	}
 }
 
-void bruno::Term::simplify()
+void bmath::Term::simplify()
 {
 	//if this and term in this->subterms have same state: add subterms of subterm to this->subterms directly
-	switch (this->state)
-	{
+	switch (this->state) {
+	double buffer_vals; //used as buffer to add/ multiply vals
 	case list_product:
 	case list_sum:
-		for (auto it : this->subterms) {
-
+		buffer_vals = (this->state == list_product ? 1 : 0);
+		for (std::list<Term*>::iterator it = this->subterms.begin(); it != this->subterms.end();) {
+			switch ((*it)->state) {
+			case list_product: {
+				while ((*it)->subterms.size())
+				{
+					this->subterms.push_back((*it)->subterms.back());
+					(*it)->subterms.pop_back();
+				}
+				delete *it;
+				std::list<Term*>::iterator it_2 = it;
+				++it;
+				this->subterms.erase(it_2);
+				break; }
+			case val: {
+				switch (this->state){
+				case list_product:
+					buffer_vals *= (*it)->value;
+					break;
+				case list_sum:
+					buffer_vals += (*it)->value;
+					break;
+				}
+				delete *it;
+				std::list<Term*>::iterator it_2 = it;
+				++it;
+				this->subterms.erase(it_2);
+				break; }
+			default:
+				++it;
+				break;
+			}
+		} //end of for loop
+		if (buffer_vals != (this->state == list_product ? 1 : 0)) {
+			this->subterms.push_back(new Term(buffer_vals, this));
 		}
+		break;
 	}
 }
 
-std::string& bruno::Term::to_str() const
+std::string& bmath::Term::to_str() const
 {
 	std::string* str = new std::string;
 	this->to_str_intern(*str, true);
 	return *str;
 }
 
-bruno::Term::Term(std::string name)
-	:Term(name, nullptr, false, 1)
+bmath::Term::Term(std::string name)
+	:Term(name, this, false, 1)
 {
 }
 
 Term::~Term() {
-	std::cout << "destructor of: " << *this << '\n';
 	for (auto it : this->subterms) {
 		delete it;
 	}

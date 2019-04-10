@@ -8,7 +8,7 @@
 #include <math.h>
 
 
-namespace bruno {
+namespace bmath {
 
 //contains position of parentheses in constructor string
 struct Pos_Pars {
@@ -56,7 +56,8 @@ private:
 	std::string var_name;
 	bool negative;			//used as sign of var
 
-	Term(std::string name, Term* parent, bool negative, double pow);	//parent is one layer above (nullptr is highest layer)
+	Term(std::string name, Term* parent_, bool negative_, double exponent_);	//parent is one layer above (this == parent is highest layer)
+	Term(double value_, Term* parent_);
 
 	void to_str_intern(std::string& buffer, bool first_subterm_in_parent) const;
 
@@ -70,6 +71,6 @@ public:
 
 }//namespace bruno
 
-std::ostream& operator<<(std::ostream& stream, const bruno::Term& term);
+std::ostream& operator<<(std::ostream& stream, const bmath::Term& term);
 
 

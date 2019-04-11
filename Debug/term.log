@@ -1,2 +1,12 @@
-﻿  main.cpp
-  term.vcxproj -> C:\BrunoProgramme\term\Debug\term.exe
+﻿  Exponentiation.cpp
+  Product.cpp
+  Sum.cpp
+  Value.cpp
+  Variable.cpp
+  internal_functions.cpp
+d:\selbstgemachteprogramme\term\src\internal_functions.cpp(69): warning C4018: "<": Konflikt zwischen "signed" und "unsigned"
+  main.cpp
+  term.cpp
+  Code wird generiert...
+d:\selbstgemachteprogramme\term\src\internal_functions.cpp(125): warning C4715: "bmath::type_subterm": Nicht alle Codepfade geben einen Wert zurück.
+  term.vcxproj -> D:\SelbstgemachteProgramme\Term\Debug\term.exe

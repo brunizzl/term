@@ -1,6 +1,8 @@
 #include <iostream>
 #include "term.h"
 
+//bruno war hier
+
 int main()
 {
 	std::string name("(1*(2^(-2)*3*(4*(a^5))))");

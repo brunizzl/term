@@ -1,8 +1,6 @@
 #include <iostream>
 #include "term.h"
 
-//bruno war in 2019 hier
-
 int main()
 {
 	std::string name("(1*(2^(-2)*3*(4*(a^5))))");

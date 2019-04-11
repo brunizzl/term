@@ -21,7 +21,8 @@ enum State {
 	product,
 	sum,
 	val,
-	var
+	var,
+	exponentiation
 };
 
 //extra functions:
@@ -41,6 +42,9 @@ void del_pars_after(std::vector<Pos_Pars> pos_pars, std::string& name);
 //used in constructor to split subterm of name
 void cut_subterm_from_name(std::string& name, std::string& subterm_str, std::vector<Pos_Pars>& pos_pars, std::size_t op);
 
+//deides type of next subterm
+State type_subterm(std::string& name, std::list<Pos_Pars>& pars);
+
 //main class:
 
 class Basic_Term 
@@ -50,7 +54,7 @@ protected:
 
 public:
 	Basic_Term(std::string name);
-	~Basic_Term();
+	virtual ~Basic_Term();
 };
 
 class Product : public Therm
@@ -83,6 +87,9 @@ private:
 	double value;
 public:
 };
+
+//used in constructor to do the constructing
+Basic_Term* cut_subterm(std::string& name);
 
 }//namespace bruno
 

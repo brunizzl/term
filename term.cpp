@@ -105,8 +105,43 @@ void bmath::cut_subterm_from_name(std::string & name, std::string & subterm_str,
 	return;
 }
 
+State bmath::type_subterm(std::string & name, std::list<Pos_Pars>& pars)
+{
+	std::size_t op;
+	op = find_last_of_skip_pars(name, "+-", pars);
+	if (op != std::string::npos) {
+		return sum;
+	}
+	op = find_last_of_skip_pars(name, "*/", pars);
+	if (op != std::string::npos) {
+		return product;
+	}
+	op = find_last_of_skip_pars(name, "^", pars);
+	if (op != std::string::npos) {
+		return exponentiation;
+	}
+	//var und val
+}
+
+Basic_Term * bmath::cut_subterm(std::string & name)
+{
+	//letzten subterm abschneiden, in neuen constructor uebergeben
+	//(quasi, was vorher konstruktor war)
+	//wenn nix gefunden -> gebe nullptr zurueck
+}
+
 std::ostream& operator<<(std::ostream& stream, const Basic_Term& term)
 {
 	stream << term.to_str();
 	return stream;
+}
+
+bmath::Basic_Term::Basic_Term(std::string name)
+{
+	
+}
+
+bmath::Basic_Term::~Basic_Term()
+{
+	//no dynamic allocation in base
 }

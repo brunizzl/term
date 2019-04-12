@@ -118,10 +118,18 @@ State bmath::type_subterm(std::string & name, std::vector<Pos_Pars>& pars)
 	if (op != std::string::npos) {
 		return exponentiation;
 	}
-	op = find_last_of_skip_pars(name, "1234567890", pars);
-	if (op != std::string::npos) {
-		//return
+	if (pars.size()) {
+		return other;
 	}
+	op = name.find_last_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]_$");
+	if (op != std::string::npos) {
+		return var;
+	}
+	op = name.find_last_of("0123456789");
+	if (op != std::string::npos) {
+		return val;
+	}
+	return other;
 }
 
 

@@ -8,14 +8,14 @@
 #include <iostream>
 #include <math.h>
 
-
-
 namespace bmath {
 
 class Basic_Term 
 {
 protected:
 	Basic_Term* parent;
+public:
+	Basic_Term(std::string name_, Basic_Term* parent_);
 };
 
 class Term {
@@ -28,8 +28,5 @@ public:
 }//namespace bruno
 
 #include "internal_functions.h"
-#include "Exponentiation.h"
-#include "Product.h"
-#include "Sum.h"
-#include "Value.h"
-#include "Variable.h"
+#include "arguments.h"
+#include "operations.h"

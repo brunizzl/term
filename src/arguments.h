@@ -4,8 +4,17 @@
 
 namespace bmath {
 
-class Variable :
-	public Basic_Term
+class Value : public Basic_Term
+{
+private:
+	double value;
+public:
+	Value();
+	~Value();
+};
+
+
+class Variable : public Basic_Term
 {
 private:
 	std::string name;

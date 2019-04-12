@@ -10,7 +10,7 @@ private:
 	std::list<Basic_Term*> factors;
 	std::list<Basic_Term*> quotients;
 public:
-	Product();
+	Product(std::string name_, Basic_Term* parent_);
 	~Product();
 };
 
@@ -21,7 +21,7 @@ private:
 	std::list<Basic_Term*> summands;
 	std::list<Basic_Term*> subtrahends;
 public:
-	Sum();
+	Sum(std::string name_, Basic_Term* parent_);
 	~Sum();
 };
 
@@ -32,7 +32,7 @@ private:
 	Basic_Term* exponent;
 	Basic_Term* base;
 public:
-	Exponentiation();
+	Exponentiation(std::string name_, Basic_Term* parent_);
 	~Exponentiation();
 };
 

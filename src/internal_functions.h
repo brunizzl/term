@@ -22,25 +22,22 @@ enum State {
 
 
 //finds matching closed parethesis to the open_par in name (used in find_pars)
-std::size_t find_closed_par(std::size_t open_par, std::string& name);
+std::size_t find_closed_par(std::size_t open_par, const std::string& name);
 
 //finds the highest level of parentheses in name
-void find_pars(std::string& name, std::vector<Pos_Pars>& pars);
+void find_pars(const std::string& name, std::vector<Pos_Pars>& pars);
 
 //skips parentheses, else finds_first_of characters in name like std::string function
-std::size_t find_last_of_skip_pars(std::string& name, const char* characters, std::vector<Pos_Pars>& pars);
+std::size_t find_last_of_skip_pars(const std::string& name, const char* characters, std::vector<Pos_Pars>& pars);
 
 //deletes parentheses of parentheses list, which start after the end of the name
-void del_pars_after(std::vector<Pos_Pars>& pars, std::string& name);
+void del_pars_after(std::vector<Pos_Pars>& pars, const std::string& name);
 
-//used in constructor to split subterm of name
-void cut_subterm_from_name(std::string& name, std::string& subterm_str, std::vector<Pos_Pars>& pars, std::size_t op);
+//decides type of next subterm
+State type_subterm(const std::string& name, std::vector<Pos_Pars>& pars);
 
-//deides type of next subterm
-State type_subterm(std::string& name, std::vector<Pos_Pars>& pars);
-
-//used in constructor to do the constructing
-Basic_Term* cut_subterm(std::string& name);
+//returns pointer to newly build term of right type
+Basic_Term* build_subterm(std::string& subtermstr, Basic_Term* parent_);
 
 }
 

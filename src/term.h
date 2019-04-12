@@ -15,14 +15,15 @@ class Basic_Term
 protected:
 	Basic_Term* parent;
 public:
-	Basic_Term(std::string name_, Basic_Term* parent_);
+	Basic_Term(Basic_Term* parent_);
 };
 
-class Term {
+class Term : public Basic_Term {
 private:
 	Basic_Term* term_ptr;
 public:
 	Term(std::string name_);
+	~Term();
 };
 
 }//namespace bruno

@@ -76,9 +76,8 @@ void bmath::del_pars_after(std::vector<Pos_Pars>& pars, const std::string& name)
 	return;
 }
 
-State bmath::type_subterm(const std::string & name, std::vector<Pos_Pars>& pars)
+State bmath::type_subterm(const std::string & name, std::vector<Pos_Pars>& pars, std::size_t& op)
 {
-	std::size_t op;
 	op = find_last_of_skip_pars(name, "+-", pars);
 	if (op != std::string::npos) {
 		return sum;
@@ -111,14 +110,15 @@ Basic_Term* bmath::build_subterm(std::string& subtermstr, Basic_Term* parent_)
 	std::vector<Pos_Pars> pars;
 	while (subtermstr.size() != 0) {
 		find_pars(subtermstr, pars);
-		State state = type_subterm(subtermstr, pars);
-		switch (state) {
+		std::size_t op;
+		State type = type_subterm(subtermstr, pars, op);
+		switch (type) {
 		case exponentiation:
-			return new Exponentiation(subtermstr, parent_);
+			return new Exponentiation(subtermstr, parent_, op);
 		case product:
-			return new Product(subtermstr, parent_);
+			return new Product(subtermstr, parent_, op);
 		case sum:
-			return new Sum(subtermstr, parent_);
+			return new Sum(subtermstr, parent_, op);
 		case var:
 			return new Variable(subtermstr, parent_);
 		case val:
@@ -136,6 +136,8 @@ Basic_Term* bmath::build_subterm(std::string& subtermstr, Basic_Term* parent_)
 
 std::ostream& operator<<(std::ostream& stream, const Basic_Term& term)
 {
-	//stream << term.to_str();
+	std::string str;
+	term.to_str(str);
+	stream << str;
 	return stream;
 }

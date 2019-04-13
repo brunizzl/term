@@ -11,6 +11,9 @@ private:
 public:
 	Value(std::string name_, Basic_Term* parent_);
 	~Value();
+
+	void to_str(std::string& str) const override;
+	State get_state() const override;
 };
 
 
@@ -21,6 +24,9 @@ private:
 public:
 	Variable(std::string name_, Basic_Term* parent_);
 	~Variable();
+
+	void to_str(std::string& str) const override;
+	State get_state() const override;
 };
 
 } //namespace bmath

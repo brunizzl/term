@@ -17,6 +17,18 @@ bmath::Value::~Value()
 {
 }
 
+void bmath::Value::to_str(std::string& str) const
+{
+	std::stringstream stream;
+	stream << this->value;
+	str.append(stream.str());
+}
+
+State bmath::Value::get_state() const
+{
+	return val;
+}
+
 
 bmath::Variable::Variable(std::string name_, Basic_Term* parent_)
 	:Basic_Term(parent_), name(name_)
@@ -27,4 +39,14 @@ bmath::Variable::Variable(std::string name_, Basic_Term* parent_)
 
 bmath::Variable::~Variable()
 {
+}
+
+void bmath::Variable::to_str(std::string& str) const
+{
+	str.append(this->name);
+}
+
+State bmath::Variable::get_state() const
+{
+	return var;
 }

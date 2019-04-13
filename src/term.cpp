@@ -16,3 +16,13 @@ bmath::Term::~Term()
 {
 	delete term_ptr;
 }
+
+void bmath::Term::to_str(std::string& str) const
+{
+	this->term_ptr->to_str(str);
+}
+
+State bmath::Term::get_state() const
+{
+	return other;
+}

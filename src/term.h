@@ -8,6 +8,8 @@
 #include <iostream>
 #include <math.h>
 
+#include "structs.h"
+
 namespace bmath {
 
 class Basic_Term 
@@ -16,6 +18,9 @@ protected:
 	Basic_Term* parent;
 public:
 	Basic_Term(Basic_Term* parent_);
+
+	virtual void to_str(std::string& str) const = 0;
+	virtual State get_state() const = 0;
 };
 
 class Term : public Basic_Term {
@@ -24,6 +29,8 @@ private:
 public:
 	Term(std::string name_);
 	~Term();
+	void to_str(std::string& str) const override;
+	State get_state() const override;
 };
 
 }//namespace bruno

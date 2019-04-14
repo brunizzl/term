@@ -14,6 +14,8 @@ public:
 
 	void to_str(std::string& str) const override;
 	State get_state() const override;
+	void sort() override;
+	bool operator<(const Basic_Term& other) const override;
 };
 
 
@@ -27,6 +29,8 @@ public:
 
 	void to_str(std::string& str) const override;
 	State get_state() const override;
+	void sort() override;
+	bool operator<(const Basic_Term& other) const override;
 };
 
 } //namespace bmath

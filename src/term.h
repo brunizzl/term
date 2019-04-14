@@ -1,12 +1,11 @@
 #pragma once
 
-#include <set>
 #include <string>
 #include <sstream>
 #include <list>
 #include <vector>
 #include <iostream>
-#include <math.h>
+#include <cmath>
 
 #include "structs.h"
 
@@ -18,9 +17,19 @@ protected:
 	Basic_Term* parent;
 public:
 	Basic_Term(Basic_Term* parent_);
+	virtual ~Basic_Term();
 
+	//appends this to str
 	virtual void to_str(std::string& str) const = 0;
+
+	//returns kinda true type of term (sum, product, value, etc.)
 	virtual State get_state() const = 0;
+
+	//sorts lists in anything containing lists (sum and product atm)
+	virtual void sort() = 0;
+
+	//specified for sort() function (does not always make sense mathematically!)
+	virtual bool operator<(const Basic_Term& other) const = 0;
 };
 
 class Term : public Basic_Term {
@@ -29,8 +38,11 @@ private:
 public:
 	Term(std::string name_);
 	~Term();
+
 	void to_str(std::string& str) const override;
 	State get_state() const override;
+	void sort() override; 
+	bool operator<(const Basic_Term& other) const override;
 };
 
 }//namespace bruno

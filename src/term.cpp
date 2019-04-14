@@ -7,6 +7,11 @@ bmath::Basic_Term::Basic_Term(Basic_Term* parent_)
 {
 }
 
+bmath::Basic_Term::~Basic_Term()
+{
+	//cleaning up the tree is done in derived classes
+}
+
 bmath::Term::Term(std::string name_)
 	:Basic_Term(nullptr), term_ptr(build_subterm(name_, this))
 {
@@ -14,6 +19,7 @@ bmath::Term::Term(std::string name_)
 
 bmath::Term::~Term()
 {
+	LOG_C("loesche Term: " << *this);
 	delete term_ptr;
 }
 
@@ -24,5 +30,14 @@ void bmath::Term::to_str(std::string& str) const
 
 State bmath::Term::get_state() const
 {
-	return other;
+	return undefined;
+}
+
+void bmath::Term::sort()
+{
+}
+
+bool bmath::Term::operator<(const Basic_Term& other) const
+{
+	return false;
 }

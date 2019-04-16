@@ -50,3 +50,4 @@ public:
 #include "internal_functions.h"
 #include "arguments.h"
 #include "operations.h"
+#include "par_op.h"

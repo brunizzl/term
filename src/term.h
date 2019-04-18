@@ -30,6 +30,15 @@ public:
 
 	//specified for sort() function (does not always make sense mathematically!)
 	virtual bool operator<(const Basic_Term& other) const = 0;
+
+	//arithmetic operators
+	//defined virtual, so sum can react better to += and -=...
+	/*
+	virtual Basic_Term& operator+=(const Basic_Term& summand);
+	virtual Basic_Term& operator-=(const Basic_Term& subtractor);
+	virtual Basic_Term& operator*=(const Basic_Term& factor);
+	virtual Basic_Term& operator/=(const Basic_Term& divisor);*/
+
 };
 
 class Term : public Basic_Term {

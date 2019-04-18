@@ -14,16 +14,16 @@ bmath::Product::Product(std::string name_, Basic_Term* parent_, std::size_t op)
 		subterm = name_.substr(op + 1);
 		switch (name_[op]) {
 		case '*':
-			this->factors.push_back(build_subterm(subterm, this));
+			this->factors.push_front(build_subterm(subterm, this));
 			break;
 		case '/':
-			this->quotients.push_back(build_subterm(subterm, this));
+			this->quotients.push_front(build_subterm(subterm, this));
 			break;
 		}
 		name_.erase(op);
 		op = find_last_of_skip_pars(name_, "*/", pars);
 	}
-	this->factors.push_back(build_subterm(name_, this));
+	this->factors.push_front(build_subterm(name_, this));
 }
 
 
@@ -90,17 +90,17 @@ bmath::Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op)
 		subterm = name_.substr(op + 1);
 		switch (name_[op]) {
 		case '+':
-			this->summands.push_back(build_subterm(subterm, this));
+			this->summands.push_front(build_subterm(subterm, this));
 			break;
 		case '-':
-			this->subtrahends.push_back(build_subterm(subterm, this));
+			this->subtrahends.push_front(build_subterm(subterm, this));
 			break;
 		}
 		name_.erase(op);
 		op = find_last_of_skip_pars(name_, "+-", pars);
 	}
 	if (name_.size() != 0) {
-		this->summands.push_back(build_subterm(name_, this));
+		this->summands.push_front(build_subterm(name_, this));
 	}
 }
 

@@ -64,6 +64,13 @@ State bmath::Product::get_state() const
 
 void bmath::Product::sort()
 {
+	//1. Gucken ob drunter selber Typ, wenn ja hochholen(Produkt und Summe, nicht Potenz)
+	//	 bekannte werte zusammenfassen
+	for (auto it : this->factors) {
+
+	}
+	//2. Sort() der unterterme aufrufen
+	//3. Auf Gleichheit prüfen, wenn ja zusammenfassen (wobei immer auch basis von potenz verglichen werden muss)
 }
 
 bool bmath::Product::operator<(const Basic_Term& other) const

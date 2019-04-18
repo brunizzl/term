@@ -29,6 +29,9 @@ Basic_Term* build_subterm(std::string& subtermstr, Basic_Term* parent_);
 //(needs modification if new termtype is added)
 State type_subterm(const std::string& name, const std::vector<Pos_Pars>& pars, std::size_t& op, Par_Op_State& type_par_op);
 
+//gets called in the sort() methods of term classes
+void sort();
+
 }
 
 //allows ostream to output terms

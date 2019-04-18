@@ -67,7 +67,7 @@ void test_length() {
 
 int main()
 {
-	test_strings();
+	test_strings_2();
 }
 
 

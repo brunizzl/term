@@ -68,7 +68,15 @@ void test_length() {
 int main()
 {
 	//test_strings_2();
-	test_strings();
+	//test_strings();
+
+	bmath::Term* test;
+	{
+		bmath::Term test_2("(e^sin(2/3*pi))+3");
+		test = new bmath::Term(test_2);
+	}
+	std::cout << "Test lebt noch: " << *test << '\n';
+	std::cin.get();
 }
 
 

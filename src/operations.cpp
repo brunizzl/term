@@ -26,6 +26,18 @@ bmath::Product::Product(std::string name_, Basic_Term* parent_, std::size_t op)
 	this->factors.push_front(build_subterm(name_, this));
 }
 
+bmath::Product::Product(const Product& source, Basic_Term* parent_)
+	:Basic_Term(parent_)
+{
+	LOG_C("kopiere Produkt: " << source);
+	for (auto it : source.factors) {
+		this->factors.push_back(copy_subterm(it, this));
+	}
+	for (auto it : source.quotients) {
+		this->quotients.push_back(copy_subterm(it, this));
+	}
+}
+
 
 bmath::Product::~Product()
 {
@@ -62,21 +74,14 @@ State bmath::Product::get_state() const
 	return product;
 }
 
-void bmath::Product::sort()
-{
-	//1. Gucken ob drunter selber Typ, wenn ja hochholen(Produkt und Summe, nicht Potenz)
-	//	 bekannte werte zusammenfassen
-	for (auto it : this->factors) {
-
-	}
-	//2. Sort() der unterterme aufrufen
-	//3. Auf Gleichheit prüfen, wenn ja zusammenfassen (wobei immer auch basis von potenz verglichen werden muss)
-}
-
-bool bmath::Product::operator<(const Basic_Term& other) const
-{
-	return false;
-}
+//void bmath::Product::sort()
+//{
+//}
+//
+//bool bmath::Product::operator<(const Basic_Term& other) const
+//{
+//	return false;
+//}
 
 
 bmath::Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op)
@@ -104,6 +109,17 @@ bmath::Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op)
 	}
 }
 
+bmath::Sum::Sum(const Sum& source, Basic_Term* parent_)
+	:Basic_Term(parent_)
+{
+	LOG_C("kopiere Summe: " << source);
+	for (auto it : source.summands) {
+		this->summands.push_back(copy_subterm(it, this));
+	}
+	for (auto it : source.subtrahends) {
+		this->subtrahends.push_back(copy_subterm(it, this));
+	}
+}
 
 bmath::Sum::~Sum()
 {
@@ -142,14 +158,14 @@ State bmath::Sum::get_state() const
 	return sum;
 }
 
-void bmath::Sum::sort()
-{
-}
-
-bool bmath::Sum::operator<(const Basic_Term& other) const
-{
-	return false;
-}
+//void bmath::Sum::sort()
+//{
+//}
+//
+//bool bmath::Sum::operator<(const Basic_Term& other) const
+//{
+//	return false;
+//}
 
 
 bmath::Exponentiation::Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op)
@@ -163,6 +179,11 @@ bmath::Exponentiation::Exponentiation(std::string name_, Basic_Term* parent_, st
 	this->base = build_subterm(name_, this);
 }
 
+bmath::Exponentiation::Exponentiation(const Exponentiation& source, Basic_Term* parent_)
+	:Basic_Term(parent_), base(copy_subterm(source.base, this)), exponent(copy_subterm(source.exponent, this))
+{
+	LOG_C("kopiere Potenz: " << source);
+}
 
 bmath::Exponentiation::~Exponentiation()
 {
@@ -189,11 +210,11 @@ State bmath::Exponentiation::get_state() const
 	return exponentiation;
 }
 
-void bmath::Exponentiation::sort()
-{
-}
-
-bool bmath::Exponentiation::operator<(const Basic_Term& other) const
-{
-	return false;
-}
+//void bmath::Exponentiation::sort()
+//{
+//}
+//
+//bool bmath::Exponentiation::operator<(const Basic_Term& other) const
+//{
+//	return false;
+//}

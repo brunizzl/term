@@ -44,6 +44,12 @@ bmath::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op
 	}
 }
 
+bmath::Par_Operator::Par_Operator(const Par_Operator& source, Basic_Term* parent_)
+	:Basic_Term(parent_), argument(copy_subterm(source.argument, this)), op_state(source.op_state)
+{
+	LOG_C("kopiere Par_Operator: " << source);
+}
+
 bmath::Par_Operator::~Par_Operator()
 {
 	LOG_C("loesche Par_Operator: " << *this);
@@ -102,14 +108,14 @@ void bmath::Par_Operator::to_str(std::string & str) const
 
 State bmath::Par_Operator::get_state() const
 {
-	return State();
+	return par_op;
 }
 
-void bmath::Par_Operator::sort()
-{
-}
-
-bool bmath::Par_Operator::operator<(const Basic_Term & other) const
-{
-	return false;
-}
+//void bmath::Par_Operator::sort()
+//{
+//}
+//
+//bool bmath::Par_Operator::operator<(const Basic_Term & other) const
+//{
+//	return false;
+//}

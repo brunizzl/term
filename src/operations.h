@@ -11,12 +11,13 @@ private:
 	std::list<Basic_Term*> quotients;
 public:
 	Product(std::string name_, Basic_Term* parent_, std::size_t op);
+	Product(const Product& source, Basic_Term* parent_ = nullptr);
 	~Product();
 
 	void to_str(std::string& str) const override;
 	State get_state() const override;
-	void sort() override;
-	bool operator<(const Basic_Term& other) const override;
+	/*void sort() override;
+	bool operator<(const Basic_Term& other) const override;*/
 };
 
 
@@ -27,12 +28,13 @@ private:
 	std::list<Basic_Term*> subtrahends;
 public:
 	Sum(std::string name_, Basic_Term* parent_, std::size_t op);
+	Sum(const Sum& source, Basic_Term* parent_ = nullptr);
 	~Sum();
 
 	void to_str(std::string& str) const override;
 	State get_state() const override;
-	void sort() override;
-	bool operator<(const Basic_Term& other) const override;
+	/*void sort() override;
+	bool operator<(const Basic_Term& other) const override;*/
 };
 
 
@@ -43,12 +45,13 @@ private:
 	Basic_Term* base;
 public:
 	Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op);
+	Exponentiation(const Exponentiation& source, Basic_Term* parent_ = nullptr);
 	~Exponentiation();
 
 	void to_str(std::string& str) const override;
 	State get_state() const override;
-	void sort() override;
-	bool operator<(const Basic_Term& other) const override;
+	/*void sort() override;
+	bool operator<(const Basic_Term& other) const override;*/
 };
 
 } //namespace bmath

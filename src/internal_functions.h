@@ -25,14 +25,15 @@ void del_pars_after(std::vector<Pos_Pars>& pars, const std::string& name);
 //(needs modification if new termtype is added)
 Basic_Term* build_subterm(std::string& subtermstr, Basic_Term* parent_);
 
+//returns pointer to newly build term of right type (u now have ownership of object)
+//(needs modification if new termtype is added)
+Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
+
 //decides type of next subterm (finds the next operation to split)
 //(needs modification if new termtype is added)
 State type_subterm(const std::string& name, const std::vector<Pos_Pars>& pars, std::size_t& op, Par_Op_State& type_par_op);
 
-//gets called in the sort() methods of term classes
-void sort();
-
-}
+} //namespace bmath
 
 //allows ostream to output terms
 std::ostream& operator<<(std::ostream& stream, const bmath::Basic_Term& term);

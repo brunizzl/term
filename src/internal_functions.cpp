@@ -234,6 +234,27 @@ Basic_Term* bmath::build_subterm(std::string& subtermstr, Basic_Term* parent_)
 	return nullptr;
 }
 
+Basic_Term* bmath::copy_subterm(const Basic_Term* source, Basic_Term* parent_)
+{
+	State type = source->get_state();
+	switch (type) {
+	case par_op:
+		return new Par_Operator(*(static_cast<const Par_Operator*>(source)), parent_);
+	case val:
+		return new Value(*(static_cast<const Value*>(source)), parent_);
+	case var:
+		return new Variable(*(static_cast<const Variable*>(source)), parent_);
+	case sum:
+		return new Sum(*(static_cast<const Sum*>(source)), parent_);
+	case product:
+		return new Product(*(static_cast<const Product*>(source)), parent_);
+	case exponentiation:
+		return new Exponentiation(*(static_cast<const Exponentiation*>(source)), parent_);
+	}
+	std::cout << "Error: function copy_subterm expected known type to copy: " << type << '\n';
+	return nullptr;
+}
+
 
 
 std::ostream& operator<<(std::ostream& stream, const Basic_Term& term)

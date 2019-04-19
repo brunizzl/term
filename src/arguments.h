@@ -10,12 +10,13 @@ private:
 	double value;
 public:
 	Value(std::string name_, Basic_Term* parent_);
+	Value(const Value& source, Basic_Term* parent_ = nullptr);
 	~Value();
 
 	void to_str(std::string& str) const override;
 	State get_state() const override;
-	void sort() override;
-	bool operator<(const Basic_Term& other) const override;
+	/*void sort() override;
+	bool operator<(const Basic_Term& other) const override;*/
 };
 
 
@@ -25,12 +26,13 @@ private:
 	std::string name;
 public:
 	Variable(std::string name_, Basic_Term* parent_);
+	Variable(const Variable& source, Basic_Term* parent_ = nullptr);
 	~Variable();
 
 	void to_str(std::string& str) const override;
 	State get_state() const override;
-	void sort() override;
-	bool operator<(const Basic_Term& other) const override;
+	/*void sort() override;
+	bool operator<(const Basic_Term& other) const override;*/
 };
 
 } //namespace bmath

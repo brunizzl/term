@@ -12,6 +12,12 @@ bmath::Value::Value(std::string name_, Basic_Term* parent_)
 	stream >> this->value;
 }
 
+bmath::Value::Value(const Value& source, Basic_Term* parent_)
+	:Basic_Term(parent_), value(source.value)
+{
+	LOG_C("kopiere Wert: " << source);
+}
+
 
 bmath::Value::~Value()
 {
@@ -30,14 +36,14 @@ State bmath::Value::get_state() const
 	return val;
 }
 
-void bmath::Value::sort()
-{
-}
-
-bool bmath::Value::operator<(const Basic_Term& other) const
-{
-	return false;
-}
+//void bmath::Value::sort()
+//{
+//}
+//
+//bool bmath::Value::operator<(const Basic_Term& other) const
+//{
+//	return false;
+//}
 
 
 bmath::Variable::Variable(std::string name_, Basic_Term* parent_)
@@ -46,6 +52,11 @@ bmath::Variable::Variable(std::string name_, Basic_Term* parent_)
 	LOG_C("baue Variable: " << name_);
 }
 
+bmath::Variable::Variable(const Variable& source, Basic_Term* parent_)
+	: Basic_Term(parent_), name(source.name)
+{
+	LOG_C("kopiere Variable: " << source);
+}
 
 bmath::Variable::~Variable()
 {
@@ -62,11 +73,11 @@ State bmath::Variable::get_state() const
 	return var;
 }
 
-void bmath::Variable::sort()
-{
-}
-
-bool bmath::Variable::operator<(const Basic_Term& other) const
-{
-	return false;
-}
+//void bmath::Variable::sort()
+//{
+//}
+//
+//bool bmath::Variable::operator<(const Basic_Term& other) const
+//{
+//	return false;
+//}

@@ -17,11 +17,14 @@ void test_strings() {
 
 	for (auto str : teststrs) {
 		std::cout << '\n';
-		std::cout << "String: " << str << '\n';
+		std::cout << "String: \t" << str << '\n';
+		bmath::Term* kopie;
 		{
 			bmath::Term test(str);
-			std::cout << " print: " << test << '\n';
+			std::cout << "print:  \t" << test << '\n';
+			kopie = new bmath::Term(test);
 		}
+		std::cout << "print kopie: \t" << *kopie << '\n';
 	}
 }
 
@@ -68,15 +71,7 @@ void test_length() {
 int main()
 {
 	//test_strings_2();
-	//test_strings();
-
-	bmath::Term* test;
-	{
-		bmath::Term test_2("(e^sin(2/3*pi))+3");
-		test = new bmath::Term(test_2);
-	}
-	std::cout << "Test lebt noch: " << *test << '\n';
-	std::cin.get();
+	test_strings();
 }
 
 

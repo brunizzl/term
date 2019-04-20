@@ -3,6 +3,11 @@
 using namespace bmath;
 
 
+bmath::Value::Value(Basic_Term* parent_)
+	:Basic_Term(parent_)
+{
+}
+
 bmath::Value::Value(std::string name_, Basic_Term* parent_)
 	:Basic_Term(parent_), value(0)
 {
@@ -36,15 +41,15 @@ State bmath::Value::get_state() const
 	return val;
 }
 
-//void bmath::Value::sort()
-//{
-//}
-//
-//bool bmath::Value::operator<(const Basic_Term& other) const
-//{
-//	return false;
-//}
+void bmath::Value::combine()
+{
+	//nothing needs to be done here (value does not hold any pointers to combine with)
+}
 
+bmath::Variable::Variable(Basic_Term* parent_)
+	:Basic_Term(parent_)
+{
+}
 
 bmath::Variable::Variable(std::string name_, Basic_Term* parent_)
 	:Basic_Term(parent_), name(name_)
@@ -73,11 +78,7 @@ State bmath::Variable::get_state() const
 	return var;
 }
 
-//void bmath::Variable::sort()
-//{
-//}
-//
-//bool bmath::Variable::operator<(const Basic_Term& other) const
-//{
-//	return false;
-//}
+void bmath::Variable::combine()
+{
+	//nothing needs to be done here (variable does not hold any pointers to combine with)
+}

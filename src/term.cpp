@@ -44,11 +44,51 @@ State bmath::Term::get_state() const
 	return undefined;
 }
 
-//void bmath::Term::sort()
-//{
-//}
-//
-//bool bmath::Term::operator<(const Basic_Term& other) const
-//{
-//	return false;
-//}
+void bmath::Term::combine()
+{
+	this->term_ptr->combine();
+}
+
+Term& bmath::Term::operator+=(const Term& summand)
+{
+	Sum* sum = new Sum(this);
+	this->term_ptr->parent = sum;
+	sum->summands.push_back(this->term_ptr);
+	sum->summands.push_back(copy_subterm(summand.term_ptr, sum));
+	this->term_ptr = sum;
+	this->combine();
+	return *this;
+}
+
+Term& bmath::Term::operator-=(const Term& subtractor)
+{
+	Sum* sum = new Sum(this);
+	this->term_ptr->parent = sum;
+	sum->summands.push_back(this->term_ptr);
+	sum->subtractors.push_back(copy_subterm(subtractor.term_ptr, sum));
+	this->term_ptr = sum;
+	this->combine();
+	return *this;
+}
+
+Term& bmath::Term::operator*=(const Term& factor)
+{
+	Product* product = new Product(this);
+	this->term_ptr->parent = product;
+	product->factors.push_back(this->term_ptr);
+	product->factors.push_back(copy_subterm(factor.term_ptr, product));
+	this->term_ptr = product;
+	this->combine();
+	return *this;
+}
+
+Term& bmath::Term::operator/=(const Term& divisor)
+{
+	Product* product = new Product(this);
+	this->term_ptr->parent = product;
+	product->factors.push_back(this->term_ptr);
+	product->divisors.push_back(copy_subterm(divisor.term_ptr, product));
+	this->term_ptr = product;
+	this->combine();
+	return *this;
+}

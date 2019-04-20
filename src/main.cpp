@@ -70,8 +70,16 @@ void test_length() {
 
 int main()
 {
+	//test_strings();
 	//test_strings_2();
-	test_strings();
+
+	bmath::Term term1("sin(5*pi/4+30)");
+	std::cout << "term1: " << term1 << '\n';
+	bmath::Term term2("cos(4)+3");
+	std::cout << "term2: " << term2 << '\n';
+	term1 -= term2;
+	std::cout << "term1: " << term1 << '\n';
+
 }
 
 

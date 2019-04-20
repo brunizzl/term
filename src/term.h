@@ -26,11 +26,13 @@ public:
 	//returns kinda true type of term (sum, product, value, etc.)
 	virtual State get_state() const = 0;
 
-	//sorts lists in anything containing lists (sum and product atm)
-	//virtual void sort() = 0;
+	//if one term holds a pointer to a term of same type
+	//this function combines both in the upper term (if possible)
+	virtual void combine() = 0;
 
-	////specified for sort() function (does not always make sense mathematically!)
-	//virtual bool operator<(const Basic_Term& other) const = 0;
+	friend class Term;
+	friend class Product;
+	friend class Sum;
 };
 
 class Term : public Basic_Term {
@@ -43,15 +45,13 @@ public:
 
 	void to_str(std::string& str) const override;
 	State get_state() const override;
-	/*void sort() override; 
-	bool operator<(const Basic_Term& other) const override;*/
+	void combine() override;
 
 	//arithmetic operators
-	//defined virtual, so sum can react better to += and -=...	
-	/*Basic_Term& operator+=(const Basic_Term& summand);
-	Basic_Term& operator-=(const Basic_Term& subtractor);
-	Basic_Term& operator*=(const Basic_Term& factor);
-	Basic_Term& operator/=(const Basic_Term& divisor);*/
+	Term& operator+=(const Term& summand);
+	Term& operator-=(const Term& subtractor);
+	Term& operator*=(const Term& factor);
+	Term& operator/=(const Term& divisor);
 };
 
 }//namespace bruno

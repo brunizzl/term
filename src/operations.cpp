@@ -3,6 +3,11 @@
 using namespace bmath;
 
 
+bmath::Product::Product(Basic_Term* parent_)
+	:Basic_Term(parent_)
+{
+}
+
 bmath::Product::Product(std::string name_, Basic_Term* parent_, std::size_t op)
 	:Basic_Term(parent_)
 {
@@ -17,7 +22,7 @@ bmath::Product::Product(std::string name_, Basic_Term* parent_, std::size_t op)
 			this->factors.push_front(build_subterm(subterm, this));
 			break;
 		case '/':
-			this->quotients.push_front(build_subterm(subterm, this));
+			this->divisors.push_front(build_subterm(subterm, this));
 			break;
 		}
 		name_.erase(op);
@@ -33,8 +38,8 @@ bmath::Product::Product(const Product& source, Basic_Term* parent_)
 	for (auto it : source.factors) {
 		this->factors.push_back(copy_subterm(it, this));
 	}
-	for (auto it : source.quotients) {
-		this->quotients.push_back(copy_subterm(it, this));
+	for (auto it : source.divisors) {
+		this->divisors.push_back(copy_subterm(it, this));
 	}
 }
 
@@ -45,14 +50,14 @@ bmath::Product::~Product()
 	for (auto it : factors) {
 		delete it;
 	}
-	for (auto it : quotients) {
+	for (auto it : divisors) {
 		delete it;
 	}
 }
 
 void bmath::Product::to_str(std::string& str) const
 {
-	if (this->parent->get_state() > this->get_state()) {
+	if (this->parent->get_state() >= this->get_state()) {
 		str.push_back('(');
 	}
 	for (auto it : this->factors) {
@@ -60,11 +65,11 @@ void bmath::Product::to_str(std::string& str) const
 		str.push_back('*');
 	}
 	str.pop_back();
-	for (auto it : this->quotients) {
+	for (auto it : this->divisors) {
 		str.push_back('/');
 		it->to_str(str);
 	}
-	if (this->parent->get_state() > this->get_state()) {
+	if (this->parent->get_state() >= this->get_state()) {
 		str.push_back(')');
 	}
 }
@@ -74,15 +79,60 @@ State bmath::Product::get_state() const
 	return product;
 }
 
-//void bmath::Product::sort()
-//{
-//}
-//
-//bool bmath::Product::operator<(const Basic_Term& other) const
-//{
-//	return false;
-//}
+void bmath::Product::combine()
+{
+	for (std::list<Basic_Term*>::iterator it = this->factors.begin(); it != this->factors.end();) {
+		(*it)->combine();
+		if ((*it)->get_state() == product) {
+			Product* redundant = static_cast<Product*>((*it));
+			for (auto it_red : redundant->factors) {
+				it_red->parent = this;
+				this->factors.push_back(it_red);
+			}
+			redundant->factors.clear();
+			for (auto it_red : redundant->divisors) {
+				it_red->parent = this;
+				this->divisors.push_back(it_red);
+			}
+			redundant->divisors.clear();
+			delete redundant;
+			std::list<Basic_Term*>::iterator it_2 = it;
+			++it;
+			this->factors.erase(it_2);
+		}
+		else {
+			++it;
+		}
+	}
+	for (std::list<Basic_Term*>::iterator it = this->divisors.begin(); it != this->divisors.end();) {
+		(*it)->combine();
+		if ((*it)->get_state() == product) {
+			Product* redundant = static_cast<Product*>((*it));
+			for (auto it_red : redundant->factors) {
+				it_red->parent = this;
+				this->divisors.push_back(it_red);
+			}
+			redundant->factors.clear();
+			for (auto it_red : redundant->divisors) {
+				it_red->parent = this;
+				this->factors.push_back(it_red);
+			}
+			redundant->divisors.clear();
+			delete redundant;
+			std::list<Basic_Term*>::iterator it_2 = it;
+			++it;
+			this->divisors.erase(it_2);
+		}
+		else {
+			++it;
+		}
+	}
+}
 
+bmath::Sum::Sum(Basic_Term* parent_)
+	:Basic_Term(parent_)
+{
+}
 
 bmath::Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op)
 	:Basic_Term(parent_)
@@ -98,7 +148,7 @@ bmath::Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op)
 			this->summands.push_front(build_subterm(subterm, this));
 			break;
 		case '-':
-			this->subtrahends.push_front(build_subterm(subterm, this));
+			this->subtractors.push_front(build_subterm(subterm, this));
 			break;
 		}
 		name_.erase(op);
@@ -116,8 +166,8 @@ bmath::Sum::Sum(const Sum& source, Basic_Term* parent_)
 	for (auto it : source.summands) {
 		this->summands.push_back(copy_subterm(it, this));
 	}
-	for (auto it : source.subtrahends) {
-		this->subtrahends.push_back(copy_subterm(it, this));
+	for (auto it : source.subtractors) {
+		this->subtractors.push_back(copy_subterm(it, this));
 	}
 }
 
@@ -127,14 +177,14 @@ bmath::Sum::~Sum()
 	for (auto it : summands) {
 		delete it;
 	}
-	for (auto it : subtrahends) {
+	for (auto it : subtractors) {
 		delete it;
 	}
 }
 
 void bmath::Sum::to_str(std::string& str) const
 {
-	if (this->parent->get_state() > this->get_state()) {
+	if (this->parent->get_state() >= this->get_state()) {
 		str.push_back('(');
 	}
 	for (auto it : this->summands) {
@@ -144,11 +194,11 @@ void bmath::Sum::to_str(std::string& str) const
 	if (this->summands.size()) {
 		str.pop_back();
 	}
-	for (auto it : this->subtrahends) {
+	for (auto it : this->subtractors) {
 		str.push_back('-');
 		it->to_str(str);
 	}
-	if (this->parent->get_state() > this->get_state()) {
+	if (this->parent->get_state() >= this->get_state()) {
 		str.push_back(')');
 	}
 }
@@ -158,15 +208,60 @@ State bmath::Sum::get_state() const
 	return sum;
 }
 
-//void bmath::Sum::sort()
-//{
-//}
-//
-//bool bmath::Sum::operator<(const Basic_Term& other) const
-//{
-//	return false;
-//}
+void bmath::Sum::combine()
+{
+	for (std::list<Basic_Term*>::iterator it = this->summands.begin(); it != this->summands.end();) {
+		(*it)->combine();
+		if ((*it)->get_state() == sum) {
+			Sum* redundant = static_cast<Sum*>((*it));
+			for (auto it_red : redundant->summands) {
+				it_red->parent = this;
+				this->summands.push_back(it_red);
+			}
+			redundant->summands.clear();
+			for (auto it_red : redundant->subtractors) {
+				it_red->parent = this;
+				this->subtractors.push_back(it_red);
+			}
+			redundant->subtractors.clear();
+			delete redundant;
+			std::list<Basic_Term*>::iterator it_2 = it;
+			++it;
+			this->summands.erase(it_2);
+		}
+		else {
+			++it;
+		}
+	}
+	for (std::list<Basic_Term*>::iterator it = this->subtractors.begin(); it != this->subtractors.end();) {
+		(*it)->combine();
+		if ((*it)->get_state() == sum) {
+			Sum* redundant = static_cast<Sum*>((*it));
+			for (auto it_red : redundant->summands) {
+				it_red->parent = this;
+				this->subtractors.push_back(it_red);
+			}
+			redundant->summands.clear();
+			for (auto it_red : redundant->subtractors) {
+				it_red->parent = this;
+				this->summands.push_back(it_red);
+			}
+			redundant->subtractors.clear();
+			delete redundant;
+			std::list<Basic_Term*>::iterator it_2 = it;
+			++it;
+			this->subtractors.erase(it_2);
+		}
+		else {
+			++it;
+		}
+	}
+}
 
+bmath::Exponentiation::Exponentiation(Basic_Term* parent_)
+	:Basic_Term(parent_)
+{
+}
 
 bmath::Exponentiation::Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op)
 	:Basic_Term(parent_)
@@ -210,11 +305,8 @@ State bmath::Exponentiation::get_state() const
 	return exponentiation;
 }
 
-//void bmath::Exponentiation::sort()
-//{
-//}
-//
-//bool bmath::Exponentiation::operator<(const Basic_Term& other) const
-//{
-//	return false;
-//}
+void bmath::Exponentiation::combine()
+{
+	this->base->combine();
+	this->exponent->combine();
+}

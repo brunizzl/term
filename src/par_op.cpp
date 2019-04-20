@@ -4,6 +4,11 @@ using namespace bmath;
 
 
 
+bmath::Par_Operator::Par_Operator(Basic_Term* parent_)
+	:Basic_Term(parent_)
+{
+}
+
 bmath::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_)
 	:Basic_Term(parent_), op_state(op_state_), argument(nullptr)
 {
@@ -109,6 +114,11 @@ void bmath::Par_Operator::to_str(std::string & str) const
 State bmath::Par_Operator::get_state() const
 {
 	return par_op;
+}
+
+void bmath::Par_Operator::combine()
+{
+	this->argument->combine();
 }
 
 //void bmath::Par_Operator::sort()

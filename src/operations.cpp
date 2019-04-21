@@ -60,11 +60,16 @@ void bmath::Product::to_str(std::string& str) const
 	if (this->parent->get_state() >= this->get_state()) {
 		str.push_back('(');
 	}
+	bool already_printed_smth = false;
 	for (auto it : this->factors) {
+		if (std::exchange(already_printed_smth, true)) {
+			str.push_back('*');
+		}
 		it->to_str(str);
-		str.push_back('*');
 	}
-	str.pop_back();
+	if (!already_printed_smth) {
+		str.push_back('1');
+	}
 	for (auto it : this->divisors) {
 		str.push_back('/');
 		it->to_str(str);
@@ -76,14 +81,14 @@ void bmath::Product::to_str(std::string& str) const
 
 State bmath::Product::get_state() const
 {
-	return product;
+	return s_product;
 }
 
-void bmath::Product::combine()
+void bmath::Product::combine_layers()
 {
 	for (std::list<Basic_Term*>::iterator it = this->factors.begin(); it != this->factors.end();) {
-		(*it)->combine();
-		if ((*it)->get_state() == product) {
+		(*it)->combine_layers();
+		if ((*it)->get_state() == s_product) {
 			Product* redundant = static_cast<Product*>((*it));
 			for (auto it_red : redundant->factors) {
 				it_red->parent = this;
@@ -105,8 +110,8 @@ void bmath::Product::combine()
 		}
 	}
 	for (std::list<Basic_Term*>::iterator it = this->divisors.begin(); it != this->divisors.end();) {
-		(*it)->combine();
-		if ((*it)->get_state() == product) {
+		(*it)->combine_layers();
+		if ((*it)->get_state() == s_product) {
 			Product* redundant = static_cast<Product*>((*it));
 			for (auto it_red : redundant->factors) {
 				it_red->parent = this;
@@ -127,6 +132,71 @@ void bmath::Product::combine()
 			++it;
 		}
 	}
+}
+
+Vals_Combinded bmath::Product::combine_values()
+{
+	double buffer_factor = 1;
+	bool only_known = true;
+	for (std::list<Basic_Term*>::iterator it = this->factors.begin(); it != this->factors.end();) {
+		Vals_Combinded factor = (*it)->combine_values();
+		if (factor.known) {
+			buffer_factor *= factor.val;
+			delete (*it);
+			std::list<Basic_Term*>::iterator it_2 = it;
+			++it;
+			this->factors.erase(it_2);
+		}
+		else {
+			only_known = false;
+			++it;
+		}
+	}
+	for (std::list<Basic_Term*>::iterator it = this->divisors.begin(); it != this->divisors.end();) {
+		Vals_Combinded divisor = (*it)->combine_values();
+		if (divisor.known) {
+			buffer_factor /= divisor.val;
+			delete (*it);
+			std::list<Basic_Term*>::iterator it_2 = it;
+			++it;
+			this->divisors.erase(it_2);
+		}
+		else {
+			only_known = false;
+			++it;
+		}
+	}
+	if (buffer_factor != 1) {
+		this->factors.push_front(new Value(buffer_factor, this));
+	}
+	if (only_known) {
+		return Vals_Combinded{ true, buffer_factor };
+	}
+	return Vals_Combinded{ false, 0 };
+}
+
+Vals_Combinded bmath::Product::evaluate(std::string& name_, double value_)
+{
+	Vals_Combinded result{ true, 1 };
+	for (auto it : this->factors) {
+		Vals_Combinded factor_combined = it->evaluate(name_, value_);
+		if (factor_combined.known) {
+			result.val *= factor_combined.val;
+		}
+		else {
+			return Vals_Combinded{ false, 0 };
+		}
+	}
+	for (auto it : this->divisors) {
+		Vals_Combinded divisor_combined = it->evaluate(name_, value_);
+		if (divisor_combined.known) {
+			result.val /= divisor_combined.val;
+		}
+		else {
+			return Vals_Combinded{ false, 0 };
+		}
+	}
+	return result;
 }
 
 bmath::Sum::Sum(Basic_Term* parent_)
@@ -187,12 +257,12 @@ void bmath::Sum::to_str(std::string& str) const
 	if (this->parent->get_state() >= this->get_state()) {
 		str.push_back('(');
 	}
+	bool need_operator = false;
 	for (auto it : this->summands) {
+		if (std::exchange(need_operator, true)/* && it->get_state() != s_value*/) {
+			str.push_back('+');
+		}
 		it->to_str(str);
-		str.push_back('+');
-	}
-	if (this->summands.size()) {
-		str.pop_back();
 	}
 	for (auto it : this->subtractors) {
 		str.push_back('-');
@@ -205,14 +275,14 @@ void bmath::Sum::to_str(std::string& str) const
 
 State bmath::Sum::get_state() const
 {
-	return sum;
+	return s_sum;
 }
 
-void bmath::Sum::combine()
+void bmath::Sum::combine_layers()
 {
 	for (std::list<Basic_Term*>::iterator it = this->summands.begin(); it != this->summands.end();) {
-		(*it)->combine();
-		if ((*it)->get_state() == sum) {
+		(*it)->combine_layers();
+		if ((*it)->get_state() == s_sum) {
 			Sum* redundant = static_cast<Sum*>((*it));
 			for (auto it_red : redundant->summands) {
 				it_red->parent = this;
@@ -234,8 +304,8 @@ void bmath::Sum::combine()
 		}
 	}
 	for (std::list<Basic_Term*>::iterator it = this->subtractors.begin(); it != this->subtractors.end();) {
-		(*it)->combine();
-		if ((*it)->get_state() == sum) {
+		(*it)->combine_layers();
+		if ((*it)->get_state() == s_sum) {
 			Sum* redundant = static_cast<Sum*>((*it));
 			for (auto it_red : redundant->summands) {
 				it_red->parent = this;
@@ -258,8 +328,73 @@ void bmath::Sum::combine()
 	}
 }
 
+Vals_Combinded bmath::Sum::combine_values()
+{
+	double buffer_summand = 0;
+	bool only_known = true;
+	for (std::list<Basic_Term*>::iterator it = this->summands.begin(); it != this->summands.end();) {
+		Vals_Combinded summand = (*it)->combine_values();
+		if (summand.known) {
+			buffer_summand += summand.val;
+			delete (*it);
+			std::list<Basic_Term*>::iterator it_2 = it;
+			++it;
+			this->summands.erase(it_2);
+		}
+		else {
+			only_known = false;
+			++it;
+		}
+	}
+	for (std::list<Basic_Term*>::iterator it = this->subtractors.begin(); it != this->subtractors.end();) {
+		Vals_Combinded subtractor = (*it)->combine_values();
+		if (subtractor.known) {
+			buffer_summand -= subtractor.val;
+			delete (*it);
+			std::list<Basic_Term*>::iterator it_2 = it;
+			++it;
+			this->subtractors.erase(it_2);
+		}
+		else {
+			only_known = false;
+			++it;
+		}
+	}
+	if (buffer_summand != 0) {
+		this->summands.push_front(new Value(buffer_summand, this));
+	}
+	if (only_known) {
+		return Vals_Combinded{ true, buffer_summand };
+	}	
+	return Vals_Combinded{ false, 0 };
+}
+
+Vals_Combinded bmath::Sum::evaluate(std::string& name_, double value_)
+{
+	Vals_Combinded result{ true, 0 };
+	for (auto it : this->summands) {
+		Vals_Combinded summand_combined = it->evaluate(name_, value_);
+		if (summand_combined.known) {
+			result.val += summand_combined.val;
+		}
+		else {
+			return Vals_Combinded{ false, 0 };
+		}
+	}
+	for (auto it : this->subtractors) {
+		Vals_Combinded subtractor_combined = it->evaluate(name_, value_);
+		if (subtractor_combined.known) {
+			result.val -= subtractor_combined.val;
+		}
+		else {
+			return Vals_Combinded{ false, 0 };
+		}
+	}
+	return result;
+}
+
 bmath::Exponentiation::Exponentiation(Basic_Term* parent_)
-	:Basic_Term(parent_)
+	:Basic_Term(parent_), base(nullptr), exponent(nullptr)
 {
 }
 
@@ -302,11 +437,46 @@ void bmath::Exponentiation::to_str(std::string& str) const
 
 State bmath::Exponentiation::get_state() const
 {
-	return exponentiation;
+	return s_exponentiation;
 }
 
-void bmath::Exponentiation::combine()
+void bmath::Exponentiation::combine_layers()
 {
-	this->base->combine();
-	this->exponent->combine();
+	this->base->combine_layers();
+	this->exponent->combine_layers();
+}
+
+Vals_Combinded bmath::Exponentiation::combine_values()
+{
+	Vals_Combinded base_ = this->base->combine_values();
+	Vals_Combinded exponent_ = this->exponent->combine_values();
+	if (base_.known && exponent_.known) {
+		double result = std::pow(base_.val, exponent_.val);
+		return Vals_Combinded{ true, result };
+	}
+	else if (base_.known && !exponent_.known) {
+		if (this->base->get_state() != s_value) {
+			delete this->base;
+			this->base = new Value(base_.val, this);
+		}
+	}
+	else if (!base_.known && exponent_.known) {
+		if (this->exponent->get_state() != s_value) {
+			delete this->exponent;
+			this->exponent = new Value(exponent_.val, this);
+		}
+	}
+
+	return Vals_Combinded{ false, 0 };
+}
+
+Vals_Combinded bmath::Exponentiation::evaluate(std::string& name_, double value_)
+{
+	Vals_Combinded base_ = this->base->evaluate(name_, value_);
+	Vals_Combinded exponent_ = this->exponent->evaluate(name_, value_);
+	if (base_.known && exponent_.known) {
+		double result = std::pow(base_.val, exponent_.val);
+		return Vals_Combinded{ true, result };
+	}
+	return Vals_Combinded{ false, 0 };
 }

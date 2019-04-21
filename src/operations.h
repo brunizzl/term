@@ -17,7 +17,9 @@ public:
 
 	void to_str(std::string& str) const override;
 	State get_state() const override;
-	void combine() override;
+	void combine_layers() override;
+	Vals_Combinded combine_values() override;
+	Vals_Combinded evaluate(std::string& name_, double value_) override;
 
 	friend class Term;
 };
@@ -36,7 +38,9 @@ public:
 
 	void to_str(std::string& str) const override;
 	State get_state() const override;
-	void combine() override;
+	void combine_layers() override;
+	Vals_Combinded combine_values() override;
+	Vals_Combinded evaluate(std::string& name_, double value_) override;
 
 	friend class Term;
 };
@@ -55,7 +59,9 @@ public:
 
 	void to_str(std::string& str) const override;
 	State get_state() const override;
-	void combine() override;
+	void combine_layers() override;
+	Vals_Combinded combine_values() override;
+	Vals_Combinded evaluate(std::string& name_, double value_) override;
 
 	friend class Term;
 };

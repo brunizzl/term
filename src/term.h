@@ -14,6 +14,7 @@ namespace bmath {
 class Basic_Term 
 {
 protected:
+	//pointer to whoever owns this (basic_term does not own parent)
 	Basic_Term* parent;
 public:
 	Basic_Term(Basic_Term* parent_);
@@ -26,9 +27,18 @@ public:
 	//returns kinda true type of term (sum, product, value, etc.)
 	virtual State get_state() const = 0;
 
-	//if one term holds a pointer to a term of same type
-	//this function combines both in the upper term (if possible)
-	virtual void combine() = 0;
+	//if one term holds a pointer to a term of same type both are combinded (if possible)
+	virtual void combine_layers();
+
+	//values are added, multiplied, etc.
+	virtual Vals_Combinded combine_values();
+
+	//NOCH NICHT AUSGEDACHT
+	virtual void combine_variables();
+
+	//returns {true, whatever it adds up to} if only variable of name "name_" is present
+	//returns {fale, undefined} if more variables are present
+	virtual Vals_Combinded evaluate(std::string& name_, double value_) = 0;
 
 	friend class Term;
 	friend class Product;
@@ -44,8 +54,9 @@ public:
 	~Term();
 
 	void to_str(std::string& str) const override;
-	State get_state() const override;
-	void combine() override;
+	State get_state() const override; 
+	Vals_Combinded evaluate(std::string& name_, double value_) override;
+	void combine(); 
 
 	//arithmetic operators
 	Term& operator+=(const Term& summand);

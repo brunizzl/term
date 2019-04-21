@@ -2,6 +2,25 @@
 
 using namespace bmath;
 
+void bmath::Basic_Term::combine_layers()
+{
+	//the base class does not know of the tree structures, the derived classes provide.
+	//therefore, no tree can be combined.
+	//the classes Term, Value and Variable dont need an override to this function.
+	//every derived class not beeing root or leaf need an overriding function.
+}
+
+Vals_Combinded bmath::Basic_Term::combine_values()
+{
+	//root does not need an overload of this function. all other derived classes do (including leaves).
+	return Vals_Combinded{ false, 0 };
+}
+
+void bmath::Basic_Term::combine_variables()
+{
+	//again: root and leaves need no overriding, all others do.
+}
+
 bmath::Basic_Term::Basic_Term(Basic_Term* parent_)
 	:parent(parent_)
 {
@@ -20,6 +39,7 @@ bmath::Basic_Term::~Basic_Term()
 bmath::Term::Term(std::string name_)
 	:Basic_Term(nullptr), term_ptr(build_subterm(name_, this))
 {
+	LOG_C("baue Term: " << *this);
 }
 
 bmath::Term::Term(const Term& source)
@@ -41,12 +61,25 @@ void bmath::Term::to_str(std::string& str) const
 
 State bmath::Term::get_state() const
 {
-	return undefined;
+	return s_undefined;
+}
+
+Vals_Combinded bmath::Term::evaluate(std::string& name_, double value_)
+{
+	return this->term_ptr->evaluate(name_, value_);
 }
 
 void bmath::Term::combine()
 {
-	this->term_ptr->combine();
+	this->term_ptr->combine_layers();
+
+	Vals_Combinded new_val = this->term_ptr->combine_values();
+	if (new_val.known) {
+		delete this->term_ptr;
+		this->term_ptr = new Value(new_val.val, this);
+	}
+
+	this->term_ptr->combine_variables();
 }
 
 Term& bmath::Term::operator+=(const Term& summand)

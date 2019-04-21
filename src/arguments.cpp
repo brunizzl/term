@@ -4,7 +4,7 @@ using namespace bmath;
 
 
 bmath::Value::Value(Basic_Term* parent_)
-	:Basic_Term(parent_)
+	:Basic_Term(parent_), value(0)
 {
 }
 
@@ -23,6 +23,11 @@ bmath::Value::Value(const Value& source, Basic_Term* parent_)
 	LOG_C("kopiere Wert: " << source);
 }
 
+bmath::Value::Value(double value_, Basic_Term* parent_)
+	: Basic_Term(parent_), value(value_)
+{
+}
+
 
 bmath::Value::~Value()
 {
@@ -38,12 +43,17 @@ void bmath::Value::to_str(std::string& str) const
 
 State bmath::Value::get_state() const
 {
-	return val;
+	return s_value;
 }
 
-void bmath::Value::combine()
+Vals_Combinded bmath::Value::combine_values()
 {
-	//nothing needs to be done here (value does not hold any pointers to combine with)
+	return Vals_Combinded{ true, this->value };
+}
+
+Vals_Combinded bmath::Value::evaluate(std::string& name_, double value_)
+{
+	return Vals_Combinded{true, this->value};
 }
 
 bmath::Variable::Variable(Basic_Term* parent_)
@@ -75,10 +85,16 @@ void bmath::Variable::to_str(std::string& str) const
 
 State bmath::Variable::get_state() const
 {
-	return var;
+	return s_variable;
 }
 
-void bmath::Variable::combine()
+Vals_Combinded bmath::Variable::combine_values()
 {
-	//nothing needs to be done here (variable does not hold any pointers to combine with)
+	return Vals_Combinded{false, 0};
+}
+
+Vals_Combinded bmath::Variable::evaluate(std::string& name_, double value_)
+{
+	bool same_var = this->name == name_;
+	return Vals_Combinded{ same_var, value_ };
 }

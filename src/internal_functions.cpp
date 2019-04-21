@@ -100,15 +100,15 @@ State bmath::type_subterm(const std::string & name, const std::vector<Pos_Pars>&
 	//starting search for "basic" operators
 	op = find_last_of_skip_pars(name, "+-", pars);
 	if (op != std::string::npos) {
-		return sum;
+		return s_sum;
 	}
 	op = find_last_of_skip_pars(name, "*/", pars);
 	if (op != std::string::npos) {
-		return product;
+		return s_product;
 	}
 	op = find_last_of_skip_pars(name, "^", pars);
 	if (op != std::string::npos) {
-		return exponentiation;
+		return s_exponentiation;
 	}
 
 	//starting search for parenthesis operators 
@@ -116,89 +116,94 @@ State bmath::type_subterm(const std::string & name, const std::vector<Pos_Pars>&
 	op = rfind_skip_pars(name, "log10(", pars);
 	if (op != std::string::npos) {
 		par_op_state = log10;
-		return par_op;
+		return s_par_operator;
 	}
 	op = rfind_skip_pars(name, "gamma(", pars);
 	if (op != std::string::npos) {
 		par_op_state = gamma;
-		return par_op;
+		return s_par_operator;
 	}
 	op = rfind_skip_pars(name, "log2(", pars);
 	if (op != std::string::npos) {
 		par_op_state = log2;
-		return par_op;
+		return s_par_operator;
 	}
 	op = rfind_skip_pars(name, "asin(", pars);
 	if (op != std::string::npos) {
 		par_op_state = asin;
-		return par_op;
+		return s_par_operator;
 	}
 	op = rfind_skip_pars(name, "acos(", pars);
 	if (op != std::string::npos) {
 		par_op_state = acos;
-		return par_op;
+		return s_par_operator;
 	}
 	op = rfind_skip_pars(name, "atan(", pars);
 	if (op != std::string::npos) {
 		par_op_state = atan;
-		return par_op;
+		return s_par_operator;
 	}
 	op = rfind_skip_pars(name, "sinh(", pars);
 	if (op != std::string::npos) {
 		par_op_state = sinh;
-		return par_op;
+		return s_par_operator;
 	}
 	op = rfind_skip_pars(name, "cosh(", pars);
 	if (op != std::string::npos) {
 		par_op_state = cosh;
-		return par_op;
+		return s_par_operator;
 	}
 	op = rfind_skip_pars(name, "tanh(", pars);
 	if (op != std::string::npos) {
 		par_op_state = tanh;
-		return par_op;
+		return s_par_operator;
 	}
 	op = rfind_skip_pars(name, "exp(", pars);
 	if (op != std::string::npos) {
 		par_op_state = exp;
-		return par_op;
+		return s_par_operator;
 	}
 	op = rfind_skip_pars(name, "sin(", pars);
 	if (op != std::string::npos) {
 		par_op_state = sin;
-		return par_op;
+		return s_par_operator;
 	}
 	op = rfind_skip_pars(name, "cos(", pars);
 	if (op != std::string::npos) {
 		par_op_state = cos;
-		return par_op;
+		return s_par_operator;
 	}
 	op = rfind_skip_pars(name, "tan(", pars);
 	if (op != std::string::npos) {
 		par_op_state = tan;
-		return par_op;
+		return s_par_operator;
+	}
+	op = rfind_skip_pars(name, "abs(", pars);
+	if (op != std::string::npos) {
+		par_op_state = abs;
+		return s_par_operator;
 	}
 	op = rfind_skip_pars(name, "ln(", pars);
 	if (op != std::string::npos) {
 		par_op_state = ln;
-		return par_op;
+		return s_par_operator;
 	}
 
 	if (pars.size() != 0) {
-		return undefined;
+		return s_undefined;
 	}
 
 	//staring search for arguments (variable or value)
 	op = name.find_last_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]_$");
 	if (op != std::string::npos) {
-		return var;
+		return s_variable;
 	}
 	op = name.find_last_of("0123456789");	//number kann also contain '.', however not as only character
 	if (op != std::string::npos) {
-		return val;
+		return s_value;
 	}
 	std::cout << "error: string " << name << " is not of expected format.\n";
-	return undefined;
+	return s_undefined;
 }
 
 Basic_Term* bmath::build_subterm(std::string& subtermstr, Basic_Term* parent_)
@@ -212,23 +217,23 @@ Basic_Term* bmath::build_subterm(std::string& subtermstr, Basic_Term* parent_)
 		State type = type_subterm(subtermstr, pars, op, par_op_state);
 
 		switch (type) {
-		case exponentiation:
+		case s_exponentiation:
 			return new Exponentiation(subtermstr, parent_, op);
-		case product:
+		case s_product:
 			return new Product(subtermstr, parent_, op);
-		case sum:
+		case s_sum:
 			return new Sum(subtermstr, parent_, op);
-		case var:
+		case s_variable:
 			return new Variable(subtermstr, parent_);
-		case val:
+		case s_value:
 			return new Value(subtermstr, parent_);
-		case par_op:
+		case s_par_operator:
 			return new Par_Operator(subtermstr, parent_, par_op_state);
 		}
 		subtermstr.pop_back();
 		subtermstr.erase(0, 1);
 		pars.clear();
-		LOG_C("shortened name to: " << subtermstr << " in build_subterm");
+		//LOG_C("shortened name to: " << subtermstr << " in build_subterm");
 	}
 	std::cout << "Error: could not find any type to build term (function build_subterm)\n";
 	return nullptr;
@@ -238,17 +243,17 @@ Basic_Term* bmath::copy_subterm(const Basic_Term* source, Basic_Term* parent_)
 {
 	State type = source->get_state();
 	switch (type) {
-	case par_op:
+	case s_par_operator:
 		return new Par_Operator(*(static_cast<const Par_Operator*>(source)), parent_);
-	case val:
+	case s_value:
 		return new Value(*(static_cast<const Value*>(source)), parent_);
-	case var:
+	case s_variable:
 		return new Variable(*(static_cast<const Variable*>(source)), parent_);
-	case sum:
+	case s_sum:
 		return new Sum(*(static_cast<const Sum*>(source)), parent_);
-	case product:
+	case s_product:
 		return new Product(*(static_cast<const Product*>(source)), parent_);
-	case exponentiation:
+	case s_exponentiation:
 		return new Exponentiation(*(static_cast<const Exponentiation*>(source)), parent_);
 	}
 	std::cout << "Error: function copy_subterm expected known type to copy: " << type << '\n';

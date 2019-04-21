@@ -17,16 +17,24 @@ struct Pos_Pars {
 	std::size_t end;	//position of ')'
 };
 
+//return of function combine_values()
+//if function was able to combine to one single value, this gets returned
+//otherwise known == false and val is uninitialised.
+struct Vals_Combinded {
+	bool known;
+	double val;
+};
+
 //specifies actual type of Basic_Term 
 //(types ordered for parentheses to allow > / < / == etc. operators)
 enum State {
-	undefined,
-	par_op,		//already has parentheses -> lower order than in reality
-	val,
-	var,
-	sum,
-	product,
-	exponentiation
+	s_undefined,
+	s_par_operator,		//already has parentheses -> lower order than in reality
+	s_value,
+	s_variable,
+	s_sum,
+	s_product,
+	s_exponentiation
 };
 
 //used in Par_Operator class to specify whitch operator is actually used 
@@ -45,7 +53,9 @@ enum Par_Op_State {
 	sinh,		//sinh()
 	cosh,		//cosh()
 	tanh,		//tanh()
-	gamma		//tgamma()
+	gamma,		//tgamma()
+	abs,		//fabs()
+	error
 };
 
 }

@@ -6,17 +6,18 @@ namespace bmath {
 
 class Value : public Basic_Term
 {
-private:
-	double value;
 public:
+	double value;
 	Value(Basic_Term* parent_);
 	Value(std::string name_, Basic_Term* parent_);
 	Value(const Value& source, Basic_Term* parent_ = nullptr);
+	Value(double value_, Basic_Term* parent_);
 	~Value();
 
 	void to_str(std::string& str) const override;
-	State get_state() const override;
-	void combine() override;
+	State get_state() const override; 
+	Vals_Combinded combine_values() override;
+	Vals_Combinded evaluate(std::string& name_, double value_) override;
 
 	friend class Term;
 };
@@ -24,9 +25,8 @@ public:
 
 class Variable : public Basic_Term
 {
-private:
-	std::string name;
 public:
+	std::string name;
 	Variable(Basic_Term* parent_);
 	Variable(std::string name_, Basic_Term* parent_);
 	Variable(const Variable& source, Basic_Term* parent_ = nullptr);
@@ -34,7 +34,8 @@ public:
 
 	void to_str(std::string& str) const override;
 	State get_state() const override;
-	void combine() override;
+	Vals_Combinded combine_values() override;
+	Vals_Combinded evaluate(std::string& name_, double value_) override;
 
 	friend class Term;
 };

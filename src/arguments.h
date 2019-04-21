@@ -17,7 +17,8 @@ public:
 	void to_str(std::string& str) const override;
 	State get_state() const override; 
 	Vals_Combinded combine_values() override;
-	Vals_Combinded evaluate(std::string& name_, double value_) override;
+	Vals_Combinded evaluate(const std::string & name_, double value_) const override;
+	bool search_and_replace(const std::string& name_, double value_) override;
 
 	friend class Term;
 };
@@ -35,7 +36,8 @@ public:
 	void to_str(std::string& str) const override;
 	State get_state() const override;
 	Vals_Combinded combine_values() override;
-	Vals_Combinded evaluate(std::string& name_, double value_) override;
+	Vals_Combinded evaluate(const std::string & name_, double value_) const override;
+	bool search_and_replace(const std::string& name_, double value_) override;
 
 	friend class Term;
 };

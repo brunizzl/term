@@ -38,7 +38,11 @@ public:
 
 	//returns {true, whatever it adds up to} if only variable of name "name_" is present
 	//returns {fale, undefined} if more variables are present
-	virtual Vals_Combinded evaluate(std::string& name_, double value_) = 0;
+	virtual Vals_Combinded evaluate(const std::string & name_, double value_) const = 0;
+
+	//searches an replaces all variables with name "name_" with values of value "value_"
+	//this function is meant for permanent changes. else use evaluate()
+	virtual bool search_and_replace(const std::string& name_, double value_) = 0;
 
 	friend class Term;
 	friend class Product;
@@ -55,7 +59,9 @@ public:
 
 	void to_str(std::string& str) const override;
 	State get_state() const override; 
-	Vals_Combinded evaluate(std::string& name_, double value_) override;
+	Vals_Combinded evaluate(const std::string & name_, double value_) const override;
+	bool search_and_replace(const std::string& name_, double value_) override;
+
 	void combine(); 
 
 	//arithmetic operators

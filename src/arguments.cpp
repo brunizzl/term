@@ -51,9 +51,14 @@ Vals_Combinded bmath::Value::combine_values()
 	return Vals_Combinded{ true, this->value };
 }
 
-Vals_Combinded bmath::Value::evaluate(std::string& name_, double value_)
+Vals_Combinded bmath::Value::evaluate(const std::string & name_, double value_) const
 {
 	return Vals_Combinded{true, this->value};
+}
+
+bool bmath::Value::search_and_replace(const std::string& name_, double value_)
+{
+	return false;
 }
 
 bmath::Variable::Variable(Basic_Term* parent_)
@@ -93,8 +98,13 @@ Vals_Combinded bmath::Variable::combine_values()
 	return Vals_Combinded{false, 0};
 }
 
-Vals_Combinded bmath::Variable::evaluate(std::string& name_, double value_)
+Vals_Combinded bmath::Variable::evaluate(const std::string & name_, double value_) const
 {
 	bool same_var = this->name == name_;
 	return Vals_Combinded{ same_var, value_ };
+}
+
+bool bmath::Variable::search_and_replace(const std::string& name_, double value_)
+{
+	return this->name == name_;
 }

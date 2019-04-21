@@ -175,7 +175,7 @@ Vals_Combinded bmath::Product::combine_values()
 	return Vals_Combinded{ false, 0 };
 }
 
-Vals_Combinded bmath::Product::evaluate(std::string& name_, double value_)
+Vals_Combinded bmath::Product::evaluate(const std::string & name_, double value_) const
 {
 	Vals_Combinded result{ true, 1 };
 	for (auto it : this->factors) {
@@ -197,6 +197,35 @@ Vals_Combinded bmath::Product::evaluate(std::string& name_, double value_)
 		}
 	}
 	return result;
+}
+
+bool bmath::Product::search_and_replace(const std::string& name_, double value_)
+{
+	for (std::list<Basic_Term*>::iterator it = this->factors.begin(); it != this->factors.end();) {
+		if ((*it)->search_and_replace(name_, value_)) {
+			delete* it;
+			std::list<Basic_Term*>::iterator it_2 = it;
+			++it;
+			this->factors.erase(it_2);
+			this->factors.push_front(new Value(value_, this));
+		}
+		else {
+			++it;
+		}
+	}
+	for (std::list<Basic_Term*>::iterator it = this->divisors.begin(); it != this->divisors.end();) {
+		if ((*it)->search_and_replace(name_, value_)) {
+			delete* it;
+			std::list<Basic_Term*>::iterator it_2 = it;
+			++it;
+			this->divisors.erase(it_2);
+			this->divisors.push_front(new Value(value_, this));
+		}
+		else {
+			++it;
+		}
+	}
+	return false;
 }
 
 bmath::Sum::Sum(Basic_Term* parent_)
@@ -369,7 +398,7 @@ Vals_Combinded bmath::Sum::combine_values()
 	return Vals_Combinded{ false, 0 };
 }
 
-Vals_Combinded bmath::Sum::evaluate(std::string& name_, double value_)
+Vals_Combinded bmath::Sum::evaluate(const std::string & name_, double value_) const
 {
 	Vals_Combinded result{ true, 0 };
 	for (auto it : this->summands) {
@@ -391,6 +420,35 @@ Vals_Combinded bmath::Sum::evaluate(std::string& name_, double value_)
 		}
 	}
 	return result;
+}
+
+bool bmath::Sum::search_and_replace(const std::string& name_, double value_)
+{
+	for (std::list<Basic_Term*>::iterator it = this->summands.begin(); it != this->summands.end();) {
+		if ((*it)->search_and_replace(name_, value_)) {
+			delete* it;
+			std::list<Basic_Term*>::iterator it_2 = it;
+			++it;
+			this->summands.erase(it_2);
+			this->summands.push_front(new Value(value_, this));
+		}
+		else {
+			++it;
+		}
+	}
+	for (std::list<Basic_Term*>::iterator it = this->subtractors.begin(); it != this->subtractors.end();) {
+		if ((*it)->search_and_replace(name_, value_)) {
+			delete* it;
+			std::list<Basic_Term*>::iterator it_2 = it;
+			++it;
+			this->subtractors.erase(it_2);
+			this->subtractors.push_front(new Value(value_, this));
+		}
+		else {
+			++it;
+		}
+	}
+	return false;
 }
 
 bmath::Exponentiation::Exponentiation(Basic_Term* parent_)
@@ -470,7 +528,7 @@ Vals_Combinded bmath::Exponentiation::combine_values()
 	return Vals_Combinded{ false, 0 };
 }
 
-Vals_Combinded bmath::Exponentiation::evaluate(std::string& name_, double value_)
+Vals_Combinded bmath::Exponentiation::evaluate(const std::string & name_, double value_) const
 {
 	Vals_Combinded base_ = this->base->evaluate(name_, value_);
 	Vals_Combinded exponent_ = this->exponent->evaluate(name_, value_);
@@ -479,4 +537,17 @@ Vals_Combinded bmath::Exponentiation::evaluate(std::string& name_, double value_
 		return Vals_Combinded{ true, result };
 	}
 	return Vals_Combinded{ false, 0 };
+}
+
+bool bmath::Exponentiation::search_and_replace(const std::string& name_, double value_)
+{
+	if (this->base->search_and_replace(name_, value_)) {
+		delete this->base;
+		this->base = new Value(value_, this);
+	}
+	if (this->exponent->search_and_replace(name_, value_)) {
+		delete this->exponent;
+		this->exponent = new Value(value_, this);
+	}
+	return false;
 }

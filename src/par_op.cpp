@@ -37,6 +37,7 @@ bmath::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op
 	case sinh:
 	case cosh:
 	case tanh:
+	case sqrt:
 		name_.erase(0, 5);
 		LOG_C("shortened name: " << name_);
 		this->argument = build_subterm(name_, this);
@@ -110,6 +111,9 @@ void bmath::Par_Operator::to_str(std::string & str) const
 	case abs:
 		str.append("abs(");
 		break;
+	case sqrt:
+		str.append("sqrt(");
+		break;
 	}
 	this->argument->to_str(str);
 	str.push_back(')');
@@ -160,12 +164,14 @@ Vals_Combinded bmath::Par_Operator::combine_values()
 			return Vals_Combinded{ true, std::tgamma(argument_.val) };
 		case abs:
 			return Vals_Combinded{ true, std::fabs(argument_.val) };
+		case sqrt:
+			return Vals_Combinded{ true, std::sqrt(argument_.val) };
 		}
 	}
 	return Vals_Combinded{ false, 0 };
 }
 
-Vals_Combinded bmath::Par_Operator::evaluate(std::string& name_, double value_)
+Vals_Combinded bmath::Par_Operator::evaluate(const std::string & name_, double value_) const
 {
 	Vals_Combinded argument_ = argument->evaluate(name_, value_);
 	if (argument_.known) {
@@ -200,9 +206,20 @@ Vals_Combinded bmath::Par_Operator::evaluate(std::string& name_, double value_)
 			return Vals_Combinded{ true, std::tgamma(argument_.val) };
 		case abs:
 			return Vals_Combinded{ true, std::fabs(argument_.val) };
+		case sqrt:
+			return Vals_Combinded{ true, std::sqrt(argument_.val) };
 		}
 	}
 	return Vals_Combinded{ false, 0 };
+}
+
+bool bmath::Par_Operator::search_and_replace(const std::string& name_, double value_)
+{
+	if (this->argument->search_and_replace(name_, value_)) {
+		delete this->argument;
+		this->argument = new Value(value_, this);
+	}
+	return false;
 }
 
 //void bmath::Par_Operator::sort()

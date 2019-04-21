@@ -55,6 +55,7 @@ enum Par_Op_State {
 	tanh,		//tanh()
 	gamma,		//tgamma()
 	abs,		//fabs()
+	sqrt,		//sqrt()
 	error
 };
 

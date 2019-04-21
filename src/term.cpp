@@ -64,9 +64,14 @@ State bmath::Term::get_state() const
 	return s_undefined;
 }
 
-Vals_Combinded bmath::Term::evaluate(std::string& name_, double value_)
+Vals_Combinded bmath::Term::evaluate(const std::string & name_, double value_) const
 {
 	return this->term_ptr->evaluate(name_, value_);
+}
+
+bool bmath::Term::search_and_replace(const std::string& name_, double value_)
+{
+	return this->term_ptr->search_and_replace(name_, value_);
 }
 
 void bmath::Term::combine()

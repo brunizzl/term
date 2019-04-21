@@ -158,6 +158,11 @@ State bmath::type_subterm(const std::string & name, const std::vector<Pos_Pars>&
 		par_op_state = tanh;
 		return s_par_operator;
 	}
+	op = rfind_skip_pars(name, "sqrt(", pars);
+	if (op != std::string::npos) {
+		par_op_state = sqrt;
+		return s_par_operator;
+	}
 	op = rfind_skip_pars(name, "exp(", pars);
 	if (op != std::string::npos) {
 		par_op_state = exp;

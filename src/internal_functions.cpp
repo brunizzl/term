@@ -211,6 +211,32 @@ State bmath::type_subterm(const std::string & name, const std::vector<Pos_Pars>&
 	return s_undefined;
 }
 
+bool bmath::preprocess_str(std::string& str)
+{
+	int par_diff = 0;
+	for (std::size_t i = 0; i < str.length(); i++) {
+		switch (str[i]) {
+		case '\t':
+		case '\n':
+		case ' ':
+			str.erase(i, 1);
+			i--;
+			break;
+		case '(':
+			par_diff++;
+			break;
+		case ')':
+			par_diff--;
+			break;
+		}
+	}
+	if (par_diff != 0) {
+		std::cout << "Error: the parenthesis of string \"" << str << "\" do not obey the syntax rules.\n";
+		return false;
+	}
+	return true;
+}
+
 Basic_Term* bmath::build_subterm(std::string& subtermstr, Basic_Term* parent_)
 {
 	std::vector<Pos_Pars> pars;

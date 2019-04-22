@@ -33,6 +33,9 @@ Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 //(needs modification if new termtype is added)
 State type_subterm(const std::string& name, const std::vector<Pos_Pars>& pars, std::size_t& op, Par_Op_State& type_par_op);
 
+//so far: deletes spaces and counts parentheses
+bool preprocess_str(std::string& str);
+
 } //namespace bmath
 
 //allows ostream to output terms

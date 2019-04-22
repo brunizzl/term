@@ -12,10 +12,10 @@ int main()
 	//test_length();
 	//test_function("1/200*x^5");
 
-	bmath::Term test("sin(5/2*pi*sqrt(4))");
-	std::string pi = "pi";
+	bmath::Term test("ln(2) - LN[2]");
+	std::string LN2("LN[2]");
 	std::cout << test << '\n';
-	test.search_and_replace(pi, M_PI);
+	test.search_and_replace(LN2, M_LN2);
 	test.combine();
 	std::cout << test << '\n';
 }

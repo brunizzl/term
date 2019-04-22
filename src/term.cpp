@@ -37,8 +37,11 @@ bmath::Basic_Term::~Basic_Term()
 }
 
 bmath::Term::Term(std::string name_)
-	:Basic_Term(nullptr), term_ptr(build_subterm(name_, this))
+	:Basic_Term(nullptr), term_ptr(nullptr)
 {
+	if (preprocess_str(name_)) {
+		this->term_ptr = build_subterm(name_, this);
+	}	
 	LOG_C("baue Term: " << *this);
 }
 

@@ -28,7 +28,7 @@ public:
 	virtual State get_state() const = 0;
 
 	//if one term holds a pointer to a term of same type both are combinded (if possible)
-	virtual void combine_layers();-
+	virtual void combine_layers();
 
 	//values are added, multiplied, etc.
 	virtual Vals_Combinded combine_values();

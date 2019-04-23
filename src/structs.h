@@ -42,7 +42,7 @@ enum State {
 enum Par_Op_State {
 	ln,			//log()
 	log10,		//log10()
-	log2,		//log2()
+	log2,		//log2()  (will be removed, if complex terms are added)
 	exp,		//exp()
 	sin,		//sin()
 	cos,		//cos()
@@ -53,10 +53,13 @@ enum Par_Op_State {
 	sinh,		//sinh()
 	cosh,		//cosh()
 	tanh,		//tanh()
-	gamma,		//tgamma()
+	//maybe add asinh, acosh, atanh?
+	gamma,		//tgamma() (will be removed, if complex terms are added)
 	abs,		//fabs()
 	sqrt,		//sqrt()
 	error
 };
+
+
 
 }

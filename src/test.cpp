@@ -1,5 +1,7 @@
-#include <iostream>
-#include "term.h"
+
+#define _USE_MATH_DEFINES
+#include <cmath>
+#include "test.h"
 
 void test_strings() {
 	std::string teststrs[11];
@@ -56,6 +58,7 @@ void test_strings_2() {
 
 void test_length() {
 	std::cout << "Groesse von double:         " << sizeof(double) << " bytes\n";
+	std::cout << "Groesse von long double:    " << sizeof(long double) << " bytes\n";
 	std::cout << "Groesse von list:           " << sizeof(std::list<bmath::Basic_Term>) << " bytes\n";
 	std::cout << "Groesse von Basic_Term:     " << sizeof(bmath::Basic_Term) << " bytes\n";
 	std::cout << "Groesse von Basic_Term*:    " << sizeof(bmath::Basic_Term*) << " bytes\n";
@@ -72,7 +75,11 @@ void test_length() {
 void test_function(std::string name) {
 	bmath::Term f_von_x(name);
 	std::string x_string("x");
-	for (double x = 0; x < 100; x++) {
+	std::string pi("pi");
+	std::string e("e");
+	f_von_x.search_and_replace(pi, M_PI);
+	f_von_x.search_and_replace(e, M_E);
+	for (double x = 0; x < 10; x+= 0.1) {
 		bmath::Vals_Combinded y = f_von_x.evaluate(x_string, x);
 		if (y.known) {
 			std::cout << x << '\t' << y.val << '\n';

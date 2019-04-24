@@ -6,6 +6,7 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <complex>
 
 #include "structs.h"
 
@@ -38,11 +39,11 @@ public:
 
 	//returns {true, whatever it adds up to} if only variable of name "name_" is present
 	//returns {fale, undefined} if more variables are present
-	virtual Vals_Combinded evaluate(const std::string & name_, double value_) const = 0;
+	virtual Vals_Combinded evaluate(const std::string & name_, std::complex<double> value_) const = 0;
 
 	//searches an replaces all variables with name "name_" with values of value "value_"
 	//this function is meant for permanent changes. else use evaluate()
-	virtual bool search_and_replace(const std::string& name_, double value_) = 0;
+	virtual bool search_and_replace(const std::string& name_, std::complex<double> value_) = 0;
 
 	//true if no subterm holds nullptr, false if otherwise
 	virtual bool valid_state() const = 0;
@@ -62,8 +63,8 @@ public:
 
 	void to_str(std::string& str) const override;
 	State get_state() const override; 
-	Vals_Combinded evaluate(const std::string & name_, double value_) const override;
-	bool search_and_replace(const std::string& name_, double value_) override;
+	Vals_Combinded evaluate(const std::string & name_, std::complex<double> value_) const override;
+	bool search_and_replace(const std::string& name_, std::complex<double> value_) override;
 	bool valid_state() const override;
 
 	void combine(); 

@@ -136,7 +136,7 @@ void bmath::Product::combine_layers()
 
 Vals_Combinded bmath::Product::combine_values()
 {
-	double buffer_factor = 1;
+	std::complex<double> buffer_factor = 1;
 	bool only_known = true;
 	for (std::list<Basic_Term*>::iterator it = this->factors.begin(); it != this->factors.end();) {
 		Vals_Combinded factor = (*it)->combine_values();
@@ -166,7 +166,7 @@ Vals_Combinded bmath::Product::combine_values()
 			++it;
 		}
 	}
-	if (buffer_factor != 1) {
+	if (buffer_factor != std::complex<double>(1, 0)) {
 		this->factors.push_front(new Value(buffer_factor, this));
 	}
 	if (only_known) {
@@ -175,7 +175,7 @@ Vals_Combinded bmath::Product::combine_values()
 	return Vals_Combinded{ false, 0 };
 }
 
-Vals_Combinded bmath::Product::evaluate(const std::string & name_, double value_) const
+Vals_Combinded bmath::Product::evaluate(const std::string & name_, std::complex<double> value_) const
 {
 	Vals_Combinded result{ true, 1 };
 	for (auto it : this->factors) {
@@ -199,7 +199,7 @@ Vals_Combinded bmath::Product::evaluate(const std::string & name_, double value_
 	return result;
 }
 
-bool bmath::Product::search_and_replace(const std::string& name_, double value_)
+bool bmath::Product::search_and_replace(const std::string& name_, std::complex<double> value_)
 {
 	for (std::list<Basic_Term*>::iterator it = this->factors.begin(); it != this->factors.end();) {
 		if ((*it)->search_and_replace(name_, value_)) {
@@ -375,7 +375,7 @@ void bmath::Sum::combine_layers()
 
 Vals_Combinded bmath::Sum::combine_values()
 {
-	double buffer_summand = 0;
+	std::complex<double> buffer_summand = 0;
 	bool only_known = true;
 	for (std::list<Basic_Term*>::iterator it = this->summands.begin(); it != this->summands.end();) {
 		Vals_Combinded summand = (*it)->combine_values();
@@ -405,7 +405,7 @@ Vals_Combinded bmath::Sum::combine_values()
 			++it;
 		}
 	}
-	if (buffer_summand != 0) {
+	if (buffer_summand != std::complex<double>(0, 0)) {
 		this->summands.push_front(new Value(buffer_summand, this));
 	}
 	if (only_known) {
@@ -414,7 +414,7 @@ Vals_Combinded bmath::Sum::combine_values()
 	return Vals_Combinded{ false, 0 };
 }
 
-Vals_Combinded bmath::Sum::evaluate(const std::string & name_, double value_) const
+Vals_Combinded bmath::Sum::evaluate(const std::string & name_, std::complex<double> value_) const
 {
 	Vals_Combinded result{ true, 0 };
 	for (auto it : this->summands) {
@@ -438,7 +438,7 @@ Vals_Combinded bmath::Sum::evaluate(const std::string & name_, double value_) co
 	return result;
 }
 
-bool bmath::Sum::search_and_replace(const std::string& name_, double value_)
+bool bmath::Sum::search_and_replace(const std::string& name_, std::complex<double> value_)
 {
 	for (std::list<Basic_Term*>::iterator it = this->summands.begin(); it != this->summands.end();) {
 		if ((*it)->search_and_replace(name_, value_)) {
@@ -540,7 +540,7 @@ Vals_Combinded bmath::Exponentiation::combine_values()
 	Vals_Combinded base_ = this->base->combine_values();
 	Vals_Combinded exponent_ = this->exponent->combine_values();
 	if (base_.known && exponent_.known) {
-		double result = std::pow(base_.val, exponent_.val);
+		std::complex<double> result = std::pow(base_.val, exponent_.val);
 		return Vals_Combinded{ true, result };
 	}
 	else if (base_.known && !exponent_.known) {
@@ -559,18 +559,18 @@ Vals_Combinded bmath::Exponentiation::combine_values()
 	return Vals_Combinded{ false, 0 };
 }
 
-Vals_Combinded bmath::Exponentiation::evaluate(const std::string & name_, double value_) const
+Vals_Combinded bmath::Exponentiation::evaluate(const std::string & name_, std::complex<double> value_) const
 {
 	Vals_Combinded base_ = this->base->evaluate(name_, value_);
 	Vals_Combinded exponent_ = this->exponent->evaluate(name_, value_);
 	if (base_.known && exponent_.known) {
-		double result = std::pow(base_.val, exponent_.val);
+		std::complex<double> result = std::pow(base_.val, exponent_.val);
 		return Vals_Combinded{ true, result };
 	}
 	return Vals_Combinded{ false, 0 };
 }
 
-bool bmath::Exponentiation::search_and_replace(const std::string& name_, double value_)
+bool bmath::Exponentiation::search_and_replace(const std::string& name_, std::complex<double> value_)
 {
 	if (this->base->search_and_replace(name_, value_)) {
 		delete this->base;

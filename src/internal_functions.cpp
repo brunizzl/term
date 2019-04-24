@@ -70,6 +70,9 @@ std::size_t bmath::rfind_skip_pars(const std::string& name, const char* searchst
 	bool found_valid;
 	do {
 		found = name.rfind(searchstr, found - 1);
+		if (found == std::string::npos) {
+			return std::string::npos;
+		}
 		found_valid = true;
 		for (int it = skipped_pars; it >= 0; it--) {
 			if (pars[it].start < found && pars[it].end > found) {
@@ -78,7 +81,7 @@ std::size_t bmath::rfind_skip_pars(const std::string& name, const char* searchst
 				break;
 			}
 		}
-	} while (!found_valid && found != std::string::npos);
+	} while (!found_valid);
 	return found;
 }
 
@@ -112,86 +115,12 @@ State bmath::type_subterm(const std::string & name, const std::vector<Pos_Pars>&
 	}
 
 	//starting search for parenthesis operators 
-	//longest to shortest -> no problems with operators beeing substrs of each other
-	op = rfind_skip_pars(name, "log10(", pars);
-	if (op != std::string::npos) {
-		par_op_state = log10;
-		return s_par_operator;
-	}
-	op = rfind_skip_pars(name, "gamma(", pars);
-	if (op != std::string::npos) {
-		par_op_state = gamma;
-		return s_par_operator;
-	}
-	op = rfind_skip_pars(name, "log2(", pars);
-	if (op != std::string::npos) {
-		par_op_state = log2;
-		return s_par_operator;
-	}
-	op = rfind_skip_pars(name, "asin(", pars);
-	if (op != std::string::npos) {
-		par_op_state = asin;
-		return s_par_operator;
-	}
-	op = rfind_skip_pars(name, "acos(", pars);
-	if (op != std::string::npos) {
-		par_op_state = acos;
-		return s_par_operator;
-	}
-	op = rfind_skip_pars(name, "atan(", pars);
-	if (op != std::string::npos) {
-		par_op_state = atan;
-		return s_par_operator;
-	}
-	op = rfind_skip_pars(name, "sinh(", pars);
-	if (op != std::string::npos) {
-		par_op_state = sinh;
-		return s_par_operator;
-	}
-	op = rfind_skip_pars(name, "cosh(", pars);
-	if (op != std::string::npos) {
-		par_op_state = cosh;
-		return s_par_operator;
-	}
-	op = rfind_skip_pars(name, "tanh(", pars);
-	if (op != std::string::npos) {
-		par_op_state = tanh;
-		return s_par_operator;
-	}
-	op = rfind_skip_pars(name, "sqrt(", pars);
-	if (op != std::string::npos) {
-		par_op_state = sqrt;
-		return s_par_operator;
-	}
-	op = rfind_skip_pars(name, "exp(", pars);
-	if (op != std::string::npos) {
-		par_op_state = exp;
-		return s_par_operator;
-	}
-	op = rfind_skip_pars(name, "sin(", pars);
-	if (op != std::string::npos) {
-		par_op_state = sin;
-		return s_par_operator;
-	}
-	op = rfind_skip_pars(name, "cos(", pars);
-	if (op != std::string::npos) {
-		par_op_state = cos;
-		return s_par_operator;
-	}
-	op = rfind_skip_pars(name, "tan(", pars);
-	if (op != std::string::npos) {
-		par_op_state = tan;
-		return s_par_operator;
-	}
-	op = rfind_skip_pars(name, "abs(", pars);
-	if (op != std::string::npos) {
-		par_op_state = abs;
-		return s_par_operator;
-	}
-	op = rfind_skip_pars(name, "ln(", pars);
-	if (op != std::string::npos) {
-		par_op_state = ln;
-		return s_par_operator;
+	for (int op_state = 0; op_state != static_cast<int>(error); op_state++) {
+		op = rfind_skip_pars(name, op_name(static_cast<Par_Op_State>(op_state)), pars);
+		if (op != std::string::npos) {
+			par_op_state = static_cast<Par_Op_State>(op_state);
+			return s_par_operator;
+		}
 	}
 
 	if (pars.size() != 0) {
@@ -199,6 +128,9 @@ State bmath::type_subterm(const std::string & name, const std::vector<Pos_Pars>&
 	}
 
 	//staring search for arguments (variable or value)
+	if (name == std::string("i")) {
+		return s_value;
+	}
 	op = name.find_last_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]_$");
 	if (op != std::string::npos) {
 		return s_variable;
@@ -209,6 +141,41 @@ State bmath::type_subterm(const std::string & name, const std::vector<Pos_Pars>&
 	}
 	std::cout << "error: string " << name << " is not of expected format.\n";
 	return s_undefined;
+}
+
+const char* bmath::op_name(Par_Op_State op_state)
+{
+	switch (op_state) {
+	case log10:
+		return "log10(";
+	case asin:
+		return "asin(";
+	case acos:
+		return "acos(";
+	case atan:
+		return "atan(";
+	case sinh:
+		return "sinh(";
+	case cosh:
+		return "cosh(";
+	case tanh:
+		return "tanh(";
+	case sqrt:
+		return "sqrt(";
+	case exp:
+		return "exp(";
+	case sin:
+		return "sin(";
+	case cos:
+		return "cos(";
+	case tan:
+		return "tan(";
+	case abs:
+		return "abs(";
+	case ln:
+		return "ln(";
+	}
+	return nullptr;
 }
 
 bool bmath::preprocess_str(std::string& str)
@@ -240,65 +207,65 @@ bool bmath::preprocess_str(std::string& str)
 		std::cout << allowed_chars << '\n';
 		return false;
 	}
-	else if (str.size() > 1) {
-		char* chartypes = new char[str.size() + 1]();
-		std::size_t it = str.find_first_of("1234567890.");
-		while (it != std::string::npos) {
-			chartypes[it] = 'f';	//figure
-			it = str.find_first_of("1234567890.", it + 1);
-		}
-		it = str.find_first_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]_$");
-		while (it != std::string::npos) {
-			chartypes[it] = 'v';	//variable
-			it = str.find_first_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]_$", it + 1);
-		}
-		it = str.find_first_of("+-*/^");
-		while (it != std::string::npos) {
-			chartypes[it] = 'o';	//operator
-			it = str.find_first_of("+-*/^", it + 1);
-		}
-		it = str.find_first_of("(");
-		while (it != std::string::npos) {
-			chartypes[it] = '(';	//open parenthesis
-			it = str.find_first_of("(", it + 1);
-		}
-		it = str.find_first_of(")");
-		while (it != std::string::npos) {
-			chartypes[it] = ')';	//closed parentheses
-			it = str.find_first_of(")", it + 1);
-		}
+	//else if (str.size() > 1) {
+	//	char* chartypes = new char[str.size() + 1]();
+	//	std::size_t it = str.find_first_of(number_chars);
+	//	while (it != std::string::npos) {
+	//		chartypes[it] = 'f';	//figure
+	//		it = str.find_first_of(number_chars, it + 1);
+	//	}
+	//	it = str.find_first_of(variable_chars);
+	//	while (it != std::string::npos) {
+	//		chartypes[it] = 'v';	//variable
+	//		it = str.find_first_of(variable_chars, it + 1);
+	//	}
+	//	it = str.find_first_of(operator_chars);
+	//	while (it != std::string::npos) {
+	//		chartypes[it] = 'o';	//operator
+	//		it = str.find_first_of(operator_chars, it + 1);
+	//	}
+	//	it = str.find_first_of("(");
+	//	while (it != std::string::npos) {
+	//		chartypes[it] = '(';	//open parenthesis
+	//		it = str.find_first_of("(", it + 1);
+	//	}
+	//	it = str.find_first_of(")");
+	//	while (it != std::string::npos) {
+	//		chartypes[it] = ')';	//closed parentheses
+	//		it = str.find_first_of(")", it + 1);
+	//	}
 
-		for (std::size_t i = str.size() - 2; i != std::string::npos; i--) {
-			if (chartypes[i] == 'f' && chartypes[i + 1] == 'v') {
-				str.insert(i + 1, "*");
-			}
-			else if (chartypes[i] == 'f' && chartypes[i + 1] == '(') {
-				str.insert(i + 1, "*");
-			}
-			else if (chartypes[i] == 'v' && chartypes[i + 1] == 'f') {
-				str.insert(i + 1, "*");
-			}
-			else if (chartypes[i] == 'o' && chartypes[i + 1] == 'o') {
-				std::cout << "Error: syntax in \"" << str << "\" (position " << i+1 << ")\n";
-				return false;
-			}
-			else if (chartypes[i] == 'o' && chartypes[i + 1] == ')') {
-				std::cout << "Error: syntax in \"" << str << "\" (position " << i+1 << ")\n";
-				return false;
-			}
-			else if (chartypes[i] == '(' && chartypes[i + 1] == ')') {
-				std::cout << "Error: syntax in \"" << str << "\" (position " << i+1 << ")\n";
-				return false;
-			}
-			else if (chartypes[i] == ')' && chartypes[i + 1] == 'f') {
-				str.insert(i + 1, "*");
-			}
-			else if (chartypes[i] == ')' && chartypes[i + 1] == '(') {
-				str.insert(i + 1, "*");
-			}
-		}
-		delete[] chartypes;
-	}
+	//	for (std::size_t i = str.size() - 2; i != std::string::npos; i--) {
+	//		if (chartypes[i] == 'f' && chartypes[i + 1] == 'v') {
+	//			str.insert(i + 1, "*");
+	//		}
+	//		else if (chartypes[i] == 'f' && chartypes[i + 1] == '(') {
+	//			str.insert(i + 1, "*");
+	//		}
+	//		else if (chartypes[i] == 'v' && chartypes[i + 1] == 'f') {
+	//			str.insert(i + 1, "*");
+	//		}
+	//		else if (chartypes[i] == 'o' && chartypes[i + 1] == 'o') {
+	//			std::cout << "Error: syntax in \"" << str << "\" (position " << i+1 << ")\n";
+	//			return false;
+	//		}
+	//		else if (chartypes[i] == 'o' && chartypes[i + 1] == ')') {
+	//			std::cout << "Error: syntax in \"" << str << "\" (position " << i+1 << ")\n";
+	//			return false;
+	//		}
+	//		else if (chartypes[i] == '(' && chartypes[i + 1] == ')') {
+	//			std::cout << "Error: syntax in \"" << str << "\" (position " << i+1 << ")\n";
+	//			return false;
+	//		}
+	//		else if (chartypes[i] == ')' && chartypes[i + 1] == 'f') {
+	//			str.insert(i + 1, "*");
+	//		}
+	//		else if (chartypes[i] == ')' && chartypes[i + 1] == '(') {
+	//			str.insert(i + 1, "*");
+	//		}
+	//	}
+	//	delete[] chartypes;
+	//}
 
 	return true;
 }

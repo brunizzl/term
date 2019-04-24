@@ -22,7 +22,7 @@ struct Pos_Pars {
 //otherwise known == false and val is uninitialised.
 struct Vals_Combinded {
 	bool known;
-	double val;
+	std::complex<double> val;
 };
 
 //specifies actual type of Basic_Term 
@@ -39,27 +39,24 @@ enum State {
 
 //used in Par_Operator class to specify whitch operator is actually used 
 //(comments are corresponding cmath functions)
+//states names are sorted by length
 enum Par_Op_State {
-	ln,			//log()
 	log10,		//log10()
-	log2,		//log2()  (will be removed, if complex terms are added)
-	exp,		//exp()
-	sin,		//sin()
-	cos,		//cos()
-	tan,		//tan()
+	//maybe add asinh, acosh, atanh?
 	asin,		//asin()
 	acos,		//acos()
 	atan,		//atan()
 	sinh,		//sinh()
 	cosh,		//cosh()
 	tanh,		//tanh()
-	//maybe add asinh, acosh, atanh?
-	gamma,		//tgamma() (will be removed, if complex terms are added)
-	abs,		//fabs()
 	sqrt,		//sqrt()
-	error
+	exp,		//exp()
+	sin,		//sin()
+	cos,		//cos()
+	tan,		//tan()
+	abs,		//fabs()
+	ln,			//log()
+	error		//needs to be last element to enable loops to go trough the states (used as break condition)
 };
-
-
 
 }

@@ -32,7 +32,7 @@ void test_strings_2() {
 	std::string teststrs[14];
 	teststrs[0] = "(ln((2*3*4)))";
 	teststrs[1] = "(log10((abs(-2))))";
-	teststrs[2] = "(log2((a^b)))";
+	teststrs[2] = "(log10((a^b)))";
 	teststrs[3] = "(exp((2)))";
 	teststrs[4] = "(e^sin(2/3*pi))+3";
 	teststrs[5] = "(cos((2)))";
@@ -43,7 +43,7 @@ void test_strings_2() {
 	teststrs[10] = "(sinh((2)))";
 	teststrs[11] = "(cosh((2)))";
 	teststrs[12] = "(tanh((2)))";
-	teststrs[13] = "(gamma((2)))";
+	teststrs[13] = "(atan((2)))";
 
 	for (auto str : teststrs) {
 		std::cout << '\n';

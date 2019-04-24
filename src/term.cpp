@@ -77,14 +77,22 @@ bool bmath::Term::search_and_replace(const std::string& name_, double value_)
 	return this->term_ptr->search_and_replace(name_, value_);
 }
 
+bool bmath::Term::valid_state() const
+{
+	if (this->term_ptr == nullptr) {
+		return false;
+	}
+	return this->term_ptr->valid_state();
+}
+
 void bmath::Term::combine()
 {
 	this->term_ptr->combine_layers();
 
-	Vals_Combinded new_val = this->term_ptr->combine_values();
-	if (new_val.known) {
+	Vals_Combinded new_subterm = this->term_ptr->combine_values();
+	if (new_subterm.known) {
 		delete this->term_ptr;
-		this->term_ptr = new Value(new_val.val, this);
+		this->term_ptr = new Value(new_subterm.val, this);
 	}
 
 	this->term_ptr->combine_variables();

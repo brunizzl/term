@@ -21,6 +21,7 @@ public:
 	Vals_Combinded combine_values() override;
 	Vals_Combinded evaluate(const std::string & name_, double value_) const override;
 	bool search_and_replace(const std::string& name_, double value_) override;
+	bool valid_state() const override;
 
 	friend class Term;
 };
@@ -43,6 +44,7 @@ public:
 	Vals_Combinded combine_values() override;
 	Vals_Combinded evaluate(const std::string & name_, double value_) const override;
 	bool search_and_replace(const std::string& name_, double value_) override;
+	bool valid_state() const override;
 
 	friend class Term;
 };
@@ -65,6 +67,7 @@ public:
 	Vals_Combinded combine_values() override;
 	Vals_Combinded evaluate(const std::string & name_, double value_) const override;
 	bool search_and_replace(const std::string& name_, double value_) override;
+	bool valid_state() const override;
 
 	friend class Term;
 };

@@ -214,7 +214,7 @@ State bmath::type_subterm(const std::string & name, const std::vector<Pos_Pars>&
 bool bmath::preprocess_str(std::string& str)
 {
 	int par_diff = 0;
-	for (std::size_t i = 0; i < str.length(); i++) {
+	for (std::size_t i = 0; i < str.length(); i++) {	//deleting whitespace and counting parentheses
 		switch (str[i]) {
 		case '\t':
 		case '\n':
@@ -234,6 +234,72 @@ bool bmath::preprocess_str(std::string& str)
 		std::cout << "Error: the parenthesis of string \"" << str << "\" do not obey the syntax rules.\n";
 		return false;
 	}
+	const char* allowed_chars = "1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()_$";
+	if (str.find_first_not_of(allowed_chars) != std::string::npos) {
+		std::cout << "Error: String \"" << str << "\" contains characters other than: \n";
+		std::cout << allowed_chars << '\n';
+		return false;
+	}
+	else if (str.size() > 1) {
+		char* chartypes = new char[str.size() + 1]();
+		std::size_t it = str.find_first_of("1234567890.");
+		while (it != std::string::npos) {
+			chartypes[it] = 'f';	//figure
+			it = str.find_first_of("1234567890.", it + 1);
+		}
+		it = str.find_first_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]_$");
+		while (it != std::string::npos) {
+			chartypes[it] = 'v';	//variable
+			it = str.find_first_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]_$", it + 1);
+		}
+		it = str.find_first_of("+-*/^");
+		while (it != std::string::npos) {
+			chartypes[it] = 'o';	//operator
+			it = str.find_first_of("+-*/^", it + 1);
+		}
+		it = str.find_first_of("(");
+		while (it != std::string::npos) {
+			chartypes[it] = '(';	//open parenthesis
+			it = str.find_first_of("(", it + 1);
+		}
+		it = str.find_first_of(")");
+		while (it != std::string::npos) {
+			chartypes[it] = ')';	//closed parentheses
+			it = str.find_first_of(")", it + 1);
+		}
+
+		for (std::size_t i = str.size() - 2; i != std::string::npos; i--) {
+			if (chartypes[i] == 'f' && chartypes[i + 1] == 'v') {
+				str.insert(i + 1, "*");
+			}
+			else if (chartypes[i] == 'f' && chartypes[i + 1] == '(') {
+				str.insert(i + 1, "*");
+			}
+			else if (chartypes[i] == 'v' && chartypes[i + 1] == 'f') {
+				str.insert(i + 1, "*");
+			}
+			else if (chartypes[i] == 'o' && chartypes[i + 1] == 'o') {
+				std::cout << "Error: syntax in \"" << str << "\" (position " << i+1 << ")\n";
+				return false;
+			}
+			else if (chartypes[i] == 'o' && chartypes[i + 1] == ')') {
+				std::cout << "Error: syntax in \"" << str << "\" (position " << i+1 << ")\n";
+				return false;
+			}
+			else if (chartypes[i] == '(' && chartypes[i + 1] == ')') {
+				std::cout << "Error: syntax in \"" << str << "\" (position " << i+1 << ")\n";
+				return false;
+			}
+			else if (chartypes[i] == ')' && chartypes[i + 1] == 'f') {
+				str.insert(i + 1, "*");
+			}
+			else if (chartypes[i] == ')' && chartypes[i + 1] == '(') {
+				str.insert(i + 1, "*");
+			}
+		}
+		delete[] chartypes;
+	}
+
 	return true;
 }
 

@@ -228,6 +228,22 @@ bool bmath::Product::search_and_replace(const std::string& name_, double value_)
 	return false;
 }
 
+bool bmath::Product::valid_state() const
+{
+	for (auto it : this->factors) {
+
+		if (it == nullptr || it->valid_state() == false) {
+			return false;
+		}
+	}
+	for (auto it : this->divisors) {
+		if (it == nullptr || it->valid_state() == false) {
+			return false;
+		}
+	}
+	return true;
+}
+
 bmath::Sum::Sum(Basic_Term* parent_)
 	:Basic_Term(parent_)
 {
@@ -451,6 +467,21 @@ bool bmath::Sum::search_and_replace(const std::string& name_, double value_)
 	return false;
 }
 
+bool bmath::Sum::valid_state() const
+{
+	for (auto it : this->summands) {
+		if (it == nullptr || it->valid_state() == false) {
+			return false;
+		}
+	}
+	for (auto it : this->subtractors) {
+		if (it == nullptr || it->valid_state() == false) {
+			return false;
+		}
+	}
+	return true;
+}
+
 bmath::Exponentiation::Exponentiation(Basic_Term* parent_)
 	:Basic_Term(parent_), base(nullptr), exponent(nullptr)
 {
@@ -550,4 +581,12 @@ bool bmath::Exponentiation::search_and_replace(const std::string& name_, double 
 		this->exponent = new Value(value_, this);
 	}
 	return false;
+}
+
+bool bmath::Exponentiation::valid_state() const
+{
+	if (this->base == nullptr || this->exponent == nullptr) {
+		return false;
+	}
+	return this->base->valid_state() && this->exponent->valid_state();
 }

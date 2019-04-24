@@ -222,6 +222,14 @@ bool bmath::Par_Operator::search_and_replace(const std::string& name_, double va
 	return false;
 }
 
+bool bmath::Par_Operator::valid_state() const
+{
+	if (this->argument == nullptr) {
+		return false;
+	}
+	return this->argument->valid_state();
+}
+
 //void bmath::Par_Operator::sort()
 //{
 //}

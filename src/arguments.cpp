@@ -61,6 +61,12 @@ bool bmath::Value::search_and_replace(const std::string& name_, double value_)
 	return false;
 }
 
+bool bmath::Value::valid_state() const
+{
+	//holds no pointers that could be invalid
+	return true;
+}
+
 bmath::Variable::Variable(Basic_Term* parent_)
 	:Basic_Term(parent_)
 {
@@ -107,4 +113,10 @@ Vals_Combinded bmath::Variable::evaluate(const std::string & name_, double value
 bool bmath::Variable::search_and_replace(const std::string& name_, double value_)
 {
 	return this->name == name_;
+}
+
+bool bmath::Variable::valid_state() const
+{
+	//holds no pointers that could be invalid
+	return true;
 }

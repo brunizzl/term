@@ -44,6 +44,9 @@ public:
 	//this function is meant for permanent changes. else use evaluate()
 	virtual bool search_and_replace(const std::string& name_, double value_) = 0;
 
+	//true if no subterm holds nullptr, false if otherwise
+	virtual bool valid_state() const = 0;
+
 	friend class Term;
 	friend class Product;
 	friend class Sum;
@@ -61,6 +64,7 @@ public:
 	State get_state() const override; 
 	Vals_Combinded evaluate(const std::string & name_, double value_) const override;
 	bool search_and_replace(const std::string& name_, double value_) override;
+	bool valid_state() const override;
 
 	void combine(); 
 

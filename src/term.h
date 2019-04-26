@@ -56,18 +56,18 @@ public:
 class Term : public Basic_Term {
 private:
 	Basic_Term* term_ptr;
+
+	State get_state() const override; 
 public:
 	Term(std::string name_);
 	Term(const Term& source);
 	~Term();
 
 	void to_str(std::string& str) const override;
-	State get_state() const override; 
+	bool valid_state() const override;
+	void combine(); 
 	Vals_Combinded evaluate(const std::string & name_, std::complex<double> value_) const override;
 	bool search_and_replace(const std::string& name_, std::complex<double> value_) override;
-	bool valid_state() const override;
-
-	void combine(); 
 
 	//arithmetic operators
 	Term& operator+=(const Term& summand);

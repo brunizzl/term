@@ -9,6 +9,49 @@ bmath::Par_Operator::Par_Operator(Basic_Term* parent_)
 {
 }
 
+Vals_Combinded bmath::Par_Operator::internal_combine(Vals_Combinded argument_) const
+{
+	if (argument_.known) {
+		switch (this->op_state) {
+		case log10:
+			return Vals_Combinded{ true, std::log10(argument_.val) };
+		case asin:
+			return Vals_Combinded{ true, std::asin(argument_.val) };
+		case acos:
+			return Vals_Combinded{ true, std::acos(argument_.val) };
+		case atan:
+			return Vals_Combinded{ true, std::atan(argument_.val) };
+		case asinh:
+			return Vals_Combinded{ true, std::asinh(argument_.val) };
+		case acosh:
+			return Vals_Combinded{ true, std::acosh(argument_.val) };
+		case atanh:
+			return Vals_Combinded{ true, std::atanh(argument_.val) };
+		case sinh:
+			return Vals_Combinded{ true, std::sinh(argument_.val) };
+		case cosh:
+			return Vals_Combinded{ true, std::cosh(argument_.val) };
+		case tanh:
+			return Vals_Combinded{ true, std::tanh(argument_.val) };
+		case sqrt:
+			return Vals_Combinded{ true, std::sqrt(argument_.val) };
+		case exp:
+			return Vals_Combinded{ true, std::exp(argument_.val) };
+		case sin:
+			return Vals_Combinded{ true, std::sin(argument_.val) };
+		case cos:
+			return Vals_Combinded{ true, std::cos(argument_.val) };
+		case tan:
+			return Vals_Combinded{ true, std::tan(argument_.val) };
+		case abs:
+			return Vals_Combinded{ true, std::abs(argument_.val) };;
+		case ln:
+			return Vals_Combinded{ true, std::log(argument_.val) };
+		}
+	}
+	return Vals_Combinded{ false, 0 };
+}
+
 bmath::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_)
 	:Basic_Term(parent_), op_state(op_state_), argument(nullptr)
 {
@@ -42,6 +85,9 @@ bmath::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op
 		this->argument = build_subterm(name_, this);
 		break;
 	case log10:
+	case asinh:
+	case acosh:
+	case atanh:
 		name_.erase(0, 6);
 		LOG_C("shortened name: " << name_);
 		this->argument = build_subterm(name_, this);
@@ -80,78 +126,12 @@ void bmath::Par_Operator::combine_layers()
 
 Vals_Combinded bmath::Par_Operator::combine_values()
 {
-	Vals_Combinded argument_ = argument->combine_values();
-	if (argument_.known) {
-		switch (this->op_state) {
-		case ln:
-			return Vals_Combinded{ true, std::log(argument_.val) };
-		case log10:
-			return Vals_Combinded{ true, std::log10(argument_.val) };
-		case exp:
-			return Vals_Combinded{ true, std::exp(argument_.val) };
-		case sin:
-			return Vals_Combinded{ true, std::sin(argument_.val) };
-		case cos:
-			return Vals_Combinded{ true, std::cos(argument_.val) };
-		case tan:
-			return Vals_Combinded{ true, std::tan(argument_.val) };
-		case asin:
-			return Vals_Combinded{ true, std::asin(argument_.val) };
-		case acos:
-			return Vals_Combinded{ true, std::acos(argument_.val) };
-		case atan:
-			return Vals_Combinded{ true, std::atan(argument_.val) };
-		case sinh:
-			return Vals_Combinded{ true, std::sinh(argument_.val) };
-		case cosh:
-			return Vals_Combinded{ true, std::cosh(argument_.val) };
-		case tanh:
-			return Vals_Combinded{ true, std::tanh(argument_.val) };
-		case abs:
-			return Vals_Combinded{ true, std::abs(argument_.val) };
-		case sqrt:
-			return Vals_Combinded{ true, std::sqrt(argument_.val) };
-		}
-	}
-	return Vals_Combinded{ false, 0 };
+	return this->internal_combine(argument->combine_values());
 }
 
 Vals_Combinded bmath::Par_Operator::evaluate(const std::string & name_, std::complex<double> value_) const
 {
-	Vals_Combinded argument_ = argument->evaluate(name_, value_);
-	if (argument_.known) {
-		switch (this->op_state) {
-		case ln:
-			return Vals_Combinded{ true, std::log(argument_.val) };
-		case log10:
-			return Vals_Combinded{ true, std::log10(argument_.val) };
-		case exp:
-			return Vals_Combinded{ true, std::exp(argument_.val) };
-		case sin:
-			return Vals_Combinded{ true, std::sin(argument_.val) };
-		case cos:
-			return Vals_Combinded{ true, std::cos(argument_.val) };
-		case tan:
-			return Vals_Combinded{ true, std::tan(argument_.val) };
-		case asin:
-			return Vals_Combinded{ true, std::asin(argument_.val) };
-		case acos:
-			return Vals_Combinded{ true, std::acos(argument_.val) };
-		case atan:
-			return Vals_Combinded{ true, std::atan(argument_.val) };
-		case sinh:
-			return Vals_Combinded{ true, std::sinh(argument_.val) };
-		case cosh:
-			return Vals_Combinded{ true, std::cosh(argument_.val) };
-		case tanh:
-			return Vals_Combinded{ true, std::tanh(argument_.val) };
-		case abs:
-			return Vals_Combinded{ true, std::abs(argument_.val) };
-		case sqrt:
-			return Vals_Combinded{ true, std::sqrt(argument_.val) };
-		}
-	}
-	return Vals_Combinded{ false, 0 };
+	return this->internal_combine(argument->evaluate(name_, value_));
 }
 
 bool bmath::Par_Operator::search_and_replace(const std::string& name_, std::complex<double> value_)

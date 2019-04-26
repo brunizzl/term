@@ -9,15 +9,19 @@ bmath::Value::Value(Basic_Term* parent_)
 }
 
 bmath::Value::Value(std::string name_, Basic_Term* parent_)
-	:Basic_Term(parent_), value(std::complex<double>(0, 1))
+	:Basic_Term(parent_)
 {
 	LOG_C("baue Wert: " << name_);
-	if (name_.find_first_of("i") != std::string::npos) {
-		return;	//value already is build as i
-	}
+	double factor;
 	std::stringstream stream;
 	stream << name_;
-	stream >> this->value;
+	stream >> factor;
+	if (name_.find_first_of("i") != std::string::npos) {
+		this->value = std::complex<double>(0, factor);
+	}
+	else {
+		this->value = std::complex<double>(factor, 0);
+	}
 }
 
 bmath::Value::Value(const Value& source, Basic_Term* parent_)

@@ -5,9 +5,9 @@
 
 int main()
 {
-	//test_strings();
-	//test_strings_2();
-	test_length();
+	test_strings();
+	test_strings_2();
+	//test_length();
 	//test_function("atan(x)");
 	while (true) {
 		std::string name;
@@ -19,6 +19,13 @@ int main()
 		}
 		std::cin.get();
 	}
+	/*std::string eingabe;
+	double konvertiert;
+	std::cin >> eingabe;
+	std::stringstream stream;
+	stream << eingabe;
+	stream >> konvertiert;
+	std::cout << konvertiert << std::endl;*/
 
 }
 

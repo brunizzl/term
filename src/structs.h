@@ -42,7 +42,9 @@ enum State {
 //states names are sorted by length
 enum Par_Op_State {
 	log10,		//log10()
-	//maybe add asinh, acosh, atanh?
+	asinh,		//asinh()
+	acosh,		//acosh()
+	atanh,		//atanh()
 	asin,		//asin()
 	acos,		//acos()
 	atan,		//atan()

@@ -9,6 +9,9 @@ class Par_Operator : public Basic_Term
 private:
 	Par_Op_State op_state;
 	Basic_Term* argument;
+
+	Vals_Combinded internal_combine(Vals_Combinded argument_) const;
+
 public:
 	Par_Operator(Basic_Term* parent_);
 	Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_);

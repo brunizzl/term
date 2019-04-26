@@ -1,8 +1,8 @@
 #include "internal_functions.h"
 
-using namespace bmath;
+using namespace bmath::intern;
 
-std::size_t bmath::find_closed_par(std::size_t open_par, const std::string& name)
+std::size_t bmath::intern::find_closed_par(std::size_t open_par, const std::string& name)
 {	//par for parethesis
 	int deeper_open_par = 0;
 	std::size_t nxt_par = open_par;
@@ -28,7 +28,7 @@ std::size_t bmath::find_closed_par(std::size_t open_par, const std::string& name
 	}
 }
 
-void bmath::find_pars(const std::string & name, std::vector<Pos_Pars>& pars)
+void bmath::intern::find_pars(const std::string & name, std::vector<Pos_Pars>& pars)
 {
 	std::size_t open_par = name.find_first_of('(');
 	while (open_par != std::string::npos) {
@@ -44,7 +44,7 @@ void bmath::find_pars(const std::string & name, std::vector<Pos_Pars>& pars)
 	return;
 }
 
-std::size_t bmath::find_last_of_skip_pars(const std::string& name, const char* characters, const std::vector<Pos_Pars>& pars)
+std::size_t bmath::intern::find_last_of_skip_pars(const std::string& name, const char* characters, const std::vector<Pos_Pars>& pars)
 {
 	std::size_t found = name.size() - 1;
 	int skipped_pars = pars.size() - 1;
@@ -63,7 +63,7 @@ std::size_t bmath::find_last_of_skip_pars(const std::string& name, const char* c
 	return found;
 }
 
-std::size_t bmath::rfind_skip_pars(const std::string& name, const char* searchstr, const std::vector<Pos_Pars>& pars)
+std::size_t bmath::intern::rfind_skip_pars(const std::string& name, const char* searchstr, const std::vector<Pos_Pars>& pars)
 {
 	std::size_t found = name.size() - 1;
 	int skipped_pars = pars.size() - 1;
@@ -85,7 +85,7 @@ std::size_t bmath::rfind_skip_pars(const std::string& name, const char* searchst
 	return found;
 }
 
-void bmath::del_pars_after(std::vector<Pos_Pars>& pars, const std::string& name)
+void bmath::intern::del_pars_after(std::vector<Pos_Pars>& pars, const std::string& name)
 {
 	int new_end = pars.size();
 	for (unsigned int i = 0; i < pars.size(); i++) {
@@ -98,7 +98,7 @@ void bmath::del_pars_after(std::vector<Pos_Pars>& pars, const std::string& name)
 	return;
 }
 
-State bmath::type_subterm(const std::string & name, const std::vector<Pos_Pars>& pars, std::size_t& op, Par_Op_State & par_op_state)
+State bmath::intern::type_subterm(const std::string & name, const std::vector<Pos_Pars>& pars, std::size_t& op, Par_Op_State & par_op_state)
 {
 	//starting search for "basic" operators
 	op = find_last_of_skip_pars(name, "+-", pars);
@@ -140,7 +140,7 @@ State bmath::type_subterm(const std::string & name, const std::vector<Pos_Pars>&
 	return s_undefined;
 }
 
-const char* bmath::op_name(Par_Op_State op_state)
+const char* bmath::intern::op_name(Par_Op_State op_state)
 {
 	switch (op_state) {
 	case log10:
@@ -181,7 +181,7 @@ const char* bmath::op_name(Par_Op_State op_state)
 	return nullptr;
 }
 
-bool bmath::preprocess_str(std::string& str)
+bool bmath::intern::preprocess_str(std::string& str)
 {
 	int par_diff = 0;
 	for (std::size_t i = 0; i < str.length(); i++) {	//deleting whitespace and counting parentheses
@@ -213,7 +213,17 @@ bool bmath::preprocess_str(std::string& str)
 	return true;
 }
 
-Basic_Term* bmath::build_subterm(std::string& subtermstr, Basic_Term* parent_)
+State bmath::intern::get_state(const Basic_Term* obj)
+{
+	if (obj != nullptr) {
+		return obj->get_state_intern();
+	}
+	else {
+		return s_undefined;
+	}
+}
+
+Basic_Term* bmath::intern::build_subterm(std::string& subtermstr, Basic_Term* parent_)
 {
 	std::vector<Pos_Pars> pars;
 	while (subtermstr.size() != 0) {
@@ -246,9 +256,9 @@ Basic_Term* bmath::build_subterm(std::string& subtermstr, Basic_Term* parent_)
 	return nullptr;
 }
 
-Basic_Term* bmath::copy_subterm(const Basic_Term* source, Basic_Term* parent_)
+Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* parent_)
 {
-	State type = source->get_state();
+	State type = get_state(source);
 	switch (type) {
 	case s_par_operator:
 		return new Par_Operator(*(static_cast<const Par_Operator*>(source)), parent_);
@@ -269,7 +279,7 @@ Basic_Term* bmath::copy_subterm(const Basic_Term* source, Basic_Term* parent_)
 
 
 
-std::ostream& operator<<(std::ostream& stream, const Basic_Term& term)
+std::ostream& operator<<(std::ostream& stream, const bmath::Term& term)
 {
 	std::string str;
 	term.to_str(str);

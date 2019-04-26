@@ -1,15 +1,15 @@
 #include "par_op.h"
 
-using namespace bmath;
+using namespace bmath::intern;
 
 
 
-bmath::Par_Operator::Par_Operator(Basic_Term* parent_)
+bmath::intern::Par_Operator::Par_Operator(Basic_Term* parent_)
 	:Basic_Term(parent_), argument(nullptr), op_state(error)
 {
 }
 
-Vals_Combinded bmath::Par_Operator::internal_combine(Vals_Combinded argument_) const
+bmath::Vals_Combinded bmath::intern::Par_Operator::internal_combine(Vals_Combinded argument_) const
 {
 	if (argument_.known) {
 		switch (this->op_state) {
@@ -52,7 +52,7 @@ Vals_Combinded bmath::Par_Operator::internal_combine(Vals_Combinded argument_) c
 	return Vals_Combinded{ false, 0 };
 }
 
-bmath::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_)
+bmath::intern::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_)
 	:Basic_Term(parent_), op_state(op_state_), argument(nullptr)
 {
 	LOG_C("baue Par_Operator: " << name_);
@@ -95,46 +95,46 @@ bmath::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op
 	}
 }
 
-bmath::Par_Operator::Par_Operator(const Par_Operator& source, Basic_Term* parent_)
+bmath::intern::Par_Operator::Par_Operator(const Par_Operator& source, Basic_Term* parent_)
 	:Basic_Term(parent_), argument(copy_subterm(source.argument, this)), op_state(source.op_state)
 {
 	LOG_C("kopiere Par_Operator: " << source);
 }
 
-bmath::Par_Operator::~Par_Operator()
+bmath::intern::Par_Operator::~Par_Operator()
 {
 	LOG_C("loesche Par_Operator: " << *this);
 	delete this->argument;
 }
 
-void bmath::Par_Operator::to_str(std::string & str) const
+void bmath::intern::Par_Operator::to_str(std::string & str) const
 {
 	str.append(op_name(this->op_state));
 	this->argument->to_str(str);
 	str.push_back(')');
 }
 
-State bmath::Par_Operator::get_state() const
+State bmath::intern::Par_Operator::get_state_intern() const
 {
 	return s_par_operator;
 }
 
-void bmath::Par_Operator::combine_layers()
+void bmath::intern::Par_Operator::combine_layers()
 {
 	this->argument->combine_layers();
 }
 
-Vals_Combinded bmath::Par_Operator::combine_values()
+bmath::Vals_Combinded bmath::intern::Par_Operator::combine_values()
 {
 	return this->internal_combine(argument->combine_values());
 }
 
-Vals_Combinded bmath::Par_Operator::evaluate(const std::string & name_, std::complex<double> value_) const
+bmath::Vals_Combinded bmath::intern::Par_Operator::evaluate(const std::string & name_, std::complex<double> value_) const
 {
 	return this->internal_combine(argument->evaluate(name_, value_));
 }
 
-bool bmath::Par_Operator::search_and_replace(const std::string& name_, std::complex<double> value_)
+bool bmath::intern::Par_Operator::search_and_replace(const std::string& name_, std::complex<double> value_)
 {
 	if (this->argument->search_and_replace(name_, value_)) {
 		delete this->argument;
@@ -143,7 +143,7 @@ bool bmath::Par_Operator::search_and_replace(const std::string& name_, std::comp
 	return false;
 }
 
-bool bmath::Par_Operator::valid_state() const
+bool bmath::intern::Par_Operator::valid_state() const
 {
 	if (this->argument == nullptr) {
 		return false;
@@ -151,11 +151,11 @@ bool bmath::Par_Operator::valid_state() const
 	return this->argument->valid_state();
 }
 
-//void bmath::Par_Operator::sort()
+//void bmath::intern::Par_Operator::sort()
 //{
 //}
 //
-//bool bmath::Par_Operator::operator<(const Basic_Term & other) const
+//bool bmath::intern::Par_Operator::operator<(const Basic_Term & other) const
 //{
 //	return false;
 //}

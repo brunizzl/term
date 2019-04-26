@@ -1,8 +1,8 @@
 #include "term.h"
 
-using namespace bmath;
+using namespace bmath::intern;
 
-void bmath::Basic_Term::combine_layers()
+void bmath::intern::Basic_Term::combine_layers()
 {
 	//the base class does not know of the tree structures, the derived classes provide.
 	//therefore, no tree can be combined.
@@ -10,43 +10,43 @@ void bmath::Basic_Term::combine_layers()
 	//every derived class not beeing root or leaf need an overriding function.
 }
 
-Vals_Combinded bmath::Basic_Term::combine_values()
+bmath::Vals_Combinded bmath::intern::Basic_Term::combine_values()
 {
 	//root does not need an overload of this function. all other derived classes do (including leaves).
 	return Vals_Combinded{ false, 0 };
 }
 
-void bmath::Basic_Term::combine_variables()
+void bmath::intern::Basic_Term::combine_variables()
 {
 	//again: root and leaves need no overriding, all others do.
 }
 
-bmath::Basic_Term::Basic_Term(Basic_Term* parent_)
+bmath::intern::Basic_Term::Basic_Term(Basic_Term* parent_)
 	:parent(parent_)
 {
 }
 
-bmath::Basic_Term::Basic_Term(const Basic_Term& source)
+bmath::intern::Basic_Term::Basic_Term(const Basic_Term& source)
 	:parent(source.parent)
 {
 }
 
-bmath::Basic_Term::~Basic_Term()
+bmath::intern::Basic_Term::~Basic_Term()
 {
 	//cleaning up the tree is done in derived classes
 }
 
 bmath::Term::Term(std::string name_)
-	:Basic_Term(nullptr), term_ptr(nullptr)
+	:term_ptr(nullptr)
 {
 	if (preprocess_str(name_)) {
-		this->term_ptr = build_subterm(name_, this);
+		this->term_ptr = build_subterm(name_, nullptr);
 	}	
 	LOG_C("baue Term: " << *this);
 }
 
 bmath::Term::Term(const Term& source)
-	:Basic_Term(nullptr), term_ptr(copy_subterm(source.term_ptr, this))
+	:term_ptr(copy_subterm(source.term_ptr, nullptr))
 {
 	LOG_C("kopiere Term: " << *this);
 }
@@ -62,12 +62,7 @@ void bmath::Term::to_str(std::string& str) const
 	this->term_ptr->to_str(str);
 }
 
-State bmath::Term::get_state() const
-{
-	return s_undefined;
-}
-
-Vals_Combinded bmath::Term::evaluate(const std::string & name_, std::complex<double> value_) const
+bmath::Vals_Combinded bmath::Term::evaluate(const std::string & name_, std::complex<double> value_) const
 {
 	return this->term_ptr->evaluate(name_, value_);
 }
@@ -92,15 +87,15 @@ void bmath::Term::combine()
 	Vals_Combinded new_subterm = this->term_ptr->combine_values();
 	if (new_subterm.known) {
 		delete this->term_ptr;
-		this->term_ptr = new Value(new_subterm.val, this);
+		this->term_ptr = new Value(new_subterm.val, nullptr);
 	}
 
 	this->term_ptr->combine_variables();
 }
 
-Term& bmath::Term::operator+=(const Term& summand)
+bmath::Term& bmath::Term::operator+=(const Term& summand)
 {
-	Sum* sum = new Sum(this);
+	Sum* sum = new Sum(nullptr);
 	this->term_ptr->parent = sum;
 	sum->summands.push_back(this->term_ptr);
 	sum->summands.push_back(copy_subterm(summand.term_ptr, sum));
@@ -109,9 +104,9 @@ Term& bmath::Term::operator+=(const Term& summand)
 	return *this;
 }
 
-Term& bmath::Term::operator-=(const Term& subtractor)
+bmath::Term& bmath::Term::operator-=(const Term& subtractor)
 {
-	Sum* sum = new Sum(this);
+	Sum* sum = new Sum(nullptr);
 	this->term_ptr->parent = sum;
 	sum->summands.push_back(this->term_ptr);
 	sum->subtractors.push_back(copy_subterm(subtractor.term_ptr, sum));
@@ -120,9 +115,9 @@ Term& bmath::Term::operator-=(const Term& subtractor)
 	return *this;
 }
 
-Term& bmath::Term::operator*=(const Term& factor)
+bmath::Term& bmath::Term::operator*=(const Term& factor)
 {
-	Product* product = new Product(this);
+	Product* product = new Product(nullptr);
 	this->term_ptr->parent = product;
 	product->factors.push_back(this->term_ptr);
 	product->factors.push_back(copy_subterm(factor.term_ptr, product));
@@ -131,9 +126,9 @@ Term& bmath::Term::operator*=(const Term& factor)
 	return *this;
 }
 
-Term& bmath::Term::operator/=(const Term& divisor)
+bmath::Term& bmath::Term::operator/=(const Term& divisor)
 {
-	Product* product = new Product(this);
+	Product* product = new Product(nullptr);
 	this->term_ptr->parent = product;
 	product->factors.push_back(this->term_ptr);
 	product->divisors.push_back(copy_subterm(divisor.term_ptr, product));

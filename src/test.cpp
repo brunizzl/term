@@ -60,16 +60,16 @@ void test_length() {
 	std::cout << "Groesse von double:          " << sizeof(double) << " bytes\n";
 	std::cout << "Groesse von long double:     " << sizeof(long double) << " bytes\n";
 	std::cout << "Groesse von complex<double>: " << sizeof(std::complex<double>) << " bytes\n";
-	std::cout << "Groesse von list:            " << sizeof(std::list<bmath::Basic_Term>) << " bytes\n";
-	std::cout << "Groesse von Basic_Term:      " << sizeof(bmath::Basic_Term) << " bytes\n";
-	std::cout << "Groesse von Basic_Term*:     " << sizeof(bmath::Basic_Term*) << " bytes\n";
-	std::cout << "Groesse von Product:         " << sizeof(bmath::Product) << " bytes\n";
-	std::cout << "Groesse von Sum:             " << sizeof(bmath::Sum) << " bytes\n";
-	std::cout << "Groesse von Exponentiation:  " << sizeof(bmath::Exponentiation) << " bytes\n";
-	std::cout << "Groesse von Variable:        " << sizeof(bmath::Variable) << " bytes\n";
-	std::cout << "Groesse von Value:           " << sizeof(bmath::Value) << " bytes\n";
+	std::cout << "Groesse von list:            " << sizeof(std::list<bmath::intern::Basic_Term>) << " bytes\n";
+	std::cout << "Groesse von Basic_Term:      " << sizeof(bmath::intern::Basic_Term) << " bytes\n";
+	std::cout << "Groesse von Basic_Term*:     " << sizeof(bmath::intern::Basic_Term*) << " bytes\n";
+	std::cout << "Groesse von Product:         " << sizeof(bmath::intern::Product) << " bytes\n";
+	std::cout << "Groesse von Sum:             " << sizeof(bmath::intern::Sum) << " bytes\n";
+	std::cout << "Groesse von Exponentiation:  " << sizeof(bmath::intern::Exponentiation) << " bytes\n";
+	std::cout << "Groesse von Variable:        " << sizeof(bmath::intern::Variable) << " bytes\n";
+	std::cout << "Groesse von Value:           " << sizeof(bmath::intern::Value) << " bytes\n";
+	std::cout << "Groesse von Par_Operator:    " << sizeof(bmath::intern::Par_Operator) << " bytes\n";
 	std::cout << "Groesse von Term:            " << sizeof(bmath::Term) << " bytes\n";
-	std::cout << "Groesse von Par_Operator:    " << sizeof(bmath::Par_Operator) << " bytes\n";
 	std::cout << '\n';
 }
 

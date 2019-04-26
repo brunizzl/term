@@ -12,71 +12,76 @@
 
 namespace bmath {
 
-class Basic_Term 
-{
-protected:
-	//pointer to whoever owns this (basic_term does not own parent)
-	Basic_Term* parent;
-public:
-	Basic_Term(Basic_Term* parent_);
-	Basic_Term(const Basic_Term& source);
-	virtual ~Basic_Term();
+	class Term;
 
-	//appends this to str
-	virtual void to_str(std::string& str) const = 0;
+	namespace intern {
 
-	//returns kinda true type of term (sum, product, value, etc.)
-	virtual State get_state() const = 0;
+		class Basic_Term
+		{
+		protected:
+			//pointer to whoever owns this (basic_term does not own parent)
+			Basic_Term* parent;
+		public:
+			Basic_Term(Basic_Term* parent_);
+			Basic_Term(const Basic_Term& source);
+			virtual ~Basic_Term();
 
-	//if one term holds a pointer to a term of same type both are combinded (if possible)
-	virtual void combine_layers();
+			//appends this to str
+			virtual void to_str(std::string& str) const = 0;
 
-	//values are added, multiplied, etc.
-	virtual Vals_Combinded combine_values();
+			//returns kinda true type of term (sum, product, value, etc.)
+			virtual State get_state_intern() const = 0;
 
-	//NOCH NICHT AUSGEDACHT
-	virtual void combine_variables();
+			//if one term holds a pointer to a term of same type both are combinded (if possible)
+			virtual void combine_layers();
 
-	//returns {true, whatever it adds up to} if only variable of name "name_" is present
-	//returns {fale, undefined} if more variables are present
-	virtual Vals_Combinded evaluate(const std::string & name_, std::complex<double> value_) const = 0;
+			//values are added, multiplied, etc.
+			virtual Vals_Combinded combine_values();
 
-	//searches an replaces all variables with name "name_" with values of value "value_"
-	//this function is meant for permanent changes. else use evaluate()
-	virtual bool search_and_replace(const std::string& name_, std::complex<double> value_) = 0;
+			//NOCH NICHT AUSGEDACHT
+			virtual void combine_variables();
 
-	//true if no subterm holds nullptr, false if otherwise
-	virtual bool valid_state() const = 0;
+			//returns {true, whatever it adds up to} if only variable of name "name_" is present
+			//returns {fale, undefined} if more variables are present
+			virtual Vals_Combinded evaluate(const std::string& name_, std::complex<double> value_) const = 0;
 
-	friend class Term;
-	friend class Product;
-	friend class Sum;
-};
+			//searches an replaces all variables with name "name_" with values of value "value_"
+			//this function is meant for permanent changes. else use evaluate()
+			virtual bool search_and_replace(const std::string& name_, std::complex<double> value_) = 0;
 
-class Term : public Basic_Term {
-private:
-	Basic_Term* term_ptr;
+			//true if no subterm holds nullptr, false if otherwise
+			virtual bool valid_state() const = 0;
 
-	State get_state() const override; 
-public:
-	Term(std::string name_);
-	Term(const Term& source);
-	~Term();
+			friend class bmath::Term;
+			friend class Product;
+			friend class Sum;
+		};
 
-	void to_str(std::string& str) const override;
-	bool valid_state() const override;
-	void combine(); 
-	Vals_Combinded evaluate(const std::string & name_, std::complex<double> value_) const override;
-	bool search_and_replace(const std::string& name_, std::complex<double> value_) override;
+	} //namespace intern
 
-	//arithmetic operators
-	Term& operator+=(const Term& summand);
-	Term& operator-=(const Term& subtractor);
-	Term& operator*=(const Term& factor);
-	Term& operator/=(const Term& divisor);
-};
+	class Term {
+	private:
+		intern::Basic_Term* term_ptr;
 
-}//namespace bruno
+	public:
+		Term(std::string name_);
+		Term(const Term& source);
+		~Term();
+
+		void to_str(std::string& str) const;
+		bool valid_state() const;
+		void combine();
+		Vals_Combinded evaluate(const std::string& name_, std::complex<double> value_) const;
+		bool search_and_replace(const std::string& name_, std::complex<double> value_);
+
+		//arithmetic operators
+		Term& operator+=(const Term& summand);
+		Term& operator-=(const Term& subtractor);
+		Term& operator*=(const Term& factor);
+		Term& operator/=(const Term& divisor);
+	};
+
+}//namespace bmath
 
 #include "internal_functions.h"
 #include "arguments.h"

@@ -90,3 +90,16 @@ void test_function(std::string name) {
 		}
 	}
 }
+
+void test_rechner() {
+	while (true) {
+		std::string name;
+		std::cin >> name;
+		bmath::Term test(name);
+		if (test.valid_state()) {
+			test.combine();
+			std::cout << "-> " << test << '\n';
+		}
+		std::cin.get();
+	}
+}

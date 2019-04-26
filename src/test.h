@@ -10,3 +10,5 @@ void test_strings_2();
 void test_length();
 
 void test_function(std::string name);
+
+void test_rechner();

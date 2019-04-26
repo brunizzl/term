@@ -5,7 +5,7 @@
 #include "test.h"
 
 template <int N>
-void baue_teststrs(std::array<std::string, N> teststrs) {
+void baue_teststrs(std::array<std::string, N> &teststrs) {
 	for (auto str : teststrs) {
 		std::cout << '\n';
 		std::cout << "String: \t" << str << '\n';

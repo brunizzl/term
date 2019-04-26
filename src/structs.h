@@ -23,9 +23,9 @@ namespace bmath {
 		enum State {
 			s_undefined,
 			s_par_operator,		//already has parentheses -> lower order than in reality
+			s_sum,
 			s_value,
 			s_variable,
-			s_sum,
 			s_product,
 			s_exponentiation
 		};

@@ -12,15 +12,20 @@ bmath::intern::Value::Value(std::string name_, Basic_Term* parent_)
 	:Basic_Term(parent_)
 {
 	LOG_C("baue Wert: " << name_);
-	double factor;
-	std::stringstream stream;
-	stream << name_;
-	stream >> factor;
-	if (name_.find_first_of("i") != std::string::npos) {
-		this->value = std::complex<double>(0, factor);
+	if (name_ == std::string("i")) {
+		this->value = std::complex<double>(0, 1);
 	}
 	else {
-		this->value = std::complex<double>(factor, 0);
+		double factor;
+		std::stringstream stream;
+		stream << name_;
+		stream >> factor;
+		if (name_.find_first_of("i") != std::string::npos) {
+			this->value = std::complex<double>(0, factor);
+		}
+		else {
+			this->value = std::complex<double>(factor, 0);
+		}
 	}
 }
 
@@ -46,6 +51,9 @@ void bmath::intern::Value::to_str(std::string& str) const
 	double re = this->value.real();
 	double im = this->value.imag();
 	if (re != 0 && im != 0) {
+		if (get_state(this->parent) >= this->get_state_intern()) {
+			str.push_back('(');
+		}
 		std::stringstream stream_re;
 		stream_re << re;
 		std::stringstream stream_im;
@@ -53,6 +61,9 @@ void bmath::intern::Value::to_str(std::string& str) const
 		str.append(stream_re.str());
 		str.append(stream_im.str());
 		str.push_back('i');
+		if (get_state(this->parent) >= this->get_state_intern()) {
+			str.push_back(')');
+		}
 	}
 	else if (re != 0 && im == 0) {
 		std::stringstream stream_re;

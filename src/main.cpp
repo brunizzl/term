@@ -5,11 +5,11 @@
 
 int main()
 {
-	//test_strings();
-	//test_strings_2();
+	test_strings();
+	test_strings_2();
 	//test_length();
 	//test_function("atan(x)");
-	test_rechner();
+	//test_rechner();
 }
 
 

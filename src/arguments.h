@@ -9,6 +9,7 @@ namespace bmath {
 		{
 		public:
 			std::complex<double> value;
+
 			Value(Basic_Term* parent_);
 			Value(std::string name_, Basic_Term* parent_);
 			Value(const Value& source, Basic_Term* parent_ = nullptr);
@@ -21,6 +22,7 @@ namespace bmath {
 			Vals_Combinded evaluate(const std::string& name_, std::complex<double> value_) const override;
 			bool search_and_replace(const std::string& name_, std::complex<double> value_) override;
 			bool valid_state() const override;
+			bool re_smaller_than_0() override;
 
 			friend class Term;
 		};
@@ -30,6 +32,7 @@ namespace bmath {
 		{
 		public:
 			std::string name;
+
 			Variable(Basic_Term* parent_);
 			Variable(std::string name_, Basic_Term* parent_);
 			Variable(const Variable& source, Basic_Term* parent_ = nullptr);

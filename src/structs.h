@@ -19,7 +19,7 @@ namespace bmath {
 		};
 
 		//specifies actual type of Basic_Term 
-		//(types ordered for parentheses to allow > / < / == etc. operators)
+		//(types ordered for parentheses to allow > / < / == etc. operators to test whether parentheses are needed)
 		enum State {
 			s_undefined,
 			s_par_operator,		//already has parentheses -> lower order than in reality

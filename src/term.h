@@ -4,6 +4,7 @@
 #include <sstream>
 #include <list>
 #include <vector>
+#include <set>
 #include <iostream>
 #include <cmath>
 #include <complex>
@@ -18,10 +19,10 @@ namespace bmath {
 
 		class Basic_Term
 		{
-		protected:
+		public:
 			//pointer to whoever owns this (basic_term does not own parent)
 			Basic_Term* parent;
-		public:
+
 			Basic_Term(Basic_Term* parent_);
 			Basic_Term(const Basic_Term& source);
 			virtual ~Basic_Term();
@@ -36,10 +37,11 @@ namespace bmath {
 			virtual void combine_layers();
 
 			//values are added, multiplied, etc.
-			virtual Vals_Combinded combine_values();
+			virtual Vals_Combinded combine_values() = 0;
 
 			//NOCH NICHT AUSGEDACHT
-			virtual void combine_variables();
+			//returns whether something has changed in the tree
+			virtual bool combine_variables();
 
 			//returns {true, whatever it adds up to} if only variable of name "name_" is present
 			//returns {fale, undefined} if more variables are present
@@ -52,17 +54,18 @@ namespace bmath {
 			//true if no subterm holds nullptr, false if otherwise
 			virtual bool valid_state() const = 0;
 
-			friend class bmath::Term;
-			friend class Product;
-			friend class Sum;
+			//used to bring tree in well defined state bevore combine_variables() can be used
+			//returns false if class != value, returns true and modifies value if re(value) < 0
+			virtual bool re_smaller_than_0();
 		};
 
 	} //namespace intern
 
+	//"head" used to acess and manage actual term (only expected user interface)
 	class Term {
 	private:
-		intern::Basic_Term* term_ptr;
-
+		intern::Basic_Term* term_ptr;		//start of actual term tree
+		
 	public:
 		Term(std::string name_);
 		Term(const Term& source);

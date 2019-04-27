@@ -223,6 +223,37 @@ State bmath::intern::get_state(const Basic_Term* obj)
 	}
 }
 
+Basic_Term* bmath::intern::standardize_structure_extern(Basic_Term* obj)
+{
+	//obj->standardize_structure_intern();
+	switch (obj->get_state_intern()) {
+	case s_product: {
+		Product* product = static_cast<Product*>(obj);
+		//this access to front in product.factors already assumes, if product contains a value,
+		// it is the only value in factors and divisors and placed at first position.
+		//aka. it is assumed combine_values() did already run.
+		if (!product->factors.empty() && product->factors.front()->re_smaller_than_0()) {
+			Sum* new_sum = new Sum(product->parent);
+			new_sum->subtractors.push_back(product);
+			product->parent = new_sum;
+			return new_sum;
+		}
+		break;
+	}
+	case s_exponentiation: {
+		Exponentiation* exponentiation = static_cast<Exponentiation*>(obj);
+		if (exponentiation->exponent->re_smaller_than_0()) {
+			Product* new_product = new Product(exponentiation->parent);
+			new_product->divisors.push_back(exponentiation);
+			exponentiation->parent = new_product;
+			return new_product;
+		}
+		break;
+	}
+	}
+	return nullptr;
+}
+
 Basic_Term* bmath::intern::build_subterm(std::string& subtermstr, Basic_Term* parent_)
 {
 	std::vector<Pos_Pars> pars;

@@ -87,6 +87,7 @@ bool bmath::Term::valid_state() const
 
 void bmath::Term::combine()
 {
+	this->term_ptr->combine_layers();
 	Vals_Combinded new_subterm = this->term_ptr->combine_values();
 	if (new_subterm.known) {
 		delete this->term_ptr;

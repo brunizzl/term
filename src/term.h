@@ -17,6 +17,8 @@ namespace bmath {
 
 	namespace intern {
 
+		class Value;
+
 		class Basic_Term
 		{
 		public:
@@ -57,6 +59,9 @@ namespace bmath {
 			//used to bring tree in well defined state bevore combine_variables() can be used
 			//returns false if class != value, returns true and modifies value if re(value) < 0
 			virtual bool re_smaller_than_0();
+
+			//used in term.cut_rounding_error() to acess the values of tree
+			virtual void list_values(std::list<Value*>& values) const = 0;
 		};
 
 	} //namespace intern
@@ -76,7 +81,7 @@ namespace bmath {
 
 		//performs equivalent transfomations to combine terms and simplify
 		void combine();		
-		void cut_rounding_error();
+		void cut_rounding_error(int pow_of_10_diff_to_set_0);
 
 		std::complex<double> evaluate(const std::string& name_, std::complex<double> value_) const;
 		void search_and_replace(const std::string& name_, std::complex<double> value_);

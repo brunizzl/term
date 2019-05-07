@@ -23,6 +23,7 @@ namespace bmath {
 			Vals_Combined evaluate(const std::string& name_, std::complex<double> value_) const override;
 			bool search_and_replace(const std::string& name_, std::complex<double> value_) override;
 			bool valid_state() const override;
+			void list_values(std::list<Value*>& values) const override;
 		};
 
 
@@ -44,6 +45,7 @@ namespace bmath {
 			Vals_Combined evaluate(const std::string& name_, std::complex<double> value_) const override;
 			bool search_and_replace(const std::string& name_, std::complex<double> value_) override;
 			bool valid_state() const override;
+			void list_values(std::list<Value*>& values) const override;
 		};
 
 
@@ -65,6 +67,7 @@ namespace bmath {
 			Vals_Combined evaluate(const std::string& name_, std::complex<double> value_) const override;
 			bool search_and_replace(const std::string& name_, std::complex<double> value_) override;
 			bool valid_state() const override;
+			void list_values(std::list<Value*>& values) const override;
 		};
 
 
@@ -89,6 +92,7 @@ namespace bmath {
 			Vals_Combined evaluate(const std::string& name_, std::complex<double> value_) const override;
 			bool search_and_replace(const std::string& name_, std::complex<double> value_) override;
 			bool valid_state() const override;
+			void list_values(std::list<Value*>& values) const override;
 
 			friend class bmath::Term;
 		};

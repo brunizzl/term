@@ -247,6 +247,16 @@ bool bmath::intern::Product::valid_state() const
 	return true;
 }
 
+void bmath::intern::Product::list_values(std::list<Value*>& values) const
+{
+	for (auto it : this->factors) {
+		it->list_values(values);
+	}
+	for (auto it : this->divisors) {
+		it->list_values(values);
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Sum
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -489,6 +499,16 @@ bool bmath::intern::Sum::valid_state() const
 	return true;
 }
 
+void bmath::intern::Sum::list_values(std::list<Value*>& values) const
+{
+	for (auto it : this->summands) {
+		it->list_values(values);
+	}
+	for (auto it : this->subtractors) {
+		it->list_values(values);
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Exponentiation
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -601,6 +621,12 @@ bool bmath::intern::Exponentiation::valid_state() const
 		return false;
 	}
 	return this->base->valid_state() && this->exponent->valid_state();
+}
+
+void bmath::intern::Exponentiation::list_values(std::list<Value*>& values) const
+{
+	this->base->list_values(values);
+	this->exponent->list_values(values);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -752,6 +778,11 @@ bool bmath::intern::Par_Operator::valid_state() const
 		return false;
 	}
 	return this->argument->valid_state();
+}
+
+void bmath::intern::Par_Operator::list_values(std::list<Value*>& values) const
+{
+	this->argument->list_values(values);
 }
 
 //void bmath::intern::Par_Operator::sort()

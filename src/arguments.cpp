@@ -118,6 +118,11 @@ bool bmath::intern::Value::re_smaller_than_0()
 	}
 }
 
+void bmath::intern::Value::list_values(std::list<Value*>& values) const
+{
+	values.push_back(const_cast<Value*>(this));
+}
+
 bmath::intern::Variable::Variable(Basic_Term* parent_)
 	:Basic_Term(parent_)
 {
@@ -170,4 +175,9 @@ bool bmath::intern::Variable::valid_state() const
 {
 	//holds no pointers that could be invalid
 	return true;
+}
+
+void bmath::intern::Variable::list_values(std::list<Value*>& values) const
+{
+	//nothing to be done here
 }

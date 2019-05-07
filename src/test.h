@@ -98,6 +98,7 @@ void test_rechner() {
 		test.search_and_replace(e, M_E);
 		if (test.valid_state()) {
 			test.combine();
+			test.cut_rounding_error(15);
 			std::cout << "-> " << test << '\n';
 		}
 		std::cin.get();

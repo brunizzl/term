@@ -72,7 +72,7 @@ namespace bmath {
 		bool valid_state() const;
 		void combine();
 		Vals_Combinded evaluate(const std::string& name_, std::complex<double> value_) const;
-		bool search_and_replace(const std::string& name_, std::complex<double> value_);
+		void search_and_replace(const std::string& name_, std::complex<double> value_);
 
 		//arithmetic operators
 		Term& operator+=(const Term& summand);

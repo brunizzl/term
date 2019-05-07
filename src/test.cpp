@@ -94,6 +94,10 @@ void test_rechner() {
 		std::string name;
 		std::cin >> name;
 		bmath::Term test(name);
+		std::string pi("pi");
+		std::string e("e");
+		test.search_and_replace(pi, std::complex<double>(M_PI, 0));
+		test.search_and_replace(e, std::complex<double>(M_E, 0));
 		if (test.valid_state()) {
 			test.combine();
 			std::cout << "-> " << test << '\n';

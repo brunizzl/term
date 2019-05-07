@@ -67,9 +67,13 @@ bmath::Vals_Combinded bmath::Term::evaluate(const std::string & name_, std::comp
 	return this->term_ptr->evaluate(name_, value_);
 }
 
-bool bmath::Term::search_and_replace(const std::string& name_, std::complex<double> value_)
+void bmath::Term::search_and_replace(const std::string& name_, std::complex<double> value_)
 {
-	return this->term_ptr->search_and_replace(name_, value_);
+	if (this->term_ptr->search_and_replace(name_, value_)) {
+		delete this->term_ptr;
+		this->term_ptr = new Value(value_, nullptr);
+	}
+	return;
 }
 
 bool bmath::Term::valid_state() const

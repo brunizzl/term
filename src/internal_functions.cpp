@@ -35,6 +35,7 @@ void bmath::intern::find_pars(const std::string & name, std::vector<Pos_Pars>& p
 		std::size_t clsd_par = find_closed_par(open_par, name);
 		if (clsd_par == std::string::npos) {
 			std::cout << "Error: expected more closed parentheses in \"" << name << "\".\n";
+			return;
 		}
 		else {
 			pars.push_back({ open_par, clsd_par });

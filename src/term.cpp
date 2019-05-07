@@ -105,14 +105,16 @@ void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 	for (auto it : values) {
 		re_sum += std::abs(it->value.real());
 	}
-	double re_average = re_sum / values.size();
-	double limit_to_0 = re_average * std::pow(10, -pow_of_10_diff_to_set_0);
-	for (auto it : values) {
-		if (std::abs(it->value.real()) < limit_to_0) {
-			it->value.real(0);
-		}
-		if (std::abs(it->value.imag()) < limit_to_0) {
-			it->value.imag(0);
+	if (re_sum != 0) {
+		double re_average = re_sum / values.size();
+		double limit_to_0 = re_average * std::pow(10, -pow_of_10_diff_to_set_0);
+		for (auto it : values) {
+			if (std::abs(it->value.real()) < limit_to_0) {
+				it->value.real(0);
+			}
+			if (std::abs(it->value.imag()) < limit_to_0) {
+				it->value.imag(0);
+			}
 		}
 	}
 }

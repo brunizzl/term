@@ -81,7 +81,7 @@ namespace bmath {
 
 		//performs equivalent transfomations to combine terms and simplify
 		void combine();		
-		void cut_rounding_error(int pow_of_10_diff_to_set_0);
+		void cut_rounding_error(int pow_of_10_diff_to_set_0 = 15);
 
 		std::complex<double> evaluate(const std::string& name_, std::complex<double> value_) const;
 		void search_and_replace(const std::string& name_, std::complex<double> value_);

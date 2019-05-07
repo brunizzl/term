@@ -63,9 +63,9 @@ void bmath::Term::to_str(std::string& str) const
 	this->term_ptr->to_str(str);
 }
 
-bmath::Vals_Combinded bmath::Term::evaluate(const std::string & name_, std::complex<double> value_) const
+std::complex<double> bmath::Term::evaluate(const std::string & name_, std::complex<double> value_) const
 {
-	return this->term_ptr->evaluate(name_, value_);
+	return this->term_ptr->evaluate(name_, value_).val;
 }
 
 void bmath::Term::search_and_replace(const std::string& name_, std::complex<double> value_)
@@ -88,13 +88,19 @@ bool bmath::Term::valid_state() const
 void bmath::Term::combine()
 {
 	this->term_ptr->combine_layers();
-	Vals_Combinded new_subterm = this->term_ptr->combine_values();
+	Vals_Combined new_subterm = this->term_ptr->combine_values();
 	if (new_subterm.known) {
 		delete this->term_ptr;
 		this->term_ptr = new Value(new_subterm.val, nullptr);
 	}
 	this->term_ptr->combine_layers();
 	while(this->term_ptr->combine_variables());
+}
+
+void bmath::Term::cut_rounding_error()
+{
+	std::list<Value*> values;
+
 }
 
 bmath::Term& bmath::Term::operator+=(const Term& summand)

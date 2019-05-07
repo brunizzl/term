@@ -54,14 +54,14 @@ namespace bmath {
 			error		//needs to be last element to enable loops to go trough the states (used as break condition)
 		};
 
-	} //namespace intern
+		//return of function combine_values()
+		//if function was able to combine to one single value, this gets returned
+		//otherwise known == false and val is uninitialised.
+		struct Vals_Combined {
+			bool known;
+			std::complex<double> val;
+		};
 
-	//return of function combine_values()
-	//if function was able to combine to one single value, this gets returned
-	//otherwise known == false and val is uninitialised.
-	struct Vals_Combinded {
-		bool known;
-		std::complex<double> val;
-	};
+	} //namespace intern
 
 } // namespace bmath

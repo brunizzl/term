@@ -86,14 +86,14 @@ State bmath::intern::Value::get_state_intern() const
 	return s_value;
 }
 
-bmath::Vals_Combinded bmath::intern::Value::combine_values()
+Vals_Combined bmath::intern::Value::combine_values()
 {
-	return Vals_Combinded{ true, this->value };
+	return Vals_Combined{ true, this->value };
 }
 
-bmath::Vals_Combinded bmath::intern::Value::evaluate(const std::string & name_, std::complex<double> value_) const
+Vals_Combined bmath::intern::Value::evaluate(const std::string & name_, std::complex<double> value_) const
 {
-	return Vals_Combinded{true, this->value};
+	return Vals_Combined{true, this->value};
 }
 
 bool bmath::intern::Value::search_and_replace(const std::string& name_, std::complex<double> value_)
@@ -150,15 +150,15 @@ State bmath::intern::Variable::get_state_intern() const
 	return s_variable;
 }
 
-bmath::Vals_Combinded bmath::intern::Variable::combine_values()
+Vals_Combined bmath::intern::Variable::combine_values()
 {
-	return Vals_Combinded{false, 0};
+	return Vals_Combined{false, 0};
 }
 
-bmath::Vals_Combinded bmath::intern::Variable::evaluate(const std::string & name_, std::complex<double> value_) const
+Vals_Combined bmath::intern::Variable::evaluate(const std::string & name_, std::complex<double> value_) const
 {
 	bool same_var = this->name == name_;
-	return Vals_Combinded{ same_var, value_ };
+	return Vals_Combined{ same_var, value_ };
 }
 
 bool bmath::intern::Variable::search_and_replace(const std::string& name_, std::complex<double> value_)

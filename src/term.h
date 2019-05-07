@@ -37,7 +37,7 @@ namespace bmath {
 			virtual void combine_layers();
 
 			//values are added, multiplied, etc.
-			virtual Vals_Combinded combine_values() = 0;
+			virtual Vals_Combined combine_values() = 0;
 
 			//NOCH NICHT AUSGEDACHT
 			//returns whether something has changed in the tree
@@ -45,7 +45,7 @@ namespace bmath {
 
 			//returns {true, whatever it adds up to} if only variable of name "name_" is present
 			//returns {fale, undefined} if more variables are present
-			virtual Vals_Combinded evaluate(const std::string& name_, std::complex<double> value_) const = 0;
+			virtual Vals_Combined evaluate(const std::string& name_, std::complex<double> value_) const = 0;
 
 			//searches an replaces all variables with name "name_" with values of value "value_"
 			//this function is meant for permanent changes. else use evaluate()
@@ -73,8 +73,12 @@ namespace bmath {
 
 		void to_str(std::string& str) const;
 		bool valid_state() const;
-		void combine();
-		Vals_Combinded evaluate(const std::string& name_, std::complex<double> value_) const;
+
+		//performs equivalent transfomations to combine terms and simplify
+		void combine();		
+		void cut_rounding_error();
+
+		std::complex<double> evaluate(const std::string& name_, std::complex<double> value_) const;
 		void search_and_replace(const std::string& name_, std::complex<double> value_);
 
 		//arithmetic operators

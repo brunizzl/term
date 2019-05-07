@@ -137,12 +137,12 @@ void bmath::intern::Product::combine_layers()
 	}
 }
 
-bmath::Vals_Combinded bmath::intern::Product::combine_values()
+Vals_Combined bmath::intern::Product::combine_values()
 {
 	std::complex<double> buffer_factor = 1;
 	bool only_known = true;
 	for (std::list<Basic_Term*>::iterator it = this->factors.begin(); it != this->factors.end();) {
-		Vals_Combinded factor = (*it)->combine_values();
+		Vals_Combined factor = (*it)->combine_values();
 		if (factor.known) {
 			buffer_factor *= factor.val;
 			delete (*it);
@@ -156,7 +156,7 @@ bmath::Vals_Combinded bmath::intern::Product::combine_values()
 		}
 	}
 	for (std::list<Basic_Term*>::iterator it = this->divisors.begin(); it != this->divisors.end();) {
-		Vals_Combinded divisor = (*it)->combine_values();
+		Vals_Combined divisor = (*it)->combine_values();
 		if (divisor.known) {
 			buffer_factor /= divisor.val;
 			delete (*it);
@@ -173,30 +173,30 @@ bmath::Vals_Combinded bmath::intern::Product::combine_values()
 		this->factors.push_front(new Value(buffer_factor, this));
 	}
 	if (only_known) {
-		return Vals_Combinded{ true, buffer_factor };
+		return Vals_Combined{ true, buffer_factor };
 	}
-	return Vals_Combinded{ false, 0 };
+	return Vals_Combined{ false, 0 };
 }
 
-bmath::Vals_Combinded bmath::intern::Product::evaluate(const std::string & name_, std::complex<double> value_) const
+Vals_Combined bmath::intern::Product::evaluate(const std::string & name_, std::complex<double> value_) const
 {
-	Vals_Combinded result{ true, 1 };
+	Vals_Combined result{ true, 1 };
 	for (auto it : this->factors) {
-		Vals_Combinded factor_combined = it->evaluate(name_, value_);
+		Vals_Combined factor_combined = it->evaluate(name_, value_);
 		if (factor_combined.known) {
 			result.val *= factor_combined.val;
 		}
 		else {
-			return Vals_Combinded{ false, 0 };
+			return Vals_Combined{ false, 0 };
 		}
 	}
 	for (auto it : this->divisors) {
-		Vals_Combinded divisor_combined = it->evaluate(name_, value_);
+		Vals_Combined divisor_combined = it->evaluate(name_, value_);
 		if (divisor_combined.known) {
 			result.val /= divisor_combined.val;
 		}
 		else {
-			return Vals_Combinded{ false, 0 };
+			return Vals_Combined{ false, 0 };
 		}
 	}
 	return result;
@@ -380,12 +380,12 @@ void bmath::intern::Sum::combine_layers()
 	}
 }
 
-bmath::Vals_Combinded bmath::intern::Sum::combine_values()
+Vals_Combined bmath::intern::Sum::combine_values()
 {
 	std::complex<double> buffer_summand = 0;
 	bool only_known = true;
 	for (std::list<Basic_Term*>::iterator it = this->summands.begin(); it != this->summands.end();) {
-		Vals_Combinded summand = (*it)->combine_values();
+		Vals_Combined summand = (*it)->combine_values();
 		if (summand.known) {
 			buffer_summand += summand.val;
 			delete (*it);
@@ -399,7 +399,7 @@ bmath::Vals_Combinded bmath::intern::Sum::combine_values()
 		}
 	}
 	for (std::list<Basic_Term*>::iterator it = this->subtractors.begin(); it != this->subtractors.end();) {
-		Vals_Combinded subtractor = (*it)->combine_values();
+		Vals_Combined subtractor = (*it)->combine_values();
 		if (subtractor.known) {
 			buffer_summand -= subtractor.val;
 			delete (*it);
@@ -416,30 +416,30 @@ bmath::Vals_Combinded bmath::intern::Sum::combine_values()
 		this->summands.push_front(new Value(buffer_summand, this));
 	}
 	if (only_known) {
-		return Vals_Combinded{ true, buffer_summand };
+		return Vals_Combined{ true, buffer_summand };
 	}	
-	return Vals_Combinded{ false, 0 };
+	return Vals_Combined{ false, 0 };
 }
 
-bmath::Vals_Combinded bmath::intern::Sum::evaluate(const std::string & name_, std::complex<double> value_) const
+Vals_Combined bmath::intern::Sum::evaluate(const std::string & name_, std::complex<double> value_) const
 {
-	Vals_Combinded result{ true, 0 };
+	Vals_Combined result{ true, 0 };
 	for (auto it : this->summands) {
-		Vals_Combinded summand_combined = it->evaluate(name_, value_);
+		Vals_Combined summand_combined = it->evaluate(name_, value_);
 		if (summand_combined.known) {
 			result.val += summand_combined.val;
 		}
 		else {
-			return Vals_Combinded{ false, 0 };
+			return Vals_Combined{ false, 0 };
 		}
 	}
 	for (auto it : this->subtractors) {
-		Vals_Combinded subtractor_combined = it->evaluate(name_, value_);
+		Vals_Combined subtractor_combined = it->evaluate(name_, value_);
 		if (subtractor_combined.known) {
 			result.val -= subtractor_combined.val;
 		}
 		else {
-			return Vals_Combinded{ false, 0 };
+			return Vals_Combined{ false, 0 };
 		}
 	}
 	return result;
@@ -547,13 +547,13 @@ void bmath::intern::Exponentiation::combine_layers()
 	this->exponent->combine_layers();
 }
 
-bmath::Vals_Combinded bmath::intern::Exponentiation::combine_values()
+Vals_Combined bmath::intern::Exponentiation::combine_values()
 {
-	Vals_Combinded base_ = this->base->combine_values();
-	Vals_Combinded exponent_ = this->exponent->combine_values();
+	Vals_Combined base_ = this->base->combine_values();
+	Vals_Combined exponent_ = this->exponent->combine_values();
 	if (base_.known && exponent_.known) {
 		std::complex<double> result = std::pow(base_.val, exponent_.val);
-		return Vals_Combinded{ true, result };
+		return Vals_Combined{ true, result };
 	}
 	else if (base_.known && !exponent_.known) {
 		if (get_state(this->base) != s_value) {
@@ -568,18 +568,18 @@ bmath::Vals_Combinded bmath::intern::Exponentiation::combine_values()
 		}
 	}
 
-	return Vals_Combinded{ false, 0 };
+	return Vals_Combined{ false, 0 };
 }
 
-bmath::Vals_Combinded bmath::intern::Exponentiation::evaluate(const std::string & name_, std::complex<double> value_) const
+Vals_Combined bmath::intern::Exponentiation::evaluate(const std::string & name_, std::complex<double> value_) const
 {
-	Vals_Combinded base_ = this->base->evaluate(name_, value_);
-	Vals_Combinded exponent_ = this->exponent->evaluate(name_, value_);
+	Vals_Combined base_ = this->base->evaluate(name_, value_);
+	Vals_Combined exponent_ = this->exponent->evaluate(name_, value_);
 	if (base_.known && exponent_.known) {
 		std::complex<double> result = std::pow(base_.val, exponent_.val);
-		return Vals_Combinded{ true, result };
+		return Vals_Combined{ true, result };
 	}
-	return Vals_Combinded{ false, 0 };
+	return Vals_Combined{ false, 0 };
 }
 
 bool bmath::intern::Exponentiation::search_and_replace(const std::string& name_, std::complex<double> value_)
@@ -612,47 +612,47 @@ bmath::intern::Par_Operator::Par_Operator(Basic_Term* parent_)
 {
 }
 
-bmath::Vals_Combinded bmath::intern::Par_Operator::internal_combine(Vals_Combinded argument_) const
+Vals_Combined bmath::intern::Par_Operator::internal_combine(Vals_Combined argument_) const
 {
 	if (argument_.known) {
 		switch (this->op_state) {
 		case log10:
-			return Vals_Combinded{ true, std::log10(argument_.val) };
+			return Vals_Combined{ true, std::log10(argument_.val) };
 		case asin:
-			return Vals_Combinded{ true, std::asin(argument_.val) };
+			return Vals_Combined{ true, std::asin(argument_.val) };
 		case acos:
-			return Vals_Combinded{ true, std::acos(argument_.val) };
+			return Vals_Combined{ true, std::acos(argument_.val) };
 		case atan:
-			return Vals_Combinded{ true, std::atan(argument_.val) };
+			return Vals_Combined{ true, std::atan(argument_.val) };
 		case asinh:
-			return Vals_Combinded{ true, std::asinh(argument_.val) };
+			return Vals_Combined{ true, std::asinh(argument_.val) };
 		case acosh:
-			return Vals_Combinded{ true, std::acosh(argument_.val) };
+			return Vals_Combined{ true, std::acosh(argument_.val) };
 		case atanh:
-			return Vals_Combinded{ true, std::atanh(argument_.val) };
+			return Vals_Combined{ true, std::atanh(argument_.val) };
 		case sinh:
-			return Vals_Combinded{ true, std::sinh(argument_.val) };
+			return Vals_Combined{ true, std::sinh(argument_.val) };
 		case cosh:
-			return Vals_Combinded{ true, std::cosh(argument_.val) };
+			return Vals_Combined{ true, std::cosh(argument_.val) };
 		case tanh:
-			return Vals_Combinded{ true, std::tanh(argument_.val) };
+			return Vals_Combined{ true, std::tanh(argument_.val) };
 		case sqrt:
-			return Vals_Combinded{ true, std::sqrt(argument_.val) };
+			return Vals_Combined{ true, std::sqrt(argument_.val) };
 		case exp:
-			return Vals_Combinded{ true, std::exp(argument_.val) };
+			return Vals_Combined{ true, std::exp(argument_.val) };
 		case sin:
-			return Vals_Combinded{ true, std::sin(argument_.val) };
+			return Vals_Combined{ true, std::sin(argument_.val) };
 		case cos:
-			return Vals_Combinded{ true, std::cos(argument_.val) };
+			return Vals_Combined{ true, std::cos(argument_.val) };
 		case tan:
-			return Vals_Combinded{ true, std::tan(argument_.val) };
+			return Vals_Combined{ true, std::tan(argument_.val) };
 		case abs:
-			return Vals_Combinded{ true, std::abs(argument_.val) };;
+			return Vals_Combined{ true, std::abs(argument_.val) };;
 		case ln:
-			return Vals_Combinded{ true, std::log(argument_.val) };
+			return Vals_Combined{ true, std::log(argument_.val) };
 		}
 	}
-	return Vals_Combinded{ false, 0 };
+	return Vals_Combined{ false, 0 };
 }
 
 bmath::intern::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_)
@@ -727,12 +727,12 @@ void bmath::intern::Par_Operator::combine_layers()
 	this->argument->combine_layers();
 }
 
-bmath::Vals_Combinded bmath::intern::Par_Operator::combine_values()
+Vals_Combined bmath::intern::Par_Operator::combine_values()
 {
 	return this->internal_combine(argument->combine_values());
 }
 
-bmath::Vals_Combinded bmath::intern::Par_Operator::evaluate(const std::string & name_, std::complex<double> value_) const
+Vals_Combined bmath::intern::Par_Operator::evaluate(const std::string & name_, std::complex<double> value_) const
 {
 	return this->internal_combine(argument->evaluate(name_, value_));
 }

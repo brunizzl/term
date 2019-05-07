@@ -107,6 +107,17 @@ bool bmath::intern::Value::valid_state() const
 	return true;
 }
 
+bool bmath::intern::Value::re_smaller_than_0()
+{
+	if (this->value.real() < 0) {
+		this->value *= -1.0;
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
 bmath::intern::Variable::Variable(Basic_Term* parent_)
 	:Basic_Term(parent_)
 {

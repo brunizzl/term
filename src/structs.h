@@ -64,4 +64,10 @@ namespace bmath {
 
 	} //namespace intern
 
+	//every time a variable is assosiated with a value, this struct is used
+	struct Known_Variable {
+		const std::string name;
+		const std::complex<double> value;
+	};
+
 } // namespace bmath

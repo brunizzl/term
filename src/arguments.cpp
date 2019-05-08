@@ -3,17 +3,21 @@
 using namespace bmath::intern;
 
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Value
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 bmath::intern::Value::Value(Basic_Term* parent_)
 	:Basic_Term(parent_), value(std::complex<double>(0, 0))
 {
 }
 
 bmath::intern::Value::Value(std::string name_, Basic_Term* parent_)
-	:Basic_Term(parent_)
+	:Basic_Term(parent_), value(std::complex<double>(0, 0))
 {
 	LOG_C("baue Wert: " << name_);
 	if (name_ == std::string("i")) {
-		this->value = std::complex<double>(0, 1);
+		this->value.imag(1);
 	}
 	else {
 		double factor;
@@ -21,10 +25,10 @@ bmath::intern::Value::Value(std::string name_, Basic_Term* parent_)
 		stream << name_;
 		stream >> factor;
 		if (name_.find_first_of("i") != std::string::npos) {
-			this->value = std::complex<double>(0, factor);
+			this->value.imag(factor);
 		}
 		else {
-			this->value = std::complex<double>(factor, 0);
+			this->value.real(factor);
 		}
 	}
 }
@@ -71,9 +75,11 @@ void bmath::intern::Value::to_str(std::string& str) const
 		str.append(stream_re.str());
 	}
 	else if (re == 0 && im != 0) {
-		std::stringstream stream_im;
-		stream_im << im;
-		str.append(stream_im.str());
+		if (im != 1) {
+			std::stringstream stream_im;
+			stream_im << im;
+			str.append(stream_im.str());
+		}
 		str.push_back('i');
 	}
 	else if (re == 0 && im == 0) {
@@ -91,14 +97,14 @@ Vals_Combined bmath::intern::Value::combine_values()
 	return Vals_Combined{ true, this->value };
 }
 
-Vals_Combined bmath::intern::Value::evaluate(const std::string & name_, std::complex<double> value_) const
+Vals_Combined bmath::intern::Value::evaluate(const std::list<Known_Variable>& known_variables) const
 {
 	return Vals_Combined{true, this->value};
 }
 
-bool bmath::intern::Value::search_and_replace(const std::string& name_, std::complex<double> value_)
+void bmath::intern::Value::search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key)
 {
-	return false;
+	//nothing to be done here
 }
 
 bool bmath::intern::Value::valid_state() const
@@ -118,10 +124,17 @@ bool bmath::intern::Value::re_smaller_than_0()
 	}
 }
 
-void bmath::intern::Value::list_values(std::list<Value*>& values) const
+void bmath::intern::Value::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
 {
-	values.push_back(const_cast<Value*>(this));
+	if (listed_state == s_value) {
+		subterms.push_back(const_cast<Value*>(this));
+	}
 }
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Variable
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bmath::intern::Variable::Variable(Basic_Term* parent_)
 	:Basic_Term(parent_)
@@ -160,15 +173,22 @@ Vals_Combined bmath::intern::Variable::combine_values()
 	return Vals_Combined{false, 0};
 }
 
-Vals_Combined bmath::intern::Variable::evaluate(const std::string & name_, std::complex<double> value_) const
+Vals_Combined bmath::intern::Variable::evaluate(const std::list<Known_Variable>& known_variables) const
 {
-	bool same_var = this->name == name_;
-	return Vals_Combined{ same_var, value_ };
+	for (auto& it : known_variables) {
+		if (it.name == this->name) {
+			return Vals_Combined{ true, it.value };
+		}
+	}
+	return Vals_Combined{ false, 0 };
 }
 
-bool bmath::intern::Variable::search_and_replace(const std::string& name_, std::complex<double> value_)
+void bmath::intern::Variable::search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key)
 {
-	return this->name == name_;
+	if (this->name == name_) {
+		storage_key = new Value(value_, this->parent);
+		delete this;
+	}
 }
 
 bool bmath::intern::Variable::valid_state() const
@@ -177,7 +197,9 @@ bool bmath::intern::Variable::valid_state() const
 	return true;
 }
 
-void bmath::intern::Variable::list_values(std::list<Value*>& values) const
+void bmath::intern::Variable::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
 {
-	//nothing to be done here
+	if (listed_state == s_variable) {
+		subterms.push_back(const_cast<Variable*>(this));
+	}
 }

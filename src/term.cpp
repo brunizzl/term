@@ -63,18 +63,29 @@ void bmath::Term::to_str(std::string& str) const
 	this->term_ptr->to_str(str);
 }
 
-std::complex<double> bmath::Term::evaluate(const std::string & name_, std::complex<double> value_) const
+void bmath::Term::get_var_names(std::list<std::string>& names)
 {
-	return this->term_ptr->evaluate(name_, value_).val;
+	std::list<Basic_Term*> variables;
+	this->term_ptr->list_subterms(variables, s_variable);
+	for (auto it : variables) {
+		names.push_back(static_cast<Variable*>(it)->name);
+	}
+}
+
+std::complex<double> bmath::Term::evaluate(const std::string name_, std::complex<double> value_) const
+{
+	std::list<Known_Variable> known_variables{ Known_Variable{ name_, value_ } };
+	return this->term_ptr->evaluate(known_variables).val;
+}
+
+std::complex<double> bmath::Term::evaluate(const std::list<Known_Variable>& known_variables) const
+{
+	return this->term_ptr->evaluate(known_variables).val;
 }
 
 void bmath::Term::search_and_replace(const std::string& name_, std::complex<double> value_)
 {
-	if (this->term_ptr->search_and_replace(name_, value_)) {
-		delete this->term_ptr;
-		this->term_ptr = new Value(value_, nullptr);
-	}
-	return;
+	this->term_ptr->search_and_replace(name_, value_, this->term_ptr);
 }
 
 bool bmath::Term::valid_state() const
@@ -93,27 +104,26 @@ void bmath::Term::combine()
 		delete this->term_ptr;
 		this->term_ptr = new Value(new_subterm.val, nullptr);
 	}
-	this->term_ptr->combine_layers();
 	while(this->term_ptr->combine_variables());
 }
 
 void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 {
-	std::list<Value*> values;
-	this->term_ptr->list_values(values);
+	std::list<Basic_Term*> values;
+	this->term_ptr->list_subterms(values, s_value);
 	double re_sum = 0;
 	for (auto it : values) {
-		re_sum += std::abs(it->value.real());
+		re_sum += std::abs(static_cast<Value*>(it)->value.real());
 	}
 	if (re_sum != 0) {
 		double re_average = re_sum / values.size();
 		double limit_to_0 = re_average * std::pow(10, -pow_of_10_diff_to_set_0);
 		for (auto it : values) {
-			if (std::abs(it->value.real()) < limit_to_0) {
-				it->value.real(0);
+			if (std::abs(static_cast<Value*>(it)->value.real()) < limit_to_0) {
+				static_cast<Value*>(it)->value.real(0);
 			}
-			if (std::abs(it->value.imag()) < limit_to_0) {
-				it->value.imag(0);
+			if (std::abs(static_cast<Value*>(it)->value.imag()) < limit_to_0) {
+				static_cast<Value*>(it)->value.imag(0);
 			}
 		}
 	}
@@ -121,12 +131,19 @@ void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 
 bmath::Term& bmath::Term::operator+=(const Term& summand)
 {
-	Sum* sum = new Sum(nullptr);
-	this->term_ptr->parent = sum;
-	sum->summands.push_back(this->term_ptr);
-	sum->summands.push_back(copy_subterm(summand.term_ptr, sum));
-	this->term_ptr = sum;
-	this->combine();
+	if (this->term_ptr->get_state_intern() == s_value && summand.term_ptr->get_state_intern() == s_value) {
+		Value* summand_1 = static_cast<Value*>(this->term_ptr);
+		Value* summand_2 = static_cast<Value*>(summand.term_ptr);
+		summand_1->value += summand_2->value;
+	}
+	else {
+		Sum* sum = new Sum(nullptr);
+		this->term_ptr->parent = sum;
+		sum->summands.push_back(this->term_ptr);
+		sum->summands.push_back(copy_subterm(summand.term_ptr, sum));
+		this->term_ptr = sum;
+		this->combine();
+	}
 	return *this;
 }
 

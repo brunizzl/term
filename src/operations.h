@@ -20,10 +20,10 @@ namespace bmath {
 			State get_state_intern() const override;
 			void combine_layers() override;
 			Vals_Combined combine_values() override;
-			Vals_Combined evaluate(const std::string& name_, std::complex<double> value_) const override;
-			bool search_and_replace(const std::string& name_, std::complex<double> value_) override;
+			Vals_Combined evaluate(const std::list<Known_Variable>& known_variables) const override;
+			void search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key) override;
 			bool valid_state() const override;
-			void list_values(std::list<Value*>& values) const override;
+			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 		};
 
 
@@ -42,10 +42,10 @@ namespace bmath {
 			State get_state_intern() const override;
 			void combine_layers() override;
 			Vals_Combined combine_values() override;
-			Vals_Combined evaluate(const std::string& name_, std::complex<double> value_) const override;
-			bool search_and_replace(const std::string& name_, std::complex<double> value_) override;
+			Vals_Combined evaluate(const std::list<Known_Variable>& known_variables) const override;
+			void search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key) override;
 			bool valid_state() const override;
-			void list_values(std::list<Value*>& values) const override;
+			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 		};
 
 
@@ -64,10 +64,10 @@ namespace bmath {
 			State get_state_intern() const override;
 			void combine_layers() override;
 			Vals_Combined combine_values() override;
-			Vals_Combined evaluate(const std::string& name_, std::complex<double> value_) const override;
-			bool search_and_replace(const std::string& name_, std::complex<double> value_) override;
+			Vals_Combined evaluate(const std::list<Known_Variable>& known_variables) const override;
+			void search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key) override;
 			bool valid_state() const override;
-			void list_values(std::list<Value*>& values) const override;
+			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 		};
 
 
@@ -89,10 +89,10 @@ namespace bmath {
 			State get_state_intern() const override;
 			void combine_layers() override;
 			Vals_Combined combine_values() override;
-			Vals_Combined evaluate(const std::string& name_, std::complex<double> value_) const override;
-			bool search_and_replace(const std::string& name_, std::complex<double> value_) override;
+			Vals_Combined evaluate(const std::list<Known_Variable>& known_variables) const override;
+			void search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key) override;
 			bool valid_state() const override;
-			void list_values(std::list<Value*>& values) const override;
+			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 
 			friend class bmath::Term;
 		};

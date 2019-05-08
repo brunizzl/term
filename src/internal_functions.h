@@ -43,8 +43,7 @@ namespace bmath {
 		//same as get_state_intern(), but returns "s_undefined" if obj == nullptr
 		State get_state(const Basic_Term* obj);
 
-		//needs to be run before combine_variables() makes sense to run (memberfunction only calls this thing)
-
+		//needs to be run before combine_variables() makes sense to run
 		Basic_Term* standardize_structure_extern(Basic_Term* obj);
 
 	} //namespace intern

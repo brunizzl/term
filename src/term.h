@@ -45,13 +45,14 @@ namespace bmath {
 			//returns whether something has changed in the tree
 			virtual bool combine_variables();
 
-			//returns {true, whatever it adds up to} if only variable of name "name_" is present
+			//returns {true, whatever it adds up to} if only variables of names of known_variables is present
 			//returns {fale, undefined} if more variables are present
-			virtual Vals_Combined evaluate(const std::string& name_, std::complex<double> value_) const = 0;
+			virtual Vals_Combined evaluate(const std::list<Known_Variable>& known_variables) const = 0;
 
-			//searches an replaces all variables with name "name_" with values of value "value_"
+			//searches an replaces all variables with name "name_" with values of value "value_" 
+			//storage_key refers to the pointer to this in the object that owns this
 			//this function is meant for permanent changes. else use evaluate()
-			virtual bool search_and_replace(const std::string& name_, std::complex<double> value_) = 0;
+			virtual void search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key) = 0;
 
 			//true if no subterm holds nullptr, false if otherwise
 			virtual bool valid_state() const = 0;
@@ -60,8 +61,8 @@ namespace bmath {
 			//returns false if class != value, returns true and modifies value if re(value) < 0
 			virtual bool re_smaller_than_0();
 
-			//used in term.cut_rounding_error() to acess the values of tree
-			virtual void list_values(std::list<Value*>& values) const = 0;
+			//all subterms of requested type get added to the list
+			virtual void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const = 0;
 		};
 
 	} //namespace intern
@@ -79,11 +80,17 @@ namespace bmath {
 		void to_str(std::string& str) const;
 		bool valid_state() const;
 
-		//performs equivalent transfomations to combine terms and simplify
-		void combine();		
+		//performs equivalent transfomations to combine subterms and simplify
+		void combine();
+
+		//sets every number to 0 if it is smaller than 10^(pow_of_10_diff_to_set_0) times the average of all numbers
 		void cut_rounding_error(int pow_of_10_diff_to_set_0 = 15);
 
-		std::complex<double> evaluate(const std::string& name_, std::complex<double> value_) const;
+		//adds all variable names in this to list
+		void get_var_names(std::list<std::string>& names);
+
+		std::complex<double> evaluate(const std::string name_, std::complex<double> value_) const;
+		std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const;
 		void search_and_replace(const std::string& name_, std::complex<double> value_);
 
 		//arithmetic operators

@@ -3,8 +3,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <array>
-#include "test.h"
 #include <iostream>
+#include <chrono>
 #include "term.h"
 
 
@@ -19,6 +19,13 @@ void baue_teststrs(std::array<std::string, N>& teststrs) {
 			std::cout << "print:  \t" << test << '\n';
 		}
 	}
+}
+
+void replace_constants(bmath::Term& term) {
+	std::string pi("pi");
+	std::string e("e");
+	term.search_and_replace(pi, M_PI);
+	term.search_and_replace(e, M_E);
 }
 
 void test_strings() {
@@ -76,14 +83,11 @@ void test_length() {
 }
 
 void test_function(std::string name) {
-	bmath::Term f_von_x(name);
+	bmath::Term function(name);
 	std::string x_string("x");
-	std::string pi("pi");
-	std::string e("e");
-	f_von_x.search_and_replace(pi, M_PI);
-	f_von_x.search_and_replace(e, M_E);
+	replace_constants(function);
 	for (double x = 0; x < 10; x += 0.1) {
-		std::cout << x << '\t' << f_von_x.evaluate(x_string, x) << '\n';
+		std::cout << x << '\t' << function.evaluate(x_string, x) << '\n';
 	}
 }
 
@@ -92,10 +96,7 @@ void test_rechner() {
 		std::string name;
 		std::cin >> name;
 		bmath::Term test(name);
-		std::string pi("pi");
-		std::string e("e");
-		test.search_and_replace(pi, M_PI);
-		test.search_and_replace(e, M_E);
+		replace_constants(test);
 		if (test.valid_state()) {
 			test.combine();
 			test.cut_rounding_error();
@@ -103,4 +104,34 @@ void test_rechner() {
 		}
 		std::cin.get();
 	}
+}
+
+void test_timing() {
+	std::cout << "starting calculations with term..." << std::endl;
+	bmath::Term summand1("3+4*5/(200-1*30+1)");
+	bmath::Term summand2("ln(200*e^(i*pi)+2)/40");
+	summand1.combine();
+	summand2.combine();
+	int repetitions = 100000;
+	auto start = std::chrono::high_resolution_clock::now();
+	for (int i = 0; i < repetitions; i++) {
+		bmath::Term s1(summand1);
+		bmath::Term s2(summand2);
+		replace_constants(s1);
+		replace_constants(s2);
+	}
+	auto end = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> duration1 = end - start;
+	std::cout << "took " << duration1.count() << "s for " << repetitions << " repetitions\n";
+	std::cout << "\nstarting calculations with complex..." << std::endl;
+	start = std::chrono::high_resolution_clock::now();
+	for (int i = 0; i < repetitions; i++) {
+		std::complex<double> s1(4, 3);
+		std::complex<double> s2(-800, 2);
+		s1 += s2;
+	}
+	end = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> duration2 = end - start;
+	std::cout << "took " << duration2.count() << "s for " << repetitions << " repetitions\n";
+	std::cout << "\nduration term / complex: " << duration1 / duration2 << '\n';
 }

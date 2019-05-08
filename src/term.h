@@ -17,8 +17,6 @@ namespace bmath {
 
 	namespace intern {
 
-		class Value;
-
 		class Basic_Term
 		{
 		public:

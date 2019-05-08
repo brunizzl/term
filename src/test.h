@@ -109,12 +109,14 @@ void test_rechner() {
 void test_timing() {
 	//std::cin.get();
 	std::cout << "starting calculations with term..." << std::endl;
-	bmath::Term test("2+(3+(4+(5+(a+b))))-8");
+	bmath::Term t1("3+4i");
+	bmath::Term t2("1-i");
+	t1.combine();
+	t2.combine();
 	int repetitions = 100000;
 	auto start = std::chrono::high_resolution_clock::now();
 	for (int i = 0; i < repetitions; i++) {
-		bmath::Term test_2(test);
-		test_2.combine();
+		t1 += t2;
 	}
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> duration1 = end - start;
@@ -122,13 +124,13 @@ void test_timing() {
 	//std::cin.get();
 	std::cout << "\nstarting calculations with complex..." << std::endl;
 	start = std::chrono::high_resolution_clock::now();
+	std::complex<double> c1(3, 4);
+	std::complex<double> c2(1, -1);
 	for (int i = 0; i < repetitions; i++) {
-		std::complex<double> s1(4, 3);
-		std::complex<double> s2(-800, 2);
-		s1 += s2;
+		c1 += c2;
 	}
 	end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> duration2 = end - start;
 	std::cout << "took " << duration2.count() << "s for " << repetitions << " repetitions\n";
-	std::cout << "\nduration term / complex: " << duration1 / duration2 << '\n';
+	std::cout << "\nratio durations (term / complex): " << duration1 / duration2 << '\n';
 }

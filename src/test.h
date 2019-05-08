@@ -107,22 +107,19 @@ void test_rechner() {
 }
 
 void test_timing() {
+	//std::cin.get();
 	std::cout << "starting calculations with term..." << std::endl;
-	bmath::Term summand1("3+4*5/(200-1*30+1)");
-	bmath::Term summand2("ln(200*e^(i*pi)+2)/40");
-	summand1.combine();
-	summand2.combine();
+	bmath::Term test("2+(3+(4+(5+(a+b))))-8");
 	int repetitions = 100000;
 	auto start = std::chrono::high_resolution_clock::now();
 	for (int i = 0; i < repetitions; i++) {
-		bmath::Term s1(summand1);
-		bmath::Term s2(summand2);
-		replace_constants(s1);
-		replace_constants(s2);
+		bmath::Term test_2(test);
+		test_2.combine();
 	}
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> duration1 = end - start;
 	std::cout << "took " << duration1.count() << "s for " << repetitions << " repetitions\n";
+	//std::cin.get();
 	std::cout << "\nstarting calculations with complex..." << std::endl;
 	start = std::chrono::high_resolution_clock::now();
 	for (int i = 0; i < repetitions; i++) {

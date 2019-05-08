@@ -94,10 +94,10 @@ namespace bmath {
 		void search_and_replace(const std::string& name_, std::complex<double> value_);
 
 		//arithmetic operators
-		Term& operator+=(const Term& summand);
-		Term& operator-=(const Term& subtractor);
-		Term& operator*=(const Term& factor);
-		Term& operator/=(const Term& divisor);
+		Term& operator+=(const Term& operand2);
+		Term& operator-=(const Term& operand2);
+		Term& operator*=(const Term& operand2);
+		Term& operator/=(const Term& operand2);
 	};
 
 }//namespace bmath

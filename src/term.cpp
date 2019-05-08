@@ -129,53 +129,66 @@ void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 	}
 }
 
-bmath::Term& bmath::Term::operator+=(const Term& summand)
+bmath::Term& bmath::Term::operator+=(const Term& operand2)
 {
-	if (this->term_ptr->get_state_intern() == s_value && summand.term_ptr->get_state_intern() == s_value) {
-		Value* summand_1 = static_cast<Value*>(this->term_ptr);
-		Value* summand_2 = static_cast<Value*>(summand.term_ptr);
-		summand_1->value += summand_2->value;
+	if (this->term_ptr->get_state_intern() == s_value && operand2.term_ptr->get_state_intern() == s_value) {
+		static_cast<Value*>(this->term_ptr)->value += static_cast<Value*>(operand2.term_ptr)->value;
 	}
 	else {
 		Sum* sum = new Sum(nullptr);
 		this->term_ptr->parent = sum;
 		sum->summands.push_back(this->term_ptr);
-		sum->summands.push_back(copy_subterm(summand.term_ptr, sum));
+		sum->summands.push_back(copy_subterm(operand2.term_ptr, sum));
 		this->term_ptr = sum;
 		this->combine();
 	}
 	return *this;
 }
 
-bmath::Term& bmath::Term::operator-=(const Term& subtractor)
+bmath::Term& bmath::Term::operator-=(const Term& operand2)
 {
-	Sum* sum = new Sum(nullptr);
-	this->term_ptr->parent = sum;
-	sum->summands.push_back(this->term_ptr);
-	sum->subtractors.push_back(copy_subterm(subtractor.term_ptr, sum));
-	this->term_ptr = sum;
-	this->combine();
+	if (this->term_ptr->get_state_intern() == s_value && operand2.term_ptr->get_state_intern() == s_value) {
+		static_cast<Value*>(this->term_ptr)->value -= static_cast<Value*>(operand2.term_ptr)->value;
+	}
+	else {
+		Sum* sum = new Sum(nullptr);
+		this->term_ptr->parent = sum;
+		sum->summands.push_back(this->term_ptr);
+		sum->subtractors.push_back(copy_subterm(operand2.term_ptr, sum));
+		this->term_ptr = sum;
+		this->combine();
+	}
 	return *this;
 }
 
-bmath::Term& bmath::Term::operator*=(const Term& factor)
+bmath::Term& bmath::Term::operator*=(const Term& operand2)
 {
-	Product* product = new Product(nullptr);
-	this->term_ptr->parent = product;
-	product->factors.push_back(this->term_ptr);
-	product->factors.push_back(copy_subterm(factor.term_ptr, product));
-	this->term_ptr = product;
-	this->combine();
+	if (this->term_ptr->get_state_intern() == s_value && operand2.term_ptr->get_state_intern() == s_value) {
+		static_cast<Value*>(this->term_ptr)->value *= static_cast<Value*>(operand2.term_ptr)->value;
+	}
+	else {
+		Product* product = new Product(nullptr);
+		this->term_ptr->parent = product;
+		product->factors.push_back(this->term_ptr);
+		product->factors.push_back(copy_subterm(operand2.term_ptr, product));
+		this->term_ptr = product;
+		this->combine();
+	}
 	return *this;
 }
 
-bmath::Term& bmath::Term::operator/=(const Term& divisor)
+bmath::Term& bmath::Term::operator/=(const Term& operand2)
 {
-	Product* product = new Product(nullptr);
-	this->term_ptr->parent = product;
-	product->factors.push_back(this->term_ptr);
-	product->divisors.push_back(copy_subterm(divisor.term_ptr, product));
-	this->term_ptr = product;
-	this->combine();
+	if (this->term_ptr->get_state_intern() == s_value && operand2.term_ptr->get_state_intern() == s_value) {
+		static_cast<Value*>(this->term_ptr)->value /= static_cast<Value*>(operand2.term_ptr)->value;
+	}
+	else {
+		Product* product = new Product(nullptr);
+		this->term_ptr->parent = product;
+		product->factors.push_back(this->term_ptr);
+		product->divisors.push_back(copy_subterm(operand2.term_ptr, product));
+		this->term_ptr = product;
+		this->combine();
+	}
 	return *this;
 }

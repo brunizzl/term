@@ -89,51 +89,45 @@ State bmath::intern::Product::get_state_intern() const
 
 void bmath::intern::Product::combine_layers()
 {
-	for (std::list<Basic_Term*>::iterator it = this->factors.begin(); it != this->factors.end();) {
+	for (auto it = this->factors.begin(); it != this->factors.end();) {
 		(*it)->combine_layers();
 		if (get_state(*it) == s_product) {
 			Product* redundant = static_cast<Product*>((*it));
 			for (auto it_red : redundant->factors) {
 				it_red->parent = this;
-				this->factors.push_back(it_red);
 			}
-			redundant->factors.clear();
 			for (auto it_red : redundant->divisors) {
 				it_red->parent = this;
-				this->divisors.push_back(it_red);
 			}
-			redundant->divisors.clear();
+			this->factors.splice(this->factors.end(), redundant->factors);
+			this->divisors.splice(this->divisors.end(), redundant->divisors);
 			delete redundant;
 			std::list<Basic_Term*>::iterator it_2 = it;
 			++it;
 			this->factors.erase(it_2);
+			continue;
 		}
-		else {
-			++it;
-		}
+		++it;
 	}
-	for (std::list<Basic_Term*>::iterator it = this->divisors.begin(); it != this->divisors.end();) {
+	for (auto it = this->divisors.begin(); it != this->divisors.end();) {
 		(*it)->combine_layers();
 		if (get_state(*it) == s_product) {
 			Product* redundant = static_cast<Product*>((*it));
 			for (auto it_red : redundant->factors) {
 				it_red->parent = this;
-				this->divisors.push_back(it_red);
 			}
-			redundant->factors.clear();
 			for (auto it_red : redundant->divisors) {
 				it_red->parent = this;
-				this->factors.push_back(it_red);
 			}
-			redundant->divisors.clear();
+			this->factors.splice(this->divisors.end(), redundant->divisors);
+			this->divisors.splice(this->factors.end(), redundant->factors);
 			delete redundant;
 			std::list<Basic_Term*>::iterator it_2 = it;
 			++it;
 			this->divisors.erase(it_2);
+			continue;
 		}
-		else {
-			++it;
-		}
+		++it;
 	}
 }
 
@@ -141,7 +135,7 @@ Vals_Combined bmath::intern::Product::combine_values()
 {
 	std::complex<double> buffer_factor = 1;
 	bool only_known = true;
-	for (std::list<Basic_Term*>::iterator it = this->factors.begin(); it != this->factors.end();) {
+	for (auto it = this->factors.begin(); it != this->factors.end();) {
 		Vals_Combined factor = (*it)->combine_values();
 		if (factor.known) {
 			buffer_factor *= factor.val;
@@ -149,13 +143,14 @@ Vals_Combined bmath::intern::Product::combine_values()
 			std::list<Basic_Term*>::iterator it_2 = it;
 			++it;
 			this->factors.erase(it_2);
+			continue;
 		}
 		else {
 			only_known = false;
-			++it;
 		}
+		++it;
 	}
-	for (std::list<Basic_Term*>::iterator it = this->divisors.begin(); it != this->divisors.end();) {
+	for (auto it = this->divisors.begin(); it != this->divisors.end();) {
 		Vals_Combined divisor = (*it)->combine_values();
 		if (divisor.known) {
 			buffer_factor /= divisor.val;
@@ -163,11 +158,12 @@ Vals_Combined bmath::intern::Product::combine_values()
 			std::list<Basic_Term*>::iterator it_2 = it;
 			++it;
 			this->divisors.erase(it_2);
+			continue;
 		}
 		else {
 			only_known = false;
-			++it;
 		}
+		++it;
 	}
 	if (buffer_factor != std::complex<double>(1, 0)) {
 		this->factors.push_front(new Value(buffer_factor, this));
@@ -326,51 +322,45 @@ State bmath::intern::Sum::get_state_intern() const
 
 void bmath::intern::Sum::combine_layers()
 {
-	for (std::list<Basic_Term*>::iterator it = this->summands.begin(); it != this->summands.end();) {
+	for (auto it = this->summands.begin(); it != this->summands.end();) {
 		(*it)->combine_layers();
 		if (get_state(*it) == s_sum) {
 			Sum* redundant = static_cast<Sum*>((*it));
 			for (auto it_red : redundant->summands) {
 				it_red->parent = this;
-				this->summands.push_back(it_red);
 			}
-			redundant->summands.clear();
 			for (auto it_red : redundant->subtractors) {
 				it_red->parent = this;
-				this->subtractors.push_back(it_red);
 			}
-			redundant->subtractors.clear();
+			this->summands.splice(this->summands.end(), redundant->summands);
+			this->subtractors.splice(this->subtractors.end(), redundant->subtractors);
 			delete redundant;
 			std::list<Basic_Term*>::iterator it_2 = it;
 			++it;
 			this->summands.erase(it_2);
+			continue;
 		}
-		else {
-			++it;
-		}
+		++it;
 	}
-	for (std::list<Basic_Term*>::iterator it = this->subtractors.begin(); it != this->subtractors.end();) {
+	for (auto it = this->subtractors.begin(); it != this->subtractors.end();) {
 		(*it)->combine_layers();
 		if (get_state(*it) == s_sum) {
 			Sum* redundant = static_cast<Sum*>((*it));
 			for (auto it_red : redundant->summands) {
 				it_red->parent = this;
-				this->subtractors.push_back(it_red);
 			}
-			redundant->summands.clear();
 			for (auto it_red : redundant->subtractors) {
 				it_red->parent = this;
-				this->summands.push_back(it_red);
 			}
-			redundant->subtractors.clear();
+			this->summands.splice(this->subtractors.end(), redundant->subtractors);
+			this->subtractors.splice(this->summands.end(), redundant->summands);
 			delete redundant;
 			std::list<Basic_Term*>::iterator it_2 = it;
 			++it;
 			this->subtractors.erase(it_2);
+			continue;
 		}
-		else {
-			++it;
-		}
+		++it;
 	}
 }
 
@@ -378,7 +368,7 @@ Vals_Combined bmath::intern::Sum::combine_values()
 {
 	std::complex<double> buffer_summand = 0;
 	bool only_known = true;
-	for (std::list<Basic_Term*>::iterator it = this->summands.begin(); it != this->summands.end();) {
+	for (auto it = this->summands.begin(); it != this->summands.end();) {
 		Vals_Combined summand = (*it)->combine_values();
 		if (summand.known) {
 			buffer_summand += summand.val;
@@ -386,11 +376,12 @@ Vals_Combined bmath::intern::Sum::combine_values()
 			std::list<Basic_Term*>::iterator it_2 = it;
 			++it;
 			this->summands.erase(it_2);
+			continue;
 		}
 		else {
 			only_known = false;
-			++it;
 		}
+		++it;
 	}
 	for (std::list<Basic_Term*>::iterator it = this->subtractors.begin(); it != this->subtractors.end();) {
 		Vals_Combined subtractor = (*it)->combine_values();
@@ -400,11 +391,12 @@ Vals_Combined bmath::intern::Sum::combine_values()
 			std::list<Basic_Term*>::iterator it_2 = it;
 			++it;
 			this->subtractors.erase(it_2);
+			continue;
 		}
 		else {
 			only_known = false;
-			++it;
 		}
+		++it;
 	}
 	if (buffer_summand != std::complex<double>(0, 0)) {
 		this->summands.push_front(new Value(buffer_summand, this));

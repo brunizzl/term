@@ -61,6 +61,12 @@ namespace bmath {
 
 			//all subterms of requested type get added to the list
 			virtual void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const = 0;
+
+			//needs to be run befor == makes sense to be used
+			virtual void sort() = 0;
+
+			//does what it seems to to (works only on sorted terms though)
+			virtual bool operator<(const Basic_Term& other) const = 0;
 		};
 
 	} //namespace intern

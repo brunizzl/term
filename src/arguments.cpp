@@ -131,6 +131,27 @@ void bmath::intern::Value::list_subterms(std::list<Basic_Term*>& subterms, State
 	}
 }
 
+void bmath::intern::Value::sort()
+{
+	//nothing to be done here
+}
+
+bool bmath::intern::Value::operator<(const Basic_Term& other) const
+{
+	if (this->get_state_intern() != other.get_state_intern()) {
+		return this->get_state_intern() < other.get_state_intern();
+	}
+	else {
+		const Value* other_val = static_cast<const Value*>(&other);
+		if (this->value.real() != other_val->value.real()) {
+			return this->value.real() < other_val->value.real();
+		}
+		else {
+			return this->value.imag() < other_val->value.imag();
+		}
+	}
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Variable
@@ -201,5 +222,21 @@ void bmath::intern::Variable::list_subterms(std::list<Basic_Term*>& subterms, St
 {
 	if (listed_state == s_variable) {
 		subterms.push_back(const_cast<Variable*>(this));
+	}
+}
+
+void bmath::intern::Variable::sort()
+{
+	//nothing to be done here
+}
+
+bool bmath::intern::Variable::operator<(const Basic_Term& other) const
+{
+	if (this->get_state_intern() != other.get_state_intern()) {
+		return this->get_state_intern() < other.get_state_intern();
+	}
+	else {
+		const Variable* other_var = static_cast<const Variable*>(&other);
+		return this->name < other_var->name;
 	}
 }

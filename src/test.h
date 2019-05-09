@@ -109,14 +109,16 @@ void test_rechner() {
 void test_timing() {
 	//std::cin.get();
 	std::cout << "starting calculations with term..." << std::endl;
-	bmath::Term t1("3+4i");
-	bmath::Term t2("1-i");
+	bmath::Term t1("3+4a");
+	bmath::Term t2("1-2*b");
 	t1.combine();
 	t2.combine();
 	int repetitions = 100000;
 	auto start = std::chrono::high_resolution_clock::now();
 	for (int i = 0; i < repetitions; i++) {
-		t1 += t2;
+		bmath::Term t3(t1);
+		bmath::Term t4(t2);
+		t3 += t4;
 	}
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> duration1 = end - start;
@@ -127,7 +129,9 @@ void test_timing() {
 	std::complex<double> c1(3, 4);
 	std::complex<double> c2(1, -1);
 	for (int i = 0; i < repetitions; i++) {
-		c1 += c2;
+		std::complex<double> c3(c1);
+		std::complex<double> c4(c2);
+		c3 += c4;
 	}
 	end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> duration2 = end - start;

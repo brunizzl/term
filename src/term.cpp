@@ -104,7 +104,9 @@ void bmath::Term::combine()
 		delete this->term_ptr;
 		this->term_ptr = new Value(new_subterm.val, nullptr);
 	}
-	while(this->term_ptr->combine_variables());
+	while (this->term_ptr->combine_variables()) {
+		this->term_ptr->combine_layers();
+	}
 }
 
 void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)

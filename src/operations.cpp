@@ -237,6 +237,55 @@ void bmath::intern::Product::list_subterms(std::list<Basic_Term*>& subterms, Sta
 	}
 }
 
+void bmath::intern::Product::sort()
+{
+	for (auto it : this->factors) {
+		it->sort();
+	}
+	for (auto it : this->divisors) {
+		it->sort();
+	}
+	//HILFE ICH HABE KEINEN PLAN ABER HIER MUSS VERGLICHEN WERDEN
+}
+
+bool bmath::intern::Product::operator<(const Basic_Term& other) const
+{
+	if (this->get_state_intern() != other.get_state_intern()) {
+		return this->get_state_intern() < other.get_state_intern();
+	}
+	else {
+		const Product* other_product = static_cast<const Product*>(&other);
+		if (this->factors.size() != other_product->factors.size()) {
+			return this->factors.size() < other_product->factors.size();
+		}
+		if (this->divisors.size() != other_product->divisors.size()) {
+			return this->divisors.size() < other_product->divisors.size();
+		}
+		//the operator assumes from now on to have sorted products to compare
+		auto it_this = this->factors.begin();
+		auto it_other = other_product->factors.begin();
+		for (; it_this != this->factors.end() && it_other != other_product->factors.end(); ++it_this, ++it_other) {
+			if ((**it_this) < (**it_other)) {
+				return true;
+			}
+			if ((**it_other) < (**it_this)) {
+				return false;
+			}
+		}
+		it_this = this->divisors.begin();
+		it_other = other_product->divisors.begin();
+		for (; it_this != this->divisors.end() && it_other != other_product->divisors.end(); ++it_this, ++it_other) {
+			if ((**it_this) < (**it_other)) {
+				return true;
+			}
+			if ((**it_other) < (**it_this)) {
+				return false;
+			}
+		}
+		return false;
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Sum
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -469,6 +518,55 @@ void bmath::intern::Sum::list_subterms(std::list<Basic_Term*>& subterms, State l
 	}
 }
 
+void bmath::intern::Sum::sort()
+{
+	for (auto it : this->summands) {
+		it->sort();
+	}
+	for (auto it : this->subtractors) {
+		it->sort();
+	}
+	//HILFE ICH HABE KEINEN PLAN ABER HIER MUSS VERGLICHEN WERDEN
+}
+
+bool bmath::intern::Sum::operator<(const Basic_Term& other) const
+{
+	if (this->get_state_intern() != other.get_state_intern()) {
+		return this->get_state_intern() < other.get_state_intern();
+	}
+	else {
+		const Sum* other_sum = static_cast<const Sum*>(&other);
+		if (this->summands.size() != other_sum->summands.size()) {
+			return this->summands.size() < other_sum->summands.size();
+		}
+		if (this->subtractors.size() != other_sum->subtractors.size()) {
+			return this->subtractors.size() < other_sum->subtractors.size();
+		}
+		//the operator assumes from now on to have sorted sums to compare
+		auto it_this = this->summands.begin();
+		auto it_other = other_sum->summands.begin();
+		for (; it_this != this->summands.end() && it_other != other_sum->summands.end(); ++it_this, ++it_other) {
+			if ((**it_this) < (**it_other)) {
+				return true;
+			}
+			if ((**it_other) < (**it_this)) {
+				return false;
+			}
+		}
+		it_this = this->subtractors.begin();
+		it_other = other_sum->subtractors.begin();
+		for (; it_this != this->subtractors.end() && it_other != other_sum->subtractors.end(); ++it_this, ++it_other) {
+			if ((**it_this) < (**it_other)) {
+				return true;
+			}
+			if ((**it_other) < (**it_this)) {
+				return false;
+			}
+		}
+		return false;
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Exponentiation
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -583,6 +681,35 @@ void bmath::intern::Exponentiation::list_subterms(std::list<Basic_Term*>& subter
 	}
 	this->base->list_subterms(subterms, listed_state);
 	this->exponent->list_subterms(subterms, listed_state);
+}
+
+void bmath::intern::Exponentiation::sort()
+{
+	this->base->sort();
+	this->exponent->sort();
+}
+
+bool bmath::intern::Exponentiation::operator<(const Basic_Term& other) const
+{
+	if (this->get_state_intern() != other.get_state_intern()) {
+		return this->get_state_intern() < other.get_state_intern();
+	}
+	else {
+		const Exponentiation* other_exp = static_cast<const Exponentiation*>(&other);
+		if (*(this->base) < *(other_exp->base)) {
+			return true;
+		}
+		if (*(other_exp->base) < *(this->base)) {
+			return false;
+		}
+		if (*(this->exponent) < *(other_exp->exponent)) {
+			return true;
+		}
+		if (*(other_exp->exponent) < *(this->exponent)) {
+			return false;
+		}
+	}
+	return false;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -739,6 +866,31 @@ void bmath::intern::Par_Operator::list_subterms(std::list<Basic_Term*>& subterms
 		subterms.push_back(const_cast<Par_Operator*>(this));
 	}
 	this->argument->list_subterms(subterms, listed_state);
+}
+
+void bmath::intern::Par_Operator::sort()
+{
+	this->argument->sort();
+}
+
+bool bmath::intern::Par_Operator::operator<(const Basic_Term& other) const
+{
+	if (this->get_state_intern() != other.get_state_intern()) {
+		return this->get_state_intern() < other.get_state_intern();
+	}
+	else {
+		const Par_Operator* other_par_op = static_cast<const Par_Operator*>(&other);
+		if (this->op_state != other_par_op->op_state) {
+			return this->op_state < other_par_op->op_state;
+		}
+		if (*(this->argument) < *(other_par_op->argument)) {
+			return true;
+		}
+		if (*(other_par_op->argument) < *(this->argument)) {
+			return false;
+		}
+	}
+	return false;
 }
 
 //void bmath::intern::Par_Operator::sort()

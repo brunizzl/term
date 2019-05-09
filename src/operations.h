@@ -24,6 +24,8 @@ namespace bmath {
 			void search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key) override;
 			bool valid_state() const override;
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
+			void sort() override;	//NOCH NICHT FERTIG
+			bool operator<(const Basic_Term& other) const override;
 		};
 
 
@@ -46,6 +48,8 @@ namespace bmath {
 			void search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key) override;
 			bool valid_state() const override;
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
+			void sort() override;	//NOCH NICHT FERTIG
+			bool operator<(const Basic_Term& other) const override;
 		};
 
 
@@ -68,6 +72,8 @@ namespace bmath {
 			void search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key) override;
 			bool valid_state() const override;
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
+			void sort() override;
+			bool operator<(const Basic_Term& other) const override;
 		};
 
 
@@ -93,8 +99,8 @@ namespace bmath {
 			void search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key) override;
 			bool valid_state() const override;
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
-
-			friend class bmath::Term;
+			void sort() override;
+			bool operator<(const Basic_Term& other) const override;
 		};
 
 	} //namespace intern

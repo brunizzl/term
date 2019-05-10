@@ -152,6 +152,17 @@ bool bmath::intern::Value::operator<(const Basic_Term& other) const
 	}
 }
 
+bool bmath::intern::Value::operator==(const Basic_Term& other) const
+{
+	if (this->get_state_intern() != other.get_state_intern()) {
+		return false;
+	}
+	else {
+		const Value* other_val = static_cast<const Value*>(&other);
+		return this->value == other_val->value;
+	}
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Variable
@@ -238,5 +249,16 @@ bool bmath::intern::Variable::operator<(const Basic_Term& other) const
 	else {
 		const Variable* other_var = static_cast<const Variable*>(&other);
 		return this->name < other_var->name;
+	}
+}
+
+bool bmath::intern::Variable::operator==(const Basic_Term& other) const
+{
+	if (this->get_state_intern() != other.get_state_intern()) {
+		return false;
+	}
+	else {
+		const Variable* other_var = static_cast<const Variable*>(&other);
+		return this->name == other_var->name;
 	}
 }

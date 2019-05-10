@@ -226,7 +226,6 @@ State bmath::intern::get_state(const Basic_Term* obj)
 
 Basic_Term* bmath::intern::standardize_structure_extern(Basic_Term* obj)
 {
-	//obj->standardize_structure_intern();
 	switch (obj->get_state_intern()) {
 	case s_product: {
 		Product* product = static_cast<Product*>(obj);
@@ -251,8 +250,9 @@ Basic_Term* bmath::intern::standardize_structure_extern(Basic_Term* obj)
 		}
 		break;
 	}
+	default:
+		return obj;
 	}
-	return nullptr;
 }
 
 Basic_Term* bmath::intern::build_subterm(std::string& subtermstr, Basic_Term* parent_)

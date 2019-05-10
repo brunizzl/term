@@ -26,6 +26,7 @@ namespace bmath {
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
 			bool operator<(const Basic_Term& other) const override;
+			bool operator==(const Basic_Term& other) const override;
 		};
 
 
@@ -48,6 +49,7 @@ namespace bmath {
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
 			bool operator<(const Basic_Term& other) const override;
+			bool operator==(const Basic_Term& other) const override;
 		};
 
 	} //namespace intern

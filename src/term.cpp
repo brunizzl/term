@@ -22,6 +22,26 @@ bool bmath::intern::Basic_Term::re_smaller_than_0()
 	return false;
 }
 
+bool bmath::intern::Basic_Term::operator>(const Basic_Term& other) const
+{
+	return other < *this;
+}
+
+bool bmath::intern::Basic_Term::operator<=(const Basic_Term& other) const
+{
+	return !(other < *this);
+}
+
+bool bmath::intern::Basic_Term::operator>=(const Basic_Term& other) const
+{
+	return !(*this < other);
+}
+
+bool bmath::intern::Basic_Term::operator!=(const Basic_Term& other) const
+{
+	return !(*this == other);
+}
+
 bmath::intern::Basic_Term::Basic_Term(Basic_Term* parent_)
 	:parent(parent_)
 {
@@ -104,9 +124,8 @@ void bmath::Term::combine()
 		delete this->term_ptr;
 		this->term_ptr = new Value(new_subterm.val, nullptr);
 	}
-	while (this->term_ptr->combine_variables()) {
-		this->term_ptr->combine_layers();
-	}
+	this->term_ptr->sort();
+	while (this->term_ptr->combine_variables());
 }
 
 void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)

@@ -96,7 +96,7 @@ void test_rechner() {
 		std::string name;
 		std::cin >> name;
 		bmath::Term test(name);
-		replace_constants(test);
+		//replace_constants(test);
 		if (test.valid_state()) {
 			test.combine();
 			test.cut_rounding_error();

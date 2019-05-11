@@ -51,3 +51,5 @@ namespace bmath {
 
 //allows ostream to output terms
 std::ostream& operator<<(std::ostream& stream, const bmath::Term& term);
+//allows ostream to output Basic_Terms
+std::ostream& operator<<(std::ostream& stream, const bmath::intern::Basic_Term& term);

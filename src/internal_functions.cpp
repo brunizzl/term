@@ -250,9 +250,8 @@ Basic_Term* bmath::intern::standardize_structure_extern(Basic_Term* obj)
 		}
 		break;
 	}
-	default:
-		return obj;
 	}
+	return obj;
 }
 
 Basic_Term* bmath::intern::build_subterm(std::string& subtermstr, Basic_Term* parent_)
@@ -312,6 +311,12 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* pa
 
 
 std::ostream& operator<<(std::ostream& stream, const bmath::Term& term)
+{
+	stream << term.to_str();
+	return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const bmath::intern::Basic_Term& term)
 {
 	std::string str;
 	term.to_str(str);

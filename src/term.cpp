@@ -2,6 +2,11 @@
 
 using namespace bmath::intern;
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Basic_Term\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 void bmath::intern::Basic_Term::combine_layers()
 {
 	//the base class does not know of the tree structures, the derived classes provide.
@@ -57,39 +62,76 @@ bmath::intern::Basic_Term::~Basic_Term()
 	//cleaning up the tree is done in derived classes
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Term\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bmath::Term::Term()
+	:term_ptr(nullptr)
+{
+}
+
 bmath::Term::Term(std::string name_)
 	:term_ptr(nullptr)
 {
 	if (preprocess_str(name_)) {
 		this->term_ptr = build_subterm(name_, nullptr);
 	}
-	LOG_C("baue Term: " << *this);
+	LOG_C("baue Term " << this << ": " << *this);
 }
 
 bmath::Term::Term(const Term& source)
 	:term_ptr(copy_subterm(source.term_ptr, nullptr))
 {
-	LOG_C("kopiere Term: " << *this);
+	LOG_C("kopiere Term " << &source << " zu " << this << ": " << *this);
+}
+
+bmath::Term::Term(Term&& source) noexcept
+	:term_ptr(std::exchange(source.term_ptr, nullptr))
+{
+}
+
+bmath::Term& bmath::Term::operator=(const Term& source)
+{
+	if (this != &source) {
+		delete this->term_ptr;
+		this->term_ptr = copy_subterm(source.term_ptr, nullptr);
+	}
+	return *this;
+}
+
+bmath::Term& bmath::Term::operator=(Term&& source) noexcept
+{
+	if (this != &source) {
+		delete this->term_ptr;
+		this->term_ptr = std::exchange(source.term_ptr, nullptr);
+	}
+	return *this;
 }
 
 bmath::Term::~Term()
 {
-	LOG_C("loesche Term: " << *this);
+	LOG_C("loesche Term " << this << ": " << *this);
 	delete term_ptr;
 }
 
-void bmath::Term::to_str(std::string& str) const
+std::string bmath::Term::to_str() const
 {
+	std::string str;
 	this->term_ptr->to_str(str);
+	return std::move(str);
 }
 
-void bmath::Term::get_var_names(std::list<std::string>& names)
+std::set<std::string> bmath::Term::get_var_names() const
 {
+	std::set<std::string> names;
 	std::list<Basic_Term*> variables;
 	this->term_ptr->list_subterms(variables, s_variable);
 	for (auto it : variables) {
-		names.push_back(static_cast<Variable*>(it)->name);
+		names.insert(static_cast<Variable*>(it)->name);
 	}
+	return std::move(names);
 }
 
 std::complex<double> bmath::Term::evaluate(const std::string name_, std::complex<double> value_) const
@@ -212,4 +254,28 @@ bmath::Term& bmath::Term::operator/=(const Term& operand2)
 		this->combine();
 	}
 	return *this;
+}
+
+bmath::Term bmath::Term::operator+(const Term& operand2) const
+{
+	bmath::Term operand1(*this);
+	return std::move(operand1 += operand2);
+}
+
+bmath::Term bmath::Term::operator-(const Term& operand2) const
+{
+	bmath::Term operand1(*this);
+	return std::move(operand1 -= operand2);
+}
+
+bmath::Term bmath::Term::operator*(const Term& operand2) const
+{
+	bmath::Term operand1(*this);
+	return std::move(operand1 *= operand2);
+}
+
+bmath::Term bmath::Term::operator/(const Term& operand2) const
+{
+	bmath::Term operand1(*this);
+	return std::move(operand1 /= operand2);
 }

@@ -109,4 +109,3 @@ namespace bmath {
 
 	} //namespace intern
 } //namespace bmath
-

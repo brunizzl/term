@@ -83,11 +83,18 @@ namespace bmath {
 		intern::Basic_Term* term_ptr;		//start of actual term tree
 		
 	public:
+		Term();
 		Term(std::string name_);
 		Term(const Term& source);
+		Term(Term&& source) noexcept;
+		Term& operator=(const Term& source);
+		Term& operator=(Term&& source) noexcept;
 		~Term();
 
-		void to_str(std::string& str) const;
+		//returns the tree converted into a string
+		std::string to_str() const;
+
+		//true if no subterm holds nullptr, false if otherwise
 		bool valid_state() const;
 
 		//performs equivalent transfomations to combine subterms and simplify
@@ -97,7 +104,7 @@ namespace bmath {
 		void cut_rounding_error(int pow_of_10_diff_to_set_0 = 15);
 
 		//adds all variable names in this to list
-		void get_var_names(std::list<std::string>& names);
+		std::set<std::string> get_var_names() const;
 
 		std::complex<double> evaluate(const std::string name_, std::complex<double> value_) const;
 		std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const;
@@ -108,7 +115,14 @@ namespace bmath {
 		Term& operator-=(const Term& operand2);
 		Term& operator*=(const Term& operand2);
 		Term& operator/=(const Term& operand2);
+
+		Term  operator+(const Term& operand2) const;
+		Term  operator-(const Term& operand2) const;
+		Term  operator*(const Term& operand2) const;
+		Term  operator/(const Term& operand2) const;
 	};
+
+	const std::pair<Term, Term> sin1 { "sin(a)^2+cos(a)^2", "1" };
 
 }//namespace bmath
 

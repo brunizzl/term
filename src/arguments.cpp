@@ -135,7 +135,7 @@ void bmath::intern::Value::sort()
 	//nothing to be done here
 }
 
-Basic_Term* bmath::intern::Value::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const
+Basic_Term* bmath::intern::Value::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses)
 {
 	if (*this == *pattern) {
 		return const_cast<Value*>(this);
@@ -250,7 +250,7 @@ void bmath::intern::Variable::sort()
 	//nothing to be done here
 }
 
-Basic_Term* bmath::intern::Variable::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const
+Basic_Term* bmath::intern::Variable::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses)
 {
 	if (*this == *pattern) {
 		return const_cast<Variable*>(this);
@@ -346,7 +346,7 @@ void bmath::intern::Pattern_Variable::sort()
 	//nothing to be done here
 }
 
-Basic_Term* bmath::intern::Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const
+Basic_Term* bmath::intern::Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses)
 {
 	std::cout << "Error: did not expect Pattern_Variable calling match_intern()\n";
 	return nullptr;
@@ -354,9 +354,13 @@ Basic_Term* bmath::intern::Pattern_Variable::match_intern(Basic_Term* pattern, s
 
 bool bmath::intern::Pattern_Variable::operator<(const Basic_Term& other) const
 {
-	std::cout << "Error: pattern_variable used instead of variable!\n";
-	std::cout << "(try running bmath::pattern_initialize() function first.)\n";
-	return false;
+	if (this->get_state_intern() != other.get_state_intern()) {
+		return this->get_state_intern() < other.get_state_intern();
+	}
+	else {
+		const Pattern_Variable* other_var = static_cast<const Pattern_Variable*>(&other);
+		return this->name < other_var->name;
+	}
 }
 
 bool bmath::intern::Pattern_Variable::operator==(const Basic_Term& other) const

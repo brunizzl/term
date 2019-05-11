@@ -249,10 +249,69 @@ void bmath::intern::Product::sort()
 	this->divisors.sort([](Basic_Term * &a, Basic_Term * &b) -> bool {return *a < *b; });
 }
 
-Basic_Term* bmath::intern::Product::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const
+Basic_Term* bmath::intern::Product::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses)
 {
-	if (*this == *pattern) {
-		return const_cast<Product*>(this);
+	if (this->get_state_intern() == pattern->get_state_intern()) {
+		Product* pattern_product = static_cast<Product*>(pattern);
+		if (this->factors.size() >= pattern_product->factors.size() && this->divisors.size() >= pattern_product->divisors.size()) {
+			bool full_match = true;
+			std::list<Basic_Term*> matched_factors;
+			std::list<Basic_Term*> matched_divisors;
+			//it is not possible so search this->factors always from start, as for example pattern "a*a" would match with every product, because the same factor would be read as first AND second "a"
+			std::list<Basic_Term*>::iterator this_factor = const_cast<Product*>(this)->factors.begin();	//therefore we assume sorted lists and only iterate trough this->factors once.
+			for (auto& pattern_factor : pattern_product->factors) {
+				Basic_Term* factor_match;
+				for (; this_factor != this->factors.end(); ++this_factor) {
+					factor_match = (*this_factor)->match_intern(pattern_factor, pattern_var_adresses);
+					if (factor_match != nullptr) {
+						matched_factors.splice(matched_factors.end(), this->factors, this_factor);
+						break;
+					}
+				}
+				if (factor_match = nullptr) {
+					full_match = false;
+					break;
+				}
+			}
+			if (full_match) {	//same for divisors
+				std::list<Basic_Term*>::iterator this_divisor = const_cast<Product*>(this)->divisors.begin();
+				for (auto& pattern_divisor : pattern_product->divisors) {
+					Basic_Term* divisor_match;
+					for (; this_divisor != this->divisors.end(); ++this_divisor) {
+						divisor_match = (*this_divisor)->match_intern(pattern_divisor, pattern_var_adresses);
+						if (divisor_match != nullptr) {
+							matched_divisors.splice(matched_divisors.end(), this->divisors, this_divisor);
+							break;
+						}
+					}
+					if (divisor_match = nullptr) {
+						full_match = false;
+						break;
+					}
+				}
+			}
+			if (full_match) {
+				//pushing matched factors + divisors into their own product
+				if (this->factors.size() > pattern_product->factors.size() || this->divisors.size() > pattern_product->divisors.size()) {
+					Product* matched_product = new Product(this);
+					matched_product->factors.splice(matched_product->factors.end(), matched_factors);
+					matched_product->divisors.splice(matched_product->divisors.end(), matched_divisors);
+					for (auto& it : matched_product->factors) {
+						it->parent = matched_product;
+					}
+					for (auto& it : matched_product->divisors) {
+						it->parent = matched_product;
+					}
+					this->factors.push_back(matched_product);
+					return matched_product;
+				}
+				else {
+					this->factors = std::move(matched_factors);
+					this->divisors = std::move(matched_divisors);
+					return const_cast<Product*>(this);
+				}
+			}
+		}
 	}
 	else {
 		Basic_Term* argument_match;
@@ -584,8 +643,9 @@ void bmath::intern::Sum::sort()
 	this->subtractors.sort([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; });
 }
 
-Basic_Term* bmath::intern::Sum::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const
+Basic_Term* bmath::intern::Sum::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses)
 {
+	//MUSS NOCH VERGLEICHEN, OB NUR TEILE VON THIS GLEICH GANZEM PATTERN SIND
 	if (*this == *pattern) {
 		return const_cast<Sum*>(this);
 	}
@@ -803,7 +863,7 @@ void bmath::intern::Exponentiation::sort()
 	this->exponent->sort();
 }
 
-Basic_Term* bmath::intern::Exponentiation::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const
+Basic_Term* bmath::intern::Exponentiation::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses)
 {
 
 	if (*this == *pattern) {
@@ -1020,7 +1080,7 @@ void bmath::intern::Par_Operator::sort()
 	this->argument->sort();
 }
 
-Basic_Term* bmath::intern::Par_Operator::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const
+Basic_Term* bmath::intern::Par_Operator::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses)
 {
 	if (*this == *pattern) {
 		return const_cast<Par_Operator*>(this);

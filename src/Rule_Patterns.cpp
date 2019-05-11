@@ -14,6 +14,7 @@ void bmath::pattern_initialize()
 {
 	constructing_patterns = false;
 	for (auto& pattern : patterns) {
+		pattern.original.term_ptr->sort();
 		pattern.original.term_ptr->list_subterms(pattern.var_adresses, s_pattern_var);
 	}
 }

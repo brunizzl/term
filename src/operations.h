@@ -25,6 +25,7 @@ namespace bmath {
 			bool valid_state() const override;
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
+			Basic_Term* match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -50,6 +51,7 @@ namespace bmath {
 			bool valid_state() const override;
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
+			Basic_Term* match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -75,6 +77,7 @@ namespace bmath {
 			bool valid_state() const override;
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
+			Basic_Term* match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -103,6 +106,7 @@ namespace bmath {
 			bool valid_state() const override;
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
+			Basic_Term* match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};

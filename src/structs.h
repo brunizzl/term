@@ -26,6 +26,7 @@ namespace bmath {
 			s_sum,
 			s_value,
 			s_variable,
+			s_pattern_var,
 			s_product,
 			s_exponentiation
 		};

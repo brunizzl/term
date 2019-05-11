@@ -239,14 +239,40 @@ void bmath::intern::Product::list_subterms(std::list<Basic_Term*>& subterms, Sta
 
 void bmath::intern::Product::sort()
 {
-	for (auto it : this->factors) {
+	for (auto& it : this->factors) {
 		it->sort();
 	}
-	for (auto it : this->divisors) {
+	for (auto& it : this->divisors) {
 		it->sort();
 	}
 	this->factors.sort([](Basic_Term * &a, Basic_Term * &b) -> bool {return *a < *b; });
 	this->divisors.sort([](Basic_Term * &a, Basic_Term * &b) -> bool {return *a < *b; });
+}
+
+Basic_Term* bmath::intern::Product::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const
+{
+	if (*this == *pattern) {
+		return const_cast<Product*>(this);
+	}
+	else {
+		Basic_Term* argument_match;
+		for (auto& it : factors) {
+			reset_pattern_vars(pattern_var_adresses);
+			argument_match = it->match_intern(pattern, pattern_var_adresses);
+			if (argument_match != nullptr) {
+				return argument_match;
+			}
+		}
+		for (auto& it : divisors) {
+			reset_pattern_vars(pattern_var_adresses);
+			argument_match = it->match_intern(pattern, pattern_var_adresses);
+			if (argument_match != nullptr) {
+				return argument_match;
+			}
+		}
+		reset_pattern_vars(pattern_var_adresses);
+		return nullptr;
+	}
 }
 
 bool bmath::intern::Product::operator<(const Basic_Term& other) const
@@ -548,14 +574,40 @@ void bmath::intern::Sum::list_subterms(std::list<Basic_Term*>& subterms, State l
 void bmath::intern::Sum::sort()
 {
 	//vielleicht hier vor noch die standardisierung mit produkt einfügen etc.?
-	for (auto it : this->summands) {
+	for (auto& it : this->summands) {
 		it->sort();
 	}
-	for (auto it : this->subtractors) {
+	for (auto& it : this->subtractors) {
 		it->sort();
 	}
 	this->summands.sort([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; });
 	this->subtractors.sort([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; });
+}
+
+Basic_Term* bmath::intern::Sum::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const
+{
+	if (*this == *pattern) {
+		return const_cast<Sum*>(this);
+	}
+	else {
+		Basic_Term* argument_match;
+		for (auto& it : summands) {
+			reset_pattern_vars(pattern_var_adresses);
+			argument_match = it->match_intern(pattern, pattern_var_adresses);
+			if (argument_match != nullptr) {
+				return argument_match;
+			}
+		}
+		for (auto& it : subtractors) {
+			reset_pattern_vars(pattern_var_adresses);
+			argument_match = it->match_intern(pattern, pattern_var_adresses);
+			if (argument_match != nullptr) {
+				return argument_match;
+			}
+		}
+		reset_pattern_vars(pattern_var_adresses);
+		return nullptr;
+	}
 }
 
 bool bmath::intern::Sum::operator<(const Basic_Term& other) const
@@ -751,6 +803,28 @@ void bmath::intern::Exponentiation::sort()
 	this->exponent->sort();
 }
 
+Basic_Term* bmath::intern::Exponentiation::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const
+{
+
+	if (*this == *pattern) {
+		return const_cast<Exponentiation*>(this);
+	}
+	else {
+		reset_pattern_vars(pattern_var_adresses);
+		Basic_Term* argument_match = base->match_intern(pattern, pattern_var_adresses);
+		if (argument_match != nullptr) {
+			return argument_match;
+		}
+		reset_pattern_vars(pattern_var_adresses);
+		argument_match = exponent->match_intern(pattern, pattern_var_adresses);
+		if (argument_match != nullptr) {
+			return argument_match;
+		}
+		reset_pattern_vars(pattern_var_adresses);
+		return nullptr;
+	}
+}
+
 bool bmath::intern::Exponentiation::operator<(const Basic_Term& other) const
 {
 	if (this->get_state_intern() != other.get_state_intern()) {
@@ -944,6 +1018,22 @@ void bmath::intern::Par_Operator::list_subterms(std::list<Basic_Term*>& subterms
 void bmath::intern::Par_Operator::sort()
 {
 	this->argument->sort();
+}
+
+Basic_Term* bmath::intern::Par_Operator::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const
+{
+	if (*this == *pattern) {
+		return const_cast<Par_Operator*>(this);
+	}
+	else {
+		reset_pattern_vars(pattern_var_adresses);
+		Basic_Term* argument_match = argument->match_intern(pattern, pattern_var_adresses);
+		if (argument_match != nullptr) {
+			return argument_match;
+		}
+		reset_pattern_vars(pattern_var_adresses);
+		return nullptr;
+	}
 }
 
 bool bmath::intern::Par_Operator::operator<(const Basic_Term& other) const

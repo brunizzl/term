@@ -12,9 +12,6 @@
 #include "structs.h"
 
 namespace bmath {
-
-	class Term;
-
 	namespace intern {
 
 		class Basic_Term
@@ -64,6 +61,11 @@ namespace bmath {
 
 			//needs to be run befor == makes sense to be used
 			virtual void sort() = 0;
+
+			//returns subterm matching pattern or nullptr (basically operator==, but with pattern matching)
+			//only differs from operator== on first layer, as it calls operator== itself.
+			//first tries to match this to pattern, then tries to match subterms
+			virtual Basic_Term* match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const = 0;
 
 			//works only on sorted terms
 			virtual bool operator<(const Basic_Term& other) const = 0;
@@ -120,12 +122,13 @@ namespace bmath {
 		Term  operator-(const Term& operand2) const;
 		Term  operator*(const Term& operand2) const;
 		Term  operator/(const Term& operand2) const;
-	};
 
-	const std::pair<Term, Term> sin1 { "sin(a)^2+cos(a)^2", "1" };
+		friend void pattern_initialize();
+	};
 
 }//namespace bmath
 
 #include "internal_functions.h"
 #include "arguments.h"
 #include "operations.h"
+#include "Rule_Patterns.h"

@@ -44,7 +44,8 @@ namespace bmath {
 		State get_state(const Basic_Term* obj);
 
 		//needs to be run before combine_variables() makes sense to run
-		Basic_Term* standardize_structure_extern(Basic_Term* obj);
+		//products with negative factor get wrapped in a sum, exponentiations with negative exponents into a product
+		Basic_Term* standardize_structure(Basic_Term* obj);
 
 	} //namespace intern
 } //namespace bmath

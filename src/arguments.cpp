@@ -2,7 +2,6 @@
 
 using namespace bmath::intern;
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Value\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -136,6 +135,16 @@ void bmath::intern::Value::sort()
 	//nothing to be done here
 }
 
+Basic_Term* bmath::intern::Value::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const
+{
+	if (*this == *pattern) {
+		return const_cast<Value*>(this);
+	}
+	else {
+		return nullptr;
+	}
+}
+
 bool bmath::intern::Value::operator<(const Basic_Term& other) const
 {
 	if (this->get_state_intern() != other.get_state_intern()) {
@@ -241,6 +250,16 @@ void bmath::intern::Variable::sort()
 	//nothing to be done here
 }
 
+Basic_Term* bmath::intern::Variable::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const
+{
+	if (*this == *pattern) {
+		return const_cast<Variable*>(this);
+	}
+	else {
+		return nullptr;
+	}
+}
+
 bool bmath::intern::Variable::operator<(const Basic_Term& other) const
 {
 	if (this->get_state_intern() != other.get_state_intern()) {
@@ -260,5 +279,93 @@ bool bmath::intern::Variable::operator==(const Basic_Term& other) const
 	else {
 		const Variable* other_var = static_cast<const Variable*>(&other);
 		return this->name == other_var->name;
+	}
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Pattern_Variable\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bmath::intern::Pattern_Variable::Pattern_Variable(std::string name_, Basic_Term* parent_)
+	:Basic_Term(parent_), name(name_), pattern_value(nullptr)
+{
+}
+
+bmath::intern::Pattern_Variable::~Pattern_Variable()
+{
+	//pattern_value is not owner -> nothing has to be deleted
+}
+
+void bmath::intern::Pattern_Variable::to_str(std::string& str) const
+{
+	str.push_back('!');
+	str.append(this->name);
+	str.push_back('!');
+}
+
+State bmath::intern::Pattern_Variable::get_state_intern() const
+{
+	return s_pattern_var;
+}
+
+Vals_Combined bmath::intern::Pattern_Variable::combine_values()
+{
+	std::cout << "Error: pattern_variable used instead of variable!\n";
+	std::cout << "(try running bmath::pattern_initialize() function first.)\n";
+	return Vals_Combined();
+}
+
+Vals_Combined bmath::intern::Pattern_Variable::evaluate(const std::list<Known_Variable>& known_variables) const
+{
+	std::cout << "Error: pattern_variable used instead of variable!\n";
+	std::cout << "(try running bmath::pattern_initialize() function first.)\n";
+	return Vals_Combined();
+}
+
+void bmath::intern::Pattern_Variable::search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key)
+{
+	std::cout << "Error: pattern_variable used instead of variable!\n";
+	std::cout << "(try running bmath::pattern_initialize() function first.)\n";
+}
+
+bool bmath::intern::Pattern_Variable::valid_state() const
+{
+	return true;
+}
+
+void bmath::intern::Pattern_Variable::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
+{
+	if (listed_state == s_variable) {
+		subterms.push_back(const_cast<Pattern_Variable*>(this));
+	}
+}
+
+void bmath::intern::Pattern_Variable::sort()
+{
+	//nothing to be done here
+}
+
+Basic_Term* bmath::intern::Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) const
+{
+	std::cout << "Error: did not expect Pattern_Variable calling match_intern()\n";
+	return nullptr;
+}
+
+bool bmath::intern::Pattern_Variable::operator<(const Basic_Term& other) const
+{
+	std::cout << "Error: pattern_variable used instead of variable!\n";
+	std::cout << "(try running bmath::pattern_initialize() function first.)\n";
+	return false;
+}
+
+bool bmath::intern::Pattern_Variable::operator==(const Basic_Term& other) const
+{
+	if (this->pattern_value == nullptr) {
+		this->pattern_value = const_cast<Basic_Term*>(&other);
+		return true;
+	}
+	else {
+		return *(this->pattern_value) == other;
 	}
 }

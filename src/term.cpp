@@ -167,6 +167,7 @@ void bmath::Term::combine()
 		this->term_ptr = new Value(new_subterm.val, nullptr);
 	}
 	this->term_ptr->sort();
+	this->term_ptr->combine_layers();
 	while (this->term_ptr->combine_variables());
 }
 

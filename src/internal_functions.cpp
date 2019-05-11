@@ -2,6 +2,8 @@
 
 using namespace bmath::intern;
 
+extern bool constructing_patterns;
+
 std::size_t bmath::intern::find_closed_par(std::size_t open_par, const std::string& name)
 {	//par for parethesis
 	int deeper_open_par = 0;
@@ -131,7 +133,12 @@ State bmath::intern::type_subterm(const std::string & name, const std::vector<Po
 		return s_value;
 	}
 	if (op != std::string::npos) {
-		return s_variable;
+		if (constructing_patterns) {
+			return s_pattern_var;
+		}
+		else {
+			return s_variable;
+		}
 	}
 	op = name.find_last_of("0123456789");	//number kann also contain '.', however not as only character
 	if (op != std::string::npos) {
@@ -224,7 +231,7 @@ State bmath::intern::get_state(const Basic_Term* obj)
 	}
 }
 
-Basic_Term* bmath::intern::standardize_structure_extern(Basic_Term* obj)
+Basic_Term* bmath::intern::standardize_structure(Basic_Term* obj)
 {
 	switch (obj->get_state_intern()) {
 	case s_product: {
@@ -273,6 +280,8 @@ Basic_Term* bmath::intern::build_subterm(std::string& subtermstr, Basic_Term* pa
 			return new Sum(subtermstr, parent_, op);
 		case s_variable:
 			return new Variable(subtermstr, parent_);
+		case s_pattern_var:
+			return new Pattern_Variable(subtermstr, parent_);
 		case s_value:
 			return new Value(subtermstr, parent_);
 		case s_par_operator:

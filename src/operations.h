@@ -13,6 +13,7 @@ namespace bmath {
 
 			Product(Basic_Term* parent_);
 			Product(std::string name_, Basic_Term* parent_, std::size_t op);
+			Product(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
 			Product(const Product& source, Basic_Term* parent_ = nullptr);
 			~Product();
 
@@ -39,6 +40,7 @@ namespace bmath {
 
 			Sum(Basic_Term* parent_);
 			Sum(std::string name_, Basic_Term* parent_, std::size_t op);
+			Sum(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
 			Sum(const Sum& source, Basic_Term* parent_ = nullptr);
 			~Sum();
 
@@ -65,6 +67,7 @@ namespace bmath {
 
 			Exponentiation(Basic_Term* parent_);
 			Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op);
+			Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
 			Exponentiation(const Exponentiation& source, Basic_Term* parent_ = nullptr);
 			~Exponentiation();
 
@@ -94,6 +97,7 @@ namespace bmath {
 		public:
 			Par_Operator(Basic_Term* parent_);
 			Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_);
+			Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_, std::list<Pattern_Variable*>& variables);
 			Par_Operator(const Par_Operator& source, Basic_Term* parent_ = nullptr);
 			~Par_Operator();
 

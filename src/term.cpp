@@ -112,7 +112,7 @@ bmath::Term& bmath::Term::operator=(Term&& source) noexcept
 
 bmath::Term::~Term()
 {
-	LOG_C("loesche Term " << this << ": " << *this);
+	LOG_C("loesche Term " << this);
 	delete term_ptr;
 }
 
@@ -279,4 +279,46 @@ bmath::Term bmath::Term::operator/(const Term& operand2) const
 {
 	bmath::Term operand1(*this);
 	return std::move(operand1 /= operand2);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Pattern\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bmath::intern::Pattern::Pattern_Term::Pattern_Term()
+	:term_ptr(nullptr)
+{
+}
+
+void bmath::intern::Pattern::Pattern_Term::build(std::string name, std::list<Pattern_Variable*>& var_adresses)
+{
+	if (term_ptr != nullptr) {
+		std::cout << "Error: Pattern_Term has already been build.\n";
+		return;
+	}
+	if (preprocess_str(name)) {
+		this->term_ptr = build_pattern_subterm(name, nullptr, var_adresses);
+	}
+}
+
+bmath::intern::Pattern::Pattern_Term::~Pattern_Term()
+{
+	//no am bauen
+}
+
+bmath::intern::Pattern::Pattern(const char* original_, const char* changed_)
+	:var_adresses(), original(), changed()
+{
+	original.build(original_, this->var_adresses);
+	changed.build(changed_, var_adresses);
+}
+
+std::string bmath::intern::Pattern::print()
+{
+	std::string str;
+	this->original.term_ptr->to_str(str);
+	str.append(" -> ");
+	this->changed.term_ptr->to_str(str);
+	return str;
 }

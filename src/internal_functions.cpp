@@ -2,8 +2,6 @@
 
 using namespace bmath::intern;
 
-extern bool constructing_patterns;
-
 std::size_t bmath::intern::find_closed_par(std::size_t open_par, const std::string& name)
 {	//par for parethesis
 	int deeper_open_par = 0;
@@ -133,12 +131,7 @@ State bmath::intern::type_subterm(const std::string & name, const std::vector<Po
 		return s_value;
 	}
 	if (op != std::string::npos) {
-		if (constructing_patterns) {
-			return s_pattern_var;
-		}
-		else {
-			return s_variable;
-		}
+		return s_variable;
 	}
 	op = name.find_last_of("0123456789");	//number kann also contain '.', however not as only character
 	if (op != std::string::npos) {
@@ -280,8 +273,6 @@ Basic_Term* bmath::intern::build_subterm(std::string& subtermstr, Basic_Term* pa
 			return new Sum(subtermstr, parent_, op);
 		case s_variable:
 			return new Variable(subtermstr, parent_);
-		case s_pattern_var:
-			return new Pattern_Variable(subtermstr, parent_);
 		case s_value:
 			return new Value(subtermstr, parent_);
 		case s_par_operator:
@@ -293,6 +284,46 @@ Basic_Term* bmath::intern::build_subterm(std::string& subtermstr, Basic_Term* pa
 		//LOG_C("shortened name to: " << subtermstr << " in build_subterm");
 	}
 	std::cout << "Error: could not find any type to build term (function build_subterm)\n";
+	return nullptr;
+}
+
+Basic_Term* bmath::intern::build_pattern_subterm(std::string& subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables)
+{
+	std::vector<Pos_Pars> pars;
+	while (subtermstr.size() != 0) {
+
+		find_pars(subtermstr, pars);
+		std::size_t op;
+		Par_Op_State par_op_state;	//only used if parenthesis operator is found
+		State type = type_subterm(subtermstr, pars, op, par_op_state);
+
+		switch (type) {
+		case s_exponentiation:
+			return new Exponentiation(subtermstr, parent_, op, variables);
+		case s_product:
+			return new Product(subtermstr, parent_, op, variables);
+		case s_sum:
+			return new Sum(subtermstr, parent_, op, variables);
+		case s_par_operator:
+			return new Par_Operator(subtermstr, parent_, par_op_state, variables);
+		case s_value:
+			return new Value(subtermstr, parent_);
+		case s_variable:
+			for (auto variable : variables) {
+				if (variable->name == subtermstr) {
+					return variable;
+				}
+			}
+			Pattern_Variable* new_variable = new Pattern_Variable(subtermstr, parent_);
+			variables.push_back(new_variable);
+			return new_variable;
+		}
+		subtermstr.pop_back();
+		subtermstr.erase(0, 1);
+		pars.clear();
+		//LOG_C("shortened name to: " << subtermstr << " in build_subterm");
+	}
+	std::cout << "Error: could not find any type to build term (function build_pattern_subterm)\n";
 	return nullptr;
 }
 
@@ -312,10 +343,42 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* pa
 		return new Product(*(static_cast<const Product*>(source)), parent_);
 	case s_exponentiation:
 		return new Exponentiation(*(static_cast<const Exponentiation*>(source)), parent_);
+	case s_pattern_variable: {
+		const Pattern_Variable* pattern_variable = static_cast<const Pattern_Variable*>(source);
+		if (pattern_variable->pattern_value != nullptr) {
+			return copy_subterm(pattern_variable->pattern_value, parent_);
+		}
+		else {
+			std::cout << "Error: can not copy Pattern_Variable with pattern_value nullptr.\n";
+			return nullptr;
+		}
+	}
 	}
 	std::cout << "Error: function copy_subterm expected known type to copy: " << type << '\n';
 	return nullptr;
 }
+
+constexpr int pattern_size = 1;
+
+std::array<Pattern, pattern_size> patterns{
+	Pattern("b*a + c*a","(b+c) * a"),
+};
+
+Basic_Term* bmath::intern::match(const Pattern& pattern, Term& term)
+{
+	for (auto& pattern : patterns) {
+		//hier soll match_intern aufgerufen werden
+	}
+	return nullptr;
+}
+
+void bmath::intern::reset_pattern_vars(std::list<Basic_Term*>& var_adresses)
+{
+	for (auto& pattern_var : var_adresses) {
+		static_cast<Pattern_Variable*>(pattern_var)->pattern_value = nullptr;
+	}
+}
+
 
 
 

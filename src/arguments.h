@@ -54,6 +54,7 @@ namespace bmath {
 			bool operator==(const Basic_Term& other) const override;
 		};
 
+		//intended to be exclusively used by Pattern_Term
 		class Pattern_Variable : public Basic_Term
 		{
 		public:

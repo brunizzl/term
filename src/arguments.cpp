@@ -299,14 +299,17 @@ bmath::intern::Pattern_Variable::~Pattern_Variable()
 
 void bmath::intern::Pattern_Variable::to_str(std::string& str) const
 {
-	str.push_back('!');
-	str.append(this->name);
-	str.push_back('!');
+	std::stringstream stream;
+	stream << this->name;
+	stream << '(';
+	stream << this;
+	stream << ')';
+	str.append(stream.str());
 }
 
 State bmath::intern::Pattern_Variable::get_state_intern() const
 {
-	return s_pattern_var;
+	return s_pattern_variable;
 }
 
 Vals_Combined bmath::intern::Pattern_Variable::combine_values()

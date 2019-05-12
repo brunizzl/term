@@ -34,6 +34,29 @@ bmath::intern::Product::Product(std::string name_, Basic_Term* parent_, std::siz
 	this->factors.push_front(build_subterm(name_, this));
 }
 
+bmath::intern::Product::Product(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
+	:Basic_Term(parent_)
+{
+	LOG_C("baue Produkt: " << name_);
+	std::vector<Pos_Pars> pars;
+	find_pars(name_, pars);
+	std::string subterm;
+	while (op != std::string::npos) {
+		subterm = name_.substr(op + 1);
+		switch (name_[op]) {
+		case '*':
+			this->factors.push_front(build_pattern_subterm(subterm, this, variables));
+			break;
+		case '/':
+			this->divisors.push_front(build_pattern_subterm(subterm, this, variables));
+			break;
+		}
+		name_.erase(op);
+		op = find_last_of_skip_pars(name_, "*/", pars);
+	}
+	this->factors.push_front(build_pattern_subterm(name_, this, variables));
+}
+
 bmath::intern::Product::Product(const Product& source, Basic_Term* parent_)
 	:Basic_Term(parent_)
 {
@@ -268,7 +291,7 @@ Basic_Term* bmath::intern::Product::match_intern(Basic_Term* pattern, std::list<
 						break;
 					}
 				}
-				if (factor_match = nullptr) {
+				if (factor_match == nullptr) {
 					full_match = false;
 					break;
 				}
@@ -284,7 +307,7 @@ Basic_Term* bmath::intern::Product::match_intern(Basic_Term* pattern, std::list<
 							break;
 						}
 					}
-					if (divisor_match = nullptr) {
+					if (divisor_match == nullptr) {
 						full_match = false;
 						break;
 					}
@@ -329,9 +352,9 @@ Basic_Term* bmath::intern::Product::match_intern(Basic_Term* pattern, std::list<
 				return argument_match;
 			}
 		}
-		reset_pattern_vars(pattern_var_adresses);
-		return nullptr;
 	}
+	reset_pattern_vars(pattern_var_adresses);
+	return nullptr;
 }
 
 bool bmath::intern::Product::operator<(const Basic_Term& other) const
@@ -429,6 +452,31 @@ bmath::intern::Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op)
 	}
 	if (name_.size() != 0) {
 		this->summands.push_front(build_subterm(name_, this));
+	}
+}
+
+bmath::intern::Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
+	:Basic_Term(parent_)
+{
+	LOG_C("baue Summe: " << name_);
+	std::vector<Pos_Pars> pars;
+	find_pars(name_, pars);
+	std::string subterm;
+	while (op != std::string::npos) {
+		subterm = name_.substr(op + 1);
+		switch (name_[op]) {
+		case '+':
+			this->summands.push_front(build_pattern_subterm(subterm, this, variables));
+			break;
+		case '-':
+			this->subtractors.push_front(build_pattern_subterm(subterm, this, variables));
+			break;
+		}
+		name_.erase(op);
+		op = find_last_of_skip_pars(name_, "+-", pars);
+	}
+	if (name_.size() != 0) {
+		this->summands.push_front(build_pattern_subterm(name_, this, variables));
 	}
 }
 
@@ -762,6 +810,17 @@ bmath::intern::Exponentiation::Exponentiation(std::string name_, Basic_Term* par
 	this->base = build_subterm(name_, this);
 }
 
+bmath::intern::Exponentiation::Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
+	:Basic_Term(parent_)
+{
+	LOG_C("baue Potenz: " << name_);
+	std::string subterm;
+	subterm = name_.substr(op + 1);
+	this->exponent = build_pattern_subterm(subterm, this, variables);
+	name_.erase(op);
+	this->base = build_pattern_subterm(subterm, this, variables);
+}
+
 bmath::intern::Exponentiation::Exponentiation(const Exponentiation& source, Basic_Term* parent_)
 	:Basic_Term(parent_), base(copy_subterm(source.base, this)), exponent(copy_subterm(source.exponent, this))
 {
@@ -1013,6 +1072,50 @@ bmath::intern::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_
 		break;
 	}
 }
+
+bmath::intern::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_, std::list<Pattern_Variable*>& variables)
+	:Basic_Term(parent_), op_state(op_state_), argument(nullptr)
+{
+	LOG_C("baue Par_Operator: " << name_);
+	name_.pop_back(); //closing parenthesis gets cut of
+	switch (op_state_) {
+		//erase function cuts of operator + opening par -> operator cases sorted by length
+	case ln:
+		name_.erase(0, 3);
+		LOG_C("shortened name: " << name_);
+		this->argument = build_pattern_subterm(name_, this, variables);
+		break;
+	case exp:
+	case sin:
+	case cos:
+	case tan:
+	case abs:
+		name_.erase(0, 4);
+		LOG_C("shortened name: " << name_);
+		this->argument = build_pattern_subterm(name_, this, variables);
+		break;
+	case asin:
+	case acos:
+	case atan:
+	case sinh:
+	case cosh:
+	case tanh:
+	case sqrt:
+		name_.erase(0, 5);
+		LOG_C("shortened name: " << name_);
+		this->argument = build_pattern_subterm(name_, this, variables);
+		break;
+	case log10:
+	case asinh:
+	case acosh:
+	case atanh:
+		name_.erase(0, 6);
+		LOG_C("shortened name: " << name_);
+		this->argument = build_pattern_subterm(name_, this, variables);
+		break;
+	}
+}
+
 
 bmath::intern::Par_Operator::Par_Operator(const Par_Operator & source, Basic_Term * parent_)
 	:Basic_Term(parent_), argument(copy_subterm(source.argument, this)), op_state(source.op_state)

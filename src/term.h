@@ -13,6 +13,7 @@
 
 namespace bmath {
 	namespace intern {
+		class Pattern_Variable;
 
 		class Basic_Term
 		{
@@ -77,6 +78,33 @@ namespace bmath {
 			virtual bool operator!=(const Basic_Term& other) const;
 		};
 
+		class  Pattern {	//used to pattern match stuff that can then be simplified
+		private:
+			class Pattern_Term {
+			public:
+				intern::Basic_Term* term_ptr;
+
+				Pattern_Term();
+				void build(std::string name, std::list<Pattern_Variable*>& var_adresses);
+				~Pattern_Term();
+
+				//patterns should not be copied nor changed
+				Pattern_Term(const Pattern_Term& source) = delete;
+				Pattern_Term(Pattern_Term&& source) = delete;
+				Pattern_Term& operator=(const Pattern_Term& source) = delete;
+				Pattern_Term& operator=(Pattern_Term&& source) = delete;
+			};
+
+		public:
+			Pattern(const char* original_, const char* changed_);
+			//members:
+			std::list<Pattern_Variable*> var_adresses;
+			Pattern_Term original;	//pattern to be compared to term opject
+			Pattern_Term changed;	//pattern to replace match in term object
+
+			std::string print();
+		};
+
 	} //namespace intern
 
 	//"head" used to acess and manage actual term (only expected user interface)
@@ -122,8 +150,6 @@ namespace bmath {
 		Term  operator-(const Term& operand2) const;
 		Term  operator*(const Term& operand2) const;
 		Term  operator/(const Term& operand2) const;
-
-		friend void pattern_initialize();
 	};
 
 }//namespace bmath
@@ -131,4 +157,3 @@ namespace bmath {
 #include "internal_functions.h"
 #include "arguments.h"
 #include "operations.h"
-#include "Rule_Patterns.h"

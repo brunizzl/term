@@ -2,6 +2,8 @@
 
 using namespace bmath::intern;
 
+extern Basic_Term* nullptr_term;
+
 std::size_t bmath::intern::find_closed_par(std::size_t open_par, const std::string& name)
 {	//par for parethesis
 	int deeper_open_par = 0;
@@ -358,28 +360,19 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* pa
 	return nullptr;
 }
 
-constexpr int pattern_size = 1;
+constexpr int pattern_size = 2;
 
-std::array<Pattern, pattern_size> patterns{
-	Pattern("b*a + c*a","(b+c) * a"),
+std::array<Pattern*, pattern_size> patterns{
+	new Pattern("sin(x)^2+cos(x)^2", "1"),
+	new Pattern("a*c+a*b", "(b+c)*a"),
 };
 
-Basic_Term* bmath::intern::match(const Pattern& pattern, Term& term)
-{
-	for (auto& pattern : patterns) {
-		//hier soll match_intern aufgerufen werden
-	}
-	return nullptr;
-}
-
-void bmath::intern::reset_pattern_vars(std::list<Basic_Term*>& var_adresses)
+void bmath::intern::reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses)
 {
 	for (auto& pattern_var : var_adresses) {
 		static_cast<Pattern_Variable*>(pattern_var)->pattern_value = nullptr;
 	}
 }
-
-
 
 
 std::ostream& operator<<(std::ostream& stream, const bmath::Term& term)

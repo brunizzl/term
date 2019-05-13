@@ -26,7 +26,7 @@ namespace bmath {
 			bool valid_state() const override;
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
-			Basic_Term* match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) override;	//NOCH NICHT GANZ IMPLEMENTIERT!
+			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;	//NOCH NICHT GANZ IMPLEMENTIERT!
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -53,7 +53,7 @@ namespace bmath {
 			bool valid_state() const override;
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
-			Basic_Term* match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) override;	//NOCH NICHT GANZ IMPLEMENTIERT!
+			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;	//NOCH NICHT GANZ IMPLEMENTIERT!
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -80,7 +80,7 @@ namespace bmath {
 			bool valid_state() const override;
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
-			Basic_Term* match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) override;
+			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -110,7 +110,7 @@ namespace bmath {
 			bool valid_state() const override;
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
-			Basic_Term* match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) override;
+			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};

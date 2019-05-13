@@ -63,10 +63,11 @@ namespace bmath {
 			//needs to be run befor == makes sense to be used
 			virtual void sort() = 0;
 
-			//returns subterm matching pattern or nullptr (basically operator==, but with pattern matching)
+			//returns subterm matching pattern or nullptr (basically operator==, but with pattern matching) 
+			//storage_key is pointer to the pointer to "this" in the object that owns "this"
 			//only differs from operator== on first layer, as it calls operator== itself.
 			//first tries to match this to pattern, then tries to match subterms
-			virtual Basic_Term* match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses) = 0;
+			virtual Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) = 0;
 
 			//works only on sorted terms
 			virtual bool operator<(const Basic_Term& other) const = 0;
@@ -87,6 +88,8 @@ namespace bmath {
 				Pattern_Term();
 				void build(std::string name, std::list<Pattern_Variable*>& var_adresses);
 				~Pattern_Term();
+
+				Basic_Term* copy(Basic_Term* parent_);
 
 				//patterns should not be copied nor changed
 				Pattern_Term(const Pattern_Term& source) = delete;
@@ -135,6 +138,14 @@ namespace bmath {
 
 		//adds all variable names in this to list
 		std::set<std::string> get_var_names() const;
+
+		//compares pattern_original to term.
+		//if a match is found, function returns the matching subterm in term.
+		//if pattern is sum and matching sum in term has more summands then pattern,
+		//a new sum is constructed in term were summands used to be. the matched summands become summands of new sum. (same with products)
+		//example:	pattern "a^2+b^2" is matched in term "var^2+sin(x)^2+3". term then is changed to "(var^2+sin(x)^2)+3"
+		//this is nessesary, as the match will be replaced. 
+		bool match_and_transform(intern::Pattern& pattern);
 
 		std::complex<double> evaluate(const std::string name_, std::complex<double> value_) const;
 		std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const;

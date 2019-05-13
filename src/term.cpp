@@ -6,7 +6,6 @@ using namespace bmath::intern;
 //Basic_Term\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 void bmath::intern::Basic_Term::combine_layers()
 {
 	//the base class does not know of the tree structures, the derived classes provide.
@@ -132,6 +131,18 @@ std::set<std::string> bmath::Term::get_var_names() const
 		names.insert(static_cast<Variable*>(it)->name);
 	}
 	return std::move(names);
+}
+
+bool bmath::Term::match_and_transform(Pattern& pattern)
+{
+	Basic_Term** match = this->term_ptr->match_intern(pattern.original.term_ptr, pattern.var_adresses, &(this->term_ptr));
+	if (match != nullptr) {
+		Basic_Term* transformed = pattern.changed.copy((*match)->parent);
+		delete *match;
+		*match = transformed;
+		return true;
+	}
+	return false;
 }
 
 std::complex<double> bmath::Term::evaluate(const std::string name_, std::complex<double> value_) const
@@ -307,11 +318,16 @@ bmath::intern::Pattern::Pattern_Term::~Pattern_Term()
 	//no am bauen
 }
 
+Basic_Term* bmath::intern::Pattern::Pattern_Term::copy(Basic_Term* parent_)
+{
+	return copy_subterm(this->term_ptr, parent_);
+}
+
 bmath::intern::Pattern::Pattern(const char* original_, const char* changed_)
 	:var_adresses(), original(), changed()
 {
 	original.build(original_, this->var_adresses);
-	changed.build(changed_, var_adresses);
+	changed.build(changed_, this->var_adresses);
 }
 
 std::string bmath::intern::Pattern::print()

@@ -54,15 +54,7 @@ namespace bmath {
 		//DERZEIT UNGENUTZT (soll sowieso obszolet werden, weil summe und produkt noch operanden umkehroperationen verlieren)
 		Basic_Term* standardize_structure(Basic_Term* obj);
 
-		//compares pattern_original to term.
-		//if a match is found, function returns the matching subterm in term.
-		//if pattern is sum and matching sum in term has more summands then pattern,
-		//a new sum is constructed in term were summands used to be. the matched summands become summands of new sum. (same with products)
-		//example:	pattern "a^2+b^2" is matched in term "var^2+sin(x)^2+3". term then is changed to "(var^2+sin(x)^2)+3"
-		//this is nessesary, as the match will be replaced. 
-		Basic_Term* match(const Pattern& pattern, Term& term);
-
-		void reset_pattern_vars(std::list<Basic_Term*>& var_adresses);
+		void reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
 
 	} //namespace intern
 } //namespace bmath

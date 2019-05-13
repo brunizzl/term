@@ -135,10 +135,10 @@ void bmath::intern::Value::sort()
 	//nothing to be done here
 }
 
-Basic_Term* bmath::intern::Value::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses)
+Basic_Term** bmath::intern::Value::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 	if (*this == *pattern) {
-		return const_cast<Value*>(this);
+		return storage_key;
 	}
 	else {
 		return nullptr;
@@ -163,13 +163,16 @@ bool bmath::intern::Value::operator<(const Basic_Term& other) const
 
 bool bmath::intern::Value::operator==(const Basic_Term& other) const
 {
-	if (this->get_state_intern() != other.get_state_intern()) {
+	switch (other.get_state_intern()) {
+	case s_exponentiation:
+		break;
+	case s_pattern_variable:
+		return other == *this;
+	default:
 		return false;
 	}
-	else {
-		const Value* other_val = static_cast<const Value*>(&other);
-		return this->value == other_val->value;
-	}
+	const Value* other_val = static_cast<const Value*>(&other);
+	return this->value == other_val->value;
 }
 
 
@@ -250,10 +253,10 @@ void bmath::intern::Variable::sort()
 	//nothing to be done here
 }
 
-Basic_Term* bmath::intern::Variable::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses)
+Basic_Term** bmath::intern::Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 	if (*this == *pattern) {
-		return const_cast<Variable*>(this);
+		return storage_key;
 	}
 	else {
 		return nullptr;
@@ -273,13 +276,16 @@ bool bmath::intern::Variable::operator<(const Basic_Term& other) const
 
 bool bmath::intern::Variable::operator==(const Basic_Term& other) const
 {
-	if (this->get_state_intern() != other.get_state_intern()) {
+	switch (other.get_state_intern()) {
+	case s_variable:
+		break;
+	case s_pattern_variable:
+		return other == *this;
+	default:
 		return false;
 	}
-	else {
-		const Variable* other_var = static_cast<const Variable*>(&other);
-		return this->name == other_var->name;
-	}
+	const Variable* other_var = static_cast<const Variable*>(&other);
+	return this->name == other_var->name;
 }
 
 
@@ -349,7 +355,7 @@ void bmath::intern::Pattern_Variable::sort()
 	//nothing to be done here
 }
 
-Basic_Term* bmath::intern::Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses)
+Basic_Term** bmath::intern::Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 	std::cout << "Error: did not expect Pattern_Variable calling match_intern()\n";
 	return nullptr;

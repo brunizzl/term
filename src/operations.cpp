@@ -272,7 +272,7 @@ void bmath::intern::Product::sort()
 	this->divisors.sort([](Basic_Term * &a, Basic_Term * &b) -> bool {return *a < *b; });
 }
 
-Basic_Term* bmath::intern::Product::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses)
+Basic_Term** bmath::intern::Product::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 	if (this->get_state_intern() == pattern->get_state_intern()) {
 		Product* pattern_product = static_cast<Product*>(pattern);
@@ -281,33 +281,33 @@ Basic_Term* bmath::intern::Product::match_intern(Basic_Term* pattern, std::list<
 			std::list<Basic_Term*> matched_factors;
 			std::list<Basic_Term*> matched_divisors;
 			//it is not possible so search this->factors always from start, as for example pattern "a*a" would match with every product, because the same factor would be read as first AND second "a"
-			std::list<Basic_Term*>::iterator this_factor = const_cast<Product*>(this)->factors.begin();	//therefore we assume sorted lists and only iterate trough this->factors once.
+			std::list<Basic_Term*>::iterator this_factor = this->factors.begin();	//therefore we assume sorted lists and only iterate trough this->factors once.
 			for (auto& pattern_factor : pattern_product->factors) {
-				Basic_Term* factor_match;
+				Basic_Term** factor_match;
 				for (; this_factor != this->factors.end(); ++this_factor) {
-					factor_match = (*this_factor)->match_intern(pattern_factor, pattern_var_adresses);
+					factor_match = (*this_factor)->match_intern(pattern_factor, pattern_var_adresses, &(*this_factor));
 					if (factor_match != nullptr) {
 						matched_factors.splice(matched_factors.end(), this->factors, this_factor);
 						break;
 					}
 				}
-				if (factor_match == nullptr) {
+				if (factor_match != nullptr) {
 					full_match = false;
 					break;
 				}
 			}
 			if (full_match) {	//same for divisors
-				std::list<Basic_Term*>::iterator this_divisor = const_cast<Product*>(this)->divisors.begin();
+				std::list<Basic_Term*>::iterator this_divisor = this->divisors.begin();
 				for (auto& pattern_divisor : pattern_product->divisors) {
-					Basic_Term* divisor_match;
+					Basic_Term** divisor_match;
 					for (; this_divisor != this->divisors.end(); ++this_divisor) {
-						divisor_match = (*this_divisor)->match_intern(pattern_divisor, pattern_var_adresses);
+						divisor_match = (*this_divisor)->match_intern(pattern_divisor, pattern_var_adresses, &(*this_divisor));
 						if (divisor_match != nullptr) {
 							matched_divisors.splice(matched_divisors.end(), this->divisors, this_divisor);
 							break;
 						}
 					}
-					if (divisor_match == nullptr) {
+					if (divisor_match != nullptr) {
 						full_match = false;
 						break;
 					}
@@ -326,28 +326,28 @@ Basic_Term* bmath::intern::Product::match_intern(Basic_Term* pattern, std::list<
 						it->parent = matched_product;
 					}
 					this->factors.push_back(matched_product);
-					return matched_product;
+					return &(this->factors.back());
 				}
 				else {
 					this->factors = std::move(matched_factors);
 					this->divisors = std::move(matched_divisors);
-					return const_cast<Product*>(this);
+					return storage_key;
 				}
 			}
 		}
 	}
 	else {
-		Basic_Term* argument_match;
+		Basic_Term** argument_match;
 		for (auto& it : factors) {
 			reset_pattern_vars(pattern_var_adresses);
-			argument_match = it->match_intern(pattern, pattern_var_adresses);
+			argument_match = it->match_intern(pattern, pattern_var_adresses, &it);
 			if (argument_match != nullptr) {
 				return argument_match;
 			}
 		}
 		for (auto& it : divisors) {
 			reset_pattern_vars(pattern_var_adresses);
-			argument_match = it->match_intern(pattern, pattern_var_adresses);
+			argument_match = it->match_intern(pattern, pattern_var_adresses, &it);
 			if (argument_match != nullptr) {
 				return argument_match;
 			}
@@ -391,34 +391,37 @@ bool bmath::intern::Product::operator<(const Basic_Term& other) const
 
 bool bmath::intern::Product::operator==(const Basic_Term& other) const
 {
-	if (this->get_state_intern() != other.get_state_intern()) {
+	switch (other.get_state_intern()) {
+	case s_product:
+		break;
+	case s_pattern_variable:
+		return other == *this;
+	default:
 		return false;
 	}
-	else {
-		const Product* other_product = static_cast<const Product*>(&other);
-		if (this->factors.size() != other_product->factors.size()) {
-			return false;
-		}
-		if (this->divisors.size() != other_product->divisors.size()) {
-			return false;
-		}
-		//the operator assumes from now on to have sorted products to compare
-		auto it_this = this->factors.begin();
-		auto it_other = other_product->factors.begin();
-		for (; it_this != this->factors.end() && it_other != other_product->factors.end(); ++it_this, ++it_other) {
-			if ((**it_this) != (**it_other)) {
-				return false;
-			}
-		}
-		it_this = this->divisors.begin();
-		it_other = other_product->divisors.begin();
-		for (; it_this != this->divisors.end() && it_other != other_product->divisors.end(); ++it_this, ++it_other) {
-			if ((**it_this) != (**it_other)) {
-				return false;
-			}
-		}
-		return true;
+	const Product* other_product = static_cast<const Product*>(&other);
+	if (this->factors.size() != other_product->factors.size()) {
+		return false;
 	}
+	if (this->divisors.size() != other_product->divisors.size()) {
+		return false;
+	}
+	//the operator assumes from now on to have sorted products to compare
+	auto it_this = this->factors.begin();
+	auto it_other = other_product->factors.begin();
+	for (; it_this != this->factors.end() && it_other != other_product->factors.end(); ++it_this, ++it_other) {
+		if ((**it_this) != (**it_other)) {
+			return false;
+		}
+	}
+	it_this = this->divisors.begin();
+	it_other = other_product->divisors.begin();
+	for (; it_this != this->divisors.end() && it_other != other_product->divisors.end(); ++it_this, ++it_other) {
+		if ((**it_this) != (**it_other)) {
+			return false;
+		}
+	}
+	return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -691,31 +694,31 @@ void bmath::intern::Sum::sort()
 	this->subtractors.sort([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; });
 }
 
-Basic_Term* bmath::intern::Sum::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses)
+Basic_Term** bmath::intern::Sum::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 	//MUSS NOCH VERGLEICHEN, OB NUR TEILE VON THIS GLEICH GANZEM PATTERN SIND
 	if (*this == *pattern) {
-		return const_cast<Sum*>(this);
+		return storage_key;
 	}
 	else {
-		Basic_Term* argument_match;
+		Basic_Term** argument_match;
 		for (auto& it : summands) {
 			reset_pattern_vars(pattern_var_adresses);
-			argument_match = it->match_intern(pattern, pattern_var_adresses);
+			argument_match = it->match_intern(pattern, pattern_var_adresses, &it);
 			if (argument_match != nullptr) {
 				return argument_match;
 			}
 		}
 		for (auto& it : subtractors) {
 			reset_pattern_vars(pattern_var_adresses);
-			argument_match = it->match_intern(pattern, pattern_var_adresses);
+			argument_match = it->match_intern(pattern, pattern_var_adresses, &it);
 			if (argument_match != nullptr) {
 				return argument_match;
 			}
 		}
-		reset_pattern_vars(pattern_var_adresses);
-		return nullptr;
 	}
+	reset_pattern_vars(pattern_var_adresses);
+	return nullptr;
 }
 
 bool bmath::intern::Sum::operator<(const Basic_Term& other) const
@@ -759,34 +762,37 @@ bool bmath::intern::Sum::operator<(const Basic_Term& other) const
 bool bmath::intern::Sum::operator==(const Basic_Term& other) const
 {
 
-	if (this->get_state_intern() != other.get_state_intern()) {
+	switch (other.get_state_intern()) {
+	case s_sum:
+		break;
+	case s_pattern_variable:
+		return other == *this;
+	default:
 		return false;
 	}
-	else {
-		const Sum* other_product = static_cast<const Sum*>(&other);
-		if (this->summands.size() != other_product->summands.size()) {
-			return false;
-		}
-		if (this->subtractors.size() != other_product->subtractors.size()) {
-			return false;
-		}
-		//the operator assumes from now on to have sorted products to compare
-		auto it_this = this->summands.begin();
-		auto it_other = other_product->summands.begin();
-		for (; it_this != this->summands.end() && it_other != other_product->summands.end(); ++it_this, ++it_other) {
-			if ((**it_this) != (**it_other)) {
-				return false;
-			}
-		}
-		it_this = this->subtractors.begin();
-		it_other = other_product->subtractors.begin();
-		for (; it_this != this->subtractors.end() && it_other != other_product->subtractors.end(); ++it_this, ++it_other) {
-			if ((**it_this) != (**it_other)) {
-				return false;
-			}
-		}
-		return true;
+	const Sum* other_product = static_cast<const Sum*>(&other);
+	if (this->summands.size() != other_product->summands.size()) {
+		return false;
 	}
+	if (this->subtractors.size() != other_product->subtractors.size()) {
+		return false;
+	}
+	//the operator assumes from now on to have sorted products to compare
+	auto it_this = this->summands.begin();
+	auto it_other = other_product->summands.begin();
+	for (; it_this != this->summands.end() && it_other != other_product->summands.end(); ++it_this, ++it_other) {
+		if ((**it_this) != (**it_other)) {
+			return false;
+		}
+	}
+	it_this = this->subtractors.begin();
+	it_other = other_product->subtractors.begin();
+	for (; it_this != this->subtractors.end() && it_other != other_product->subtractors.end(); ++it_this, ++it_other) {
+		if ((**it_this) != (**it_other)) {
+			return false;
+		}
+	}
+	return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -818,7 +824,7 @@ bmath::intern::Exponentiation::Exponentiation(std::string name_, Basic_Term* par
 	subterm = name_.substr(op + 1);
 	this->exponent = build_pattern_subterm(subterm, this, variables);
 	name_.erase(op);
-	this->base = build_pattern_subterm(subterm, this, variables);
+	this->base = build_pattern_subterm(name_, this, variables);
 }
 
 bmath::intern::Exponentiation::Exponentiation(const Exponentiation& source, Basic_Term* parent_)
@@ -922,20 +928,20 @@ void bmath::intern::Exponentiation::sort()
 	this->exponent->sort();
 }
 
-Basic_Term* bmath::intern::Exponentiation::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses)
+Basic_Term** bmath::intern::Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 
 	if (*this == *pattern) {
-		return const_cast<Exponentiation*>(this);
+		return storage_key;
 	}
 	else {
 		reset_pattern_vars(pattern_var_adresses);
-		Basic_Term* argument_match = base->match_intern(pattern, pattern_var_adresses);
+		Basic_Term** argument_match = base->match_intern(pattern, pattern_var_adresses, &base);
 		if (argument_match != nullptr) {
 			return argument_match;
 		}
 		reset_pattern_vars(pattern_var_adresses);
-		argument_match = exponent->match_intern(pattern, pattern_var_adresses);
+		argument_match = exponent->match_intern(pattern, pattern_var_adresses, &exponent);
 		if (argument_match != nullptr) {
 			return argument_match;
 		}
@@ -963,17 +969,20 @@ bool bmath::intern::Exponentiation::operator<(const Basic_Term& other) const
 
 bool bmath::intern::Exponentiation::operator==(const Basic_Term& other) const
 {
-	if (this->get_state_intern() != other.get_state_intern()) {
+	switch (other.get_state_intern()) {
+	case s_exponentiation:
+		break;
+	case s_pattern_variable:
+		return other == *this;
+	default:
 		return false;
 	}
-	else {
-		const Exponentiation* other_exp = static_cast<const Exponentiation*>(&other);
-		if (*(this->base) != *(other_exp->base)) {
-			return false;
-		}
-		if (*(this->exponent) != *(other_exp->exponent)) {
-			return false;
-		}
+	const Exponentiation* other_exp = static_cast<const Exponentiation*>(&other);
+	if (*(this->base) != *(other_exp->base)) {
+		return false;
+	}
+	if (*(this->exponent) != *(other_exp->exponent)) {
+		return false;
 	}
 	return true;
 }
@@ -1183,14 +1192,14 @@ void bmath::intern::Par_Operator::sort()
 	this->argument->sort();
 }
 
-Basic_Term* bmath::intern::Par_Operator::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses)
+Basic_Term** bmath::intern::Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 	if (*this == *pattern) {
-		return const_cast<Par_Operator*>(this);
+		return storage_key;
 	}
 	else {
 		reset_pattern_vars(pattern_var_adresses);
-		Basic_Term* argument_match = argument->match_intern(pattern, pattern_var_adresses);
+		Basic_Term** argument_match = argument->match_intern(pattern, pattern_var_adresses, &argument);
 		if (argument_match != nullptr) {
 			return argument_match;
 		}
@@ -1218,17 +1227,20 @@ bool bmath::intern::Par_Operator::operator<(const Basic_Term& other) const
 
 bool bmath::intern::Par_Operator::operator==(const Basic_Term& other) const
 {
-	if (this->get_state_intern() != other.get_state_intern()) {
+	switch (other.get_state_intern()) {
+	case s_par_operator:
+		break;
+	case s_pattern_variable:
+		return other == *this;
+	default:
 		return false;
 	}
-	else {
-		const Par_Operator* other_par_op = static_cast<const Par_Operator*>(&other);
-		if (this->op_state != other_par_op->op_state) {
-			return false;
-		}
-		if (*(this->argument) != *(other_par_op->argument)) {
-			return false;
-		}
+	const Par_Operator* other_par_op = static_cast<const Par_Operator*>(&other);
+	if (this->op_state != other_par_op->op_state) {
+		return false;
+	}
+	if (*(this->argument) != *(other_par_op->argument)) {
+		return false;
 	}
 	return true;
 }

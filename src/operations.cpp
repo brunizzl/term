@@ -391,6 +391,7 @@ bool bmath::intern::Product::operator<(const Basic_Term& other) const
 
 bool bmath::intern::Product::operator==(const Basic_Term& other) const
 {
+	LOG_P(" vergleiche  " << *this << " und " << other);
 	switch (other.get_state_intern()) {
 	case s_product:
 		break;
@@ -701,6 +702,7 @@ Basic_Term** bmath::intern::Sum::match_intern(Basic_Term* pattern, std::list<Pat
 		return storage_key;
 	}
 	else {
+		LOG_P("nicht matched summe: " << *this << " =/= " << *pattern);
 		Basic_Term** argument_match;
 		for (auto& it : summands) {
 			reset_pattern_vars(pattern_var_adresses);
@@ -761,7 +763,7 @@ bool bmath::intern::Sum::operator<(const Basic_Term& other) const
 
 bool bmath::intern::Sum::operator==(const Basic_Term& other) const
 {
-
+	LOG_P(" vergleiche  " << *this << " und " << other);
 	switch (other.get_state_intern()) {
 	case s_sum:
 		break;
@@ -930,11 +932,11 @@ void bmath::intern::Exponentiation::sort()
 
 Basic_Term** bmath::intern::Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
-
 	if (*this == *pattern) {
 		return storage_key;
 	}
 	else {
+		LOG_P("nicht matched potenz: " << *this << " =/= " << *pattern);
 		reset_pattern_vars(pattern_var_adresses);
 		Basic_Term** argument_match = base->match_intern(pattern, pattern_var_adresses, &base);
 		if (argument_match != nullptr) {
@@ -969,6 +971,7 @@ bool bmath::intern::Exponentiation::operator<(const Basic_Term& other) const
 
 bool bmath::intern::Exponentiation::operator==(const Basic_Term& other) const
 {
+	LOG_P(" vergleiche  " << *this << " und " << other);
 	switch (other.get_state_intern()) {
 	case s_exponentiation:
 		break;
@@ -1198,6 +1201,7 @@ Basic_Term** bmath::intern::Par_Operator::match_intern(Basic_Term* pattern, std:
 		return storage_key;
 	}
 	else {
+		LOG_P("nicht matched par_op: " << *this << " =/= " << *pattern);
 		reset_pattern_vars(pattern_var_adresses);
 		Basic_Term** argument_match = argument->match_intern(pattern, pattern_var_adresses, &argument);
 		if (argument_match != nullptr) {
@@ -1227,6 +1231,7 @@ bool bmath::intern::Par_Operator::operator<(const Basic_Term& other) const
 
 bool bmath::intern::Par_Operator::operator==(const Basic_Term& other) const
 {
+	LOG_P(" vergleiche  " << *this << " und " << other);
 	switch (other.get_state_intern()) {
 	case s_par_operator:
 		break;

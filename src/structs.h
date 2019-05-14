@@ -7,6 +7,13 @@
 	#define LOG_C(x)
 #endif //CONSTRUCTOR_LOG
 
+//#define PATTERN_LOG
+#ifdef PATTERN_LOG
+	#define LOG_P(x) std::cout << x << '\n'
+#else
+	#define LOG_P(x)
+#endif //PATTERN_LOG
+
 #include <string>
 
 namespace bmath {

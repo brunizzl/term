@@ -26,21 +26,6 @@ bool bmath::intern::Basic_Term::re_smaller_than_0()
 	return false;
 }
 
-bool bmath::intern::Basic_Term::operator>(const Basic_Term& other) const
-{
-	return other < *this;
-}
-
-bool bmath::intern::Basic_Term::operator<=(const Basic_Term& other) const
-{
-	return !(other < *this);
-}
-
-bool bmath::intern::Basic_Term::operator>=(const Basic_Term& other) const
-{
-	return !(*this < other);
-}
-
 bool bmath::intern::Basic_Term::operator!=(const Basic_Term& other) const
 {
 	return !(*this == other);

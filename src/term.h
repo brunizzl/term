@@ -71,9 +71,6 @@ namespace bmath {
 
 			//works only on sorted terms
 			virtual bool operator<(const Basic_Term& other) const = 0;
-			virtual bool operator>(const Basic_Term& other) const;
-			virtual bool operator<=(const Basic_Term& other) const;
-			virtual bool operator>=(const Basic_Term& other) const;
 
 			virtual bool operator==(const Basic_Term& other) const = 0;
 			virtual bool operator!=(const Basic_Term& other) const;

@@ -141,6 +141,7 @@ Basic_Term** bmath::intern::Value::match_intern(Basic_Term* pattern, std::list<P
 		return storage_key;
 	}
 	else {
+		LOG_P("nicht matched value: " << *this << " =/= " << *pattern);
 		return nullptr;
 	}
 }
@@ -163,12 +164,14 @@ bool bmath::intern::Value::operator<(const Basic_Term& other) const
 
 bool bmath::intern::Value::operator==(const Basic_Term& other) const
 {
+	LOG_P(" vergleiche  " << *this << " und " << other);
 	switch (other.get_state_intern()) {
-	case s_exponentiation:
+	case s_value:
 		break;
 	case s_pattern_variable:
 		return other == *this;
 	default:
+		LOG_P("wert ungleich (verschiedener state) " << this->get_state_intern() << " =/= " << other.get_state_intern());
 		return false;
 	}
 	const Value* other_val = static_cast<const Value*>(&other);
@@ -259,6 +262,7 @@ Basic_Term** bmath::intern::Variable::match_intern(Basic_Term* pattern, std::lis
 		return storage_key;
 	}
 	else {
+		LOG_P("nicht matched variable: " << *this << " =/= " << *pattern);
 		return nullptr;
 	}
 }
@@ -276,6 +280,7 @@ bool bmath::intern::Variable::operator<(const Basic_Term& other) const
 
 bool bmath::intern::Variable::operator==(const Basic_Term& other) const
 {
+	LOG_P(" vergleiche  " << *this << " und " << other);
 	switch (other.get_state_intern()) {
 	case s_variable:
 		break;
@@ -305,12 +310,13 @@ bmath::intern::Pattern_Variable::~Pattern_Variable()
 
 void bmath::intern::Pattern_Variable::to_str(std::string& str) const
 {
-	std::stringstream stream;
-	stream << this->name;
-	stream << '(';
-	stream << this;
-	stream << ')';
-	str.append(stream.str());
+	str.push_back('{');
+	str.append(this->name);
+	if (this->pattern_value != nullptr) {
+		str.push_back(',');
+		this->pattern_value->to_str(str);
+	}
+	str.push_back('}');
 }
 
 State bmath::intern::Pattern_Variable::get_state_intern() const
@@ -374,11 +380,16 @@ bool bmath::intern::Pattern_Variable::operator<(const Basic_Term& other) const
 
 bool bmath::intern::Pattern_Variable::operator==(const Basic_Term& other) const
 {
+	LOG_P(" vergleiche  " << *this << " und " << other);
 	if (this->pattern_value == nullptr) {
 		this->pattern_value = const_cast<Basic_Term*>(&other);
+		LOG_P("pattern_var matched mit " << other);
 		return true;
 	}
 	else {
-		return *(this->pattern_value) == other;
+		bool match = *(this->pattern_value) == other;
+
+		LOG_P("pattern_var " << *this << (match ? " === " : " =/= ") << other);
+		return match;
 	}
 }

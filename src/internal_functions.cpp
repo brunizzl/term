@@ -364,7 +364,7 @@ constexpr int pattern_size = 2;
 
 std::array<Pattern*, pattern_size> patterns{
 	new Pattern("sin(x)^2+cos(x)^2", "1"),
-	new Pattern("a*c+a*b", "(b+c)*a"),
+	new Pattern("a*c+a*b", "(c+b)*a"),
 };
 
 void bmath::intern::reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses)

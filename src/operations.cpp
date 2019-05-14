@@ -280,18 +280,23 @@ Basic_Term** bmath::intern::Product::match_intern(Basic_Term* pattern, std::list
 			bool full_match = true;
 			std::list<Basic_Term*> matched_factors;
 			std::list<Basic_Term*> matched_divisors;
-			//it is not possible so search this->factors always from start, as for example pattern "a*a" would match with every product, because the same factor would be read as first AND second "a"
-			std::list<Basic_Term*>::iterator this_factor = this->factors.begin();	//therefore we assume sorted lists and only iterate trough this->factors once.
+			//it is not possible so search this->factors always from start, 
+			//as for example pattern "a*a" would match with every product, because the same factor would be read as first AND second "a"
+			//therefore we assume sorted lists and only iterate trough this->factors once.
+
+			//however: the first comparison to a pattern_variable will always be a match (as it is definded in operator== there)
+			//this may result in the nessesity to double some patterns and change the order of variables there, for every product to be simplefied.
+			std::list<Basic_Term*>::iterator this_factor = this->factors.begin();
 			for (auto& pattern_factor : pattern_product->factors) {
-				Basic_Term** factor_match;
+				bool factor_match;
 				for (; this_factor != this->factors.end(); ++this_factor) {
-					factor_match = (*this_factor)->match_intern(pattern_factor, pattern_var_adresses, &(*this_factor));
-					if (factor_match != nullptr) {
+					factor_match = (*this_factor) == pattern_factor;
+					if (factor_match) {
 						matched_factors.splice(matched_factors.end(), this->factors, this_factor);
 						break;
 					}
 				}
-				if (factor_match != nullptr) {
+				if (!factor_match) {
 					full_match = false;
 					break;
 				}
@@ -299,15 +304,16 @@ Basic_Term** bmath::intern::Product::match_intern(Basic_Term* pattern, std::list
 			if (full_match) {	//same for divisors
 				std::list<Basic_Term*>::iterator this_divisor = this->divisors.begin();
 				for (auto& pattern_divisor : pattern_product->divisors) {
-					Basic_Term** divisor_match;
+					bool divisor_match;
 					for (; this_divisor != this->divisors.end(); ++this_divisor) {
 						divisor_match = (*this_divisor)->match_intern(pattern_divisor, pattern_var_adresses, &(*this_divisor));
-						if (divisor_match != nullptr) {
+						divisor_match = (*this_divisor) == pattern_divisor;
+						if (divisor_match) {
 							matched_divisors.splice(matched_divisors.end(), this->divisors, this_divisor);
 							break;
 						}
 					}
-					if (divisor_match != nullptr) {
+					if (!divisor_match) {
 						full_match = false;
 						break;
 					}

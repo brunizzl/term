@@ -15,6 +15,7 @@
 #endif //PATTERN_LOG
 
 #include <string>
+#include <complex>
 
 namespace bmath {
 	namespace intern {

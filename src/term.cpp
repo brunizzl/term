@@ -2,6 +2,13 @@
 
 using namespace bmath::intern;
 
+//rules to simplify terms (left string -> right string)
+std::array<Pattern*, 3> patterns{
+	new Pattern("sin(x)^2+cos(x)^2", "1"),
+	new Pattern("a*c+a*b", "(c+b)*a"),
+	new Pattern("ln(a)+ln(b)", "ln(a*b)"),
+};
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Basic_Term\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -12,12 +19,6 @@ void bmath::intern::Basic_Term::combine_layers()
 	//therefore, no tree can be combined.
 	//the classes Value and Variable dont need an override to this function.
 	//every derived class not beeing leaf needs an overriding function.
-}
-
-bool bmath::intern::Basic_Term::combine_variables()
-{
-	//again: leaves need no overriding, all others do.
-	return false;
 }
 
 bool bmath::intern::Basic_Term::re_smaller_than_0()
@@ -163,8 +164,22 @@ void bmath::Term::combine()
 		this->term_ptr = new Value(new_subterm.val, nullptr);
 	}
 	this->term_ptr->sort();
+	bool matched = false;
+	for (unsigned int i = 0; i < patterns.size(); i++) {
+		if (this->match_and_transform(*patterns[i])) {
+			i = -1;	//if match was successfull, pattern search starts again.
+			matched = true;
+		}
+	}
+	if (matched) {
+		this->term_ptr->combine_layers();
+		Vals_Combined new_subterm = this->term_ptr->combine_values();
+		if (new_subterm.known) {
+			delete this->term_ptr;
+			this->term_ptr = new Value(new_subterm.val, nullptr);
+		}
+	}
 	this->term_ptr->combine_layers();
-	while (this->term_ptr->combine_variables());
 }
 
 void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
@@ -300,7 +315,7 @@ void bmath::intern::Pattern::Pattern_Term::build(std::string name, std::list<Pat
 
 bmath::intern::Pattern::Pattern_Term::~Pattern_Term()
 {
-	//no am bauen
+	delete this->term_ptr;
 }
 
 Basic_Term* bmath::intern::Pattern::Pattern_Term::copy(Basic_Term* parent_)

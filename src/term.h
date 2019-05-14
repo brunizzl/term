@@ -37,10 +37,6 @@ namespace bmath {
 			//values are added, multiplied, etc.
 			virtual Vals_Combined combine_values() = 0;
 
-			//NOCH NICHT AUSGEDACHT
-			//returns whether something has changed in the tree
-			virtual bool combine_variables();
-
 			//returns {true, whatever it adds up to} if only variables of names of known_variables is present
 			//returns {fale, undefined} if more variables are present
 			virtual Vals_Combined evaluate(const std::list<Known_Variable>& known_variables) const = 0;
@@ -78,7 +74,7 @@ namespace bmath {
 
 		class  Pattern {	//used to pattern match stuff that can then be simplified
 		private:
-			class Pattern_Term {
+			class Pattern_Term {	//like term, but holds pattern_variables instead of variables.
 			public:
 				intern::Basic_Term* term_ptr;
 

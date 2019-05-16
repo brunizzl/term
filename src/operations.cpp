@@ -110,10 +110,10 @@ State bmath::intern::Product::get_state_intern() const
 	return s_product;
 }
 
-void bmath::intern::Product::combine_layers()
+void bmath::intern::Product::combine_layers(Basic_Term*& storage_key)
 {
 	for (auto it = this->factors.begin(); it != this->factors.end();) {
-		(*it)->combine_layers();
+		(*it)->combine_layers(*it);
 		if (get_state(*it) == s_product) {
 			Product* redundant = static_cast<Product*>((*it));
 			for (auto it_red : redundant->factors) {
@@ -133,7 +133,7 @@ void bmath::intern::Product::combine_layers()
 		++it;
 	}
 	for (auto it = this->divisors.begin(); it != this->divisors.end();) {
-		(*it)->combine_layers();
+		(*it)->combine_layers(*it);
 		if (get_state(*it) == s_product) {
 			Product* redundant = static_cast<Product*>((*it));
 			for (auto it_red : redundant->factors) {
@@ -151,6 +151,11 @@ void bmath::intern::Product::combine_layers()
 			continue;
 		}
 		++it;
+	}
+	if (this->factors.size() == 1 && this->divisors.size() == 0) {
+		storage_key = *(this->factors.begin());
+		this->factors.clear();
+		delete this;		
 	}
 }
 
@@ -539,10 +544,10 @@ State bmath::intern::Sum::get_state_intern() const
 	return s_sum;
 }
 
-void bmath::intern::Sum::combine_layers()
+void bmath::intern::Sum::combine_layers(Basic_Term*& storage_key)
 {
 	for (auto it = this->summands.begin(); it != this->summands.end();) {
-		(*it)->combine_layers();
+		(*it)->combine_layers(*it);
 		if (get_state(*it) == s_sum) {
 			Sum* redundant = static_cast<Sum*>((*it));
 			for (auto it_red : redundant->summands) {
@@ -562,7 +567,7 @@ void bmath::intern::Sum::combine_layers()
 		++it;
 	}
 	for (auto it = this->subtractors.begin(); it != this->subtractors.end();) {
-		(*it)->combine_layers();
+		(*it)->combine_layers(*it);
 		if (get_state(*it) == s_sum) {
 			Sum* redundant = static_cast<Sum*>((*it));
 			for (auto it_red : redundant->summands) {
@@ -580,6 +585,11 @@ void bmath::intern::Sum::combine_layers()
 			continue;
 		}
 		++it;
+	}
+	if (this->summands.size() == 1 && this->subtractors.size() == 0) {
+		storage_key = *(this->summands.begin());
+		this->summands.clear();
+		delete this;
 	}
 }
 
@@ -866,10 +876,40 @@ State bmath::intern::Exponentiation::get_state_intern() const
 	return s_exponentiation;
 }
 
-void bmath::intern::Exponentiation::combine_layers()
+void bmath::intern::Exponentiation::combine_layers(Basic_Term*& storage_key)
 {
-	this->base->combine_layers();
-	this->exponent->combine_layers();
+	this->base->combine_layers(this->base);
+	this->exponent->combine_layers(this->exponent);
+	if (this->exponent->get_state_intern() == s_value) {
+		Value* val_exp = static_cast<Value*>(this->exponent);
+		if (val_exp->value == 1.0) {
+			storage_key = this->base;
+			this->base->parent = this->parent;
+			this->base = nullptr;
+			delete this;
+			return;
+		}
+		if (val_exp->value == 0.0) {
+			storage_key = new Value(std::complex<double>{ 1.0, 0.0 }, this->parent);
+			delete this;
+			return;
+		}
+	}
+	if (this->base->get_state_intern() == s_value) {
+		Value* val_base = static_cast<Value*>(this->base);
+		if (val_base->value == 1.0) {
+			storage_key = val_base;
+			val_base->parent = this->parent;
+			this->base = nullptr;
+			delete this;
+			return;
+		}
+		if (val_base->value == 0.0) {
+			storage_key = new Value(std::complex<double>{ 0.0, 0.0 }, this->parent);
+			delete this;
+			return;
+		}
+	}
 }
 
 Vals_Combined bmath::intern::Exponentiation::combine_values()
@@ -1001,7 +1041,7 @@ bool bmath::intern::Exponentiation::operator==(const Basic_Term& other) const
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bmath::intern::Par_Operator::Par_Operator(Basic_Term* parent_)
-	:Basic_Term(parent_), argument(nullptr), op_state(error)
+	:Basic_Term(parent_), argument(nullptr), op_state(op_error)
 {
 }
 
@@ -1009,39 +1049,39 @@ Vals_Combined bmath::intern::Par_Operator::internal_combine(Vals_Combined argume
 {
 	if (argument_.known) {
 		switch (this->op_state) {
-		case log10:
+		case op_log10:
 			return Vals_Combined{ true, std::log10(argument_.val) };
-		case asin:
+		case op_asin:
 			return Vals_Combined{ true, std::asin(argument_.val) };
-		case acos:
+		case op_acos:
 			return Vals_Combined{ true, std::acos(argument_.val) };
-		case atan:
+		case op_atan:
 			return Vals_Combined{ true, std::atan(argument_.val) };
-		case asinh:
+		case op_asinh:
 			return Vals_Combined{ true, std::asinh(argument_.val) };
-		case acosh:
+		case op_acosh:
 			return Vals_Combined{ true, std::acosh(argument_.val) };
-		case atanh:
+		case op_atanh:
 			return Vals_Combined{ true, std::atanh(argument_.val) };
-		case sinh:
+		case op_sinh:
 			return Vals_Combined{ true, std::sinh(argument_.val) };
-		case cosh:
+		case op_cosh:
 			return Vals_Combined{ true, std::cosh(argument_.val) };
-		case tanh:
+		case op_tanh:
 			return Vals_Combined{ true, std::tanh(argument_.val) };
-		case sqrt:
+		case op_sqrt:
 			return Vals_Combined{ true, std::sqrt(argument_.val) };
-		case exp:
+		case op_exp:
 			return Vals_Combined{ true, std::exp(argument_.val) };
-		case sin:
+		case op_sin:
 			return Vals_Combined{ true, std::sin(argument_.val) };
-		case cos:
+		case op_cos:
 			return Vals_Combined{ true, std::cos(argument_.val) };
-		case tan:
+		case op_tan:
 			return Vals_Combined{ true, std::tan(argument_.val) };
-		case abs:
+		case op_abs:
 			return Vals_Combined{ true, std::abs(argument_.val) };;
-		case ln:
+		case op_ln:
 			return Vals_Combined{ true, std::log(argument_.val) };
 		}
 	}
@@ -1052,86 +1092,18 @@ bmath::intern::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_
 	:Basic_Term(parent_), op_state(op_state_), argument(nullptr)
 {
 	LOG_C("baue Par_Operator: " << name_);
-	name_.pop_back(); //closing parenthesis gets cut of
-	switch (op_state_) {
-		//erase function cuts of operator + opening par -> operator cases sorted by length
-	case ln:
-		name_.erase(0, 3);
-		LOG_C("shortened name: " << name_);
-		this->argument = build_subterm(name_, this);
-		break;
-	case exp:
-	case sin:
-	case cos:
-	case tan:
-	case abs:
-		name_.erase(0, 4);
-		LOG_C("shortened name: " << name_);
-		this->argument = build_subterm(name_, this);
-		break;
-	case asin:
-	case acos:
-	case atan:
-	case sinh:
-	case cosh:
-	case tanh:
-	case sqrt:
-		name_.erase(0, 5);
-		LOG_C("shortened name: " << name_);
-		this->argument = build_subterm(name_, this);
-		break;
-	case log10:
-	case asinh:
-	case acosh:
-	case atanh:
-		name_.erase(0, 6);
-		LOG_C("shortened name: " << name_);
-		this->argument = build_subterm(name_, this);
-		break;
-	}
+	name_.pop_back();							//closing parenthesis gets cut of
+	name_.erase(0, strlen(op_name(op_state)));	//funktionname and opening parenthesis gets cut of
+	this->argument = build_subterm(name_, this);
 }
 
 bmath::intern::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_, std::list<Pattern_Variable*>& variables)
 	:Basic_Term(parent_), op_state(op_state_), argument(nullptr)
 {
 	LOG_C("baue Par_Operator: " << name_);
-	name_.pop_back(); //closing parenthesis gets cut of
-	switch (op_state_) {
-		//erase function cuts of operator + opening par -> operator cases sorted by length
-	case ln:
-		name_.erase(0, 3);
-		LOG_C("shortened name: " << name_);
-		this->argument = build_pattern_subterm(name_, this, variables);
-		break;
-	case exp:
-	case sin:
-	case cos:
-	case tan:
-	case abs:
-		name_.erase(0, 4);
-		LOG_C("shortened name: " << name_);
-		this->argument = build_pattern_subterm(name_, this, variables);
-		break;
-	case asin:
-	case acos:
-	case atan:
-	case sinh:
-	case cosh:
-	case tanh:
-	case sqrt:
-		name_.erase(0, 5);
-		LOG_C("shortened name: " << name_);
-		this->argument = build_pattern_subterm(name_, this, variables);
-		break;
-	case log10:
-	case asinh:
-	case acosh:
-	case atanh:
-		name_.erase(0, 6);
-		LOG_C("shortened name: " << name_);
-		this->argument = build_pattern_subterm(name_, this, variables);
-		break;
-	}
+	name_.pop_back();							//closing parenthesis gets cut of
+	name_.erase(0, strlen(op_name(op_state)));	//funktionname and opening parenthesis gets cut of
+	this-> argument = build_pattern_subterm(name_, this, variables);
 }
 
 
@@ -1159,9 +1131,9 @@ State bmath::intern::Par_Operator::get_state_intern() const
 	return s_par_operator;
 }
 
-void bmath::intern::Par_Operator::combine_layers()
+void bmath::intern::Par_Operator::combine_layers(Basic_Term*& storage_key)
 {
-	this->argument->combine_layers();
+	this->argument->combine_layers(this->argument);
 }
 
 Vals_Combined bmath::intern::Par_Operator::combine_values()

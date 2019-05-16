@@ -19,7 +19,7 @@ namespace bmath {
 
 			void to_str(std::string& str) const override;
 			State get_state_intern() const override;
-			void combine_layers() override;
+			void combine_layers(Basic_Term*& storage_key) override;
 			Vals_Combined combine_values() override;
 			Vals_Combined evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key) override;
@@ -46,7 +46,7 @@ namespace bmath {
 
 			void to_str(std::string& str) const override;
 			State get_state_intern() const override;
-			void combine_layers() override;
+			void combine_layers(Basic_Term*& storage_key) override;
 			Vals_Combined combine_values() override;
 			Vals_Combined evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key) override;
@@ -73,7 +73,7 @@ namespace bmath {
 
 			void to_str(std::string& str) const override;
 			State get_state_intern() const override;
-			void combine_layers() override;
+			void combine_layers(Basic_Term*& storage_key) override;
 			Vals_Combined combine_values() override;
 			Vals_Combined evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key) override;
@@ -103,7 +103,7 @@ namespace bmath {
 
 			void to_str(std::string& str) const override;
 			State get_state_intern() const override;
-			void combine_layers() override;
+			void combine_layers(Basic_Term*& storage_key) override;
 			Vals_Combined combine_values() override;
 			Vals_Combined evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key) override;

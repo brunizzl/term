@@ -5,7 +5,7 @@ using namespace bmath::intern;
 //rules to simplify terms (left string -> right string)
 std::array<Pattern*, 3> patterns{
 	new Pattern("sin(x)^2+cos(x)^2", "1"),
-	new Pattern("a*c+a*b", "(c+b)*a"),
+	new Pattern("a*c+a*b", "a*(c+b)"),
 	new Pattern("ln(a)+ln(b)", "ln(a*b)"),
 };
 
@@ -13,7 +13,7 @@ std::array<Pattern*, 3> patterns{
 //Basic_Term\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void bmath::intern::Basic_Term::combine_layers()
+void bmath::intern::Basic_Term::combine_layers(Basic_Term*& storage_key)
 {
 	//the base class does not know of the tree structures, the derived classes provide.
 	//therefore, no tree can be combined.
@@ -131,6 +131,15 @@ bool bmath::Term::match_and_transform(Pattern& pattern)
 	return false;
 }
 
+void bmath::Term::combine_values()
+{
+	Vals_Combined new_subterm = this->term_ptr->combine_values();
+	if (new_subterm.known) {
+		delete this->term_ptr;
+		this->term_ptr = new Value(new_subterm.val, nullptr);
+	}
+}
+
 std::complex<double> bmath::Term::evaluate(const std::string name_, std::complex<double> value_) const
 {
 	std::list<Known_Variable> known_variables{ Known_Variable{ name_, value_ } };
@@ -157,29 +166,23 @@ bool bmath::Term::valid_state() const
 
 void bmath::Term::combine()
 {
-	this->term_ptr->combine_layers();
-	Vals_Combined new_subterm = this->term_ptr->combine_values();
-	if (new_subterm.known) {
-		delete this->term_ptr;
-		this->term_ptr = new Value(new_subterm.val, nullptr);
-	}
+	this->term_ptr->combine_layers(this->term_ptr);
+	this->combine_values();
 	this->term_ptr->sort();
-	bool matched = false;
+
+	std::list<recurring_term> recurring_terms;
+	//HIER MUSS DIE liste MIT DOPPELTEN VARIABLEN GEFÜLLT WERDEN UND DIE VARIABLEN DANN VON IHREN FREUNDEN ABGESPALTET WERDEN.
+	//GRAUSAM ABER NOTWENDIG 
+	//UND DANN WERDEN DIE FÜR IMMER VON EINANDER WEGSORTIERT
+
 	for (unsigned int i = 0; i < patterns.size(); i++) {
 		if (this->match_and_transform(*patterns[i])) {
 			i = -1;	//if match was successfull, pattern search starts again.
-			matched = true;
+			this->term_ptr->combine_layers(this->term_ptr);
+			this->combine_values();
 		}
 	}
-	if (matched) {
-		this->term_ptr->combine_layers();
-		Vals_Combined new_subterm = this->term_ptr->combine_values();
-		if (new_subterm.known) {
-			delete this->term_ptr;
-			this->term_ptr = new Value(new_subterm.val, nullptr);
-		}
-	}
-	this->term_ptr->combine_layers();
+	this->term_ptr->combine_layers(this->term_ptr);
 }
 
 void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)

@@ -31,8 +31,9 @@ namespace bmath {
 			//returns kinda true type of term (sum, product, value, etc.)
 			virtual State get_state_intern() const = 0;
 
-			//if one term holds a pointer to a term of same type both are combinded (if possible)
-			virtual void combine_layers();
+			//if one sum/product holds a pointer to another sum/product, both get combined into one.
+			//IN PLANUNG: WENN NUR NOCH EIN SUMMAND DA, DIE EBENE RAUSNEHMEN
+			virtual void combine_layers(Basic_Term*& storage_key);
 
 			//values are added, multiplied, etc.
 			virtual Vals_Combined combine_values() = 0;
@@ -101,12 +102,34 @@ namespace bmath {
 			std::string print();
 		};
 
+
+		//used when combining variables to split recurring terms of other summands/ factors for easier matching
+		struct ocurrence {
+			std::list<Basic_Term*>::iterator list_pos;
+			Basic_Term* list_owner;
+		};
+
+		struct recurring_term {
+			Basic_Term* term;	//points to one instance of recurring term
+			std::list<ocurrence> ocurrences;	//holds positiones of all recurring terms in sums/products
+		};
+
 	} //namespace intern
 
 	//"head" used to acess and manage actual term (only expected user interface)
 	class Term {
 	private:
 		intern::Basic_Term* term_ptr;		//start of actual term tree
+
+		//compares pattern_original to term.
+		//if a match is found, function returns the matching subterm in term.
+		//if pattern is sum and matching sum in term has more summands then pattern,
+		//a new sum is constructed in term were summands used to be. the matched summands become summands of new sum. (same with products)
+		//example:	pattern "a^2+b^2" is matched in term "var^2+sin(x)^2+3". term then is changed to "(var^2+sin(x)^2)+3"
+		//this is nessesary, as the match will be replaced. 
+		bool match_and_transform(intern::Pattern& pattern);
+
+		void combine_values();
 		
 	public:
 		Term();
@@ -131,14 +154,6 @@ namespace bmath {
 
 		//adds all variable names in this to list
 		std::set<std::string> get_var_names() const;
-
-		//compares pattern_original to term.
-		//if a match is found, function returns the matching subterm in term.
-		//if pattern is sum and matching sum in term has more summands then pattern,
-		//a new sum is constructed in term were summands used to be. the matched summands become summands of new sum. (same with products)
-		//example:	pattern "a^2+b^2" is matched in term "var^2+sin(x)^2+3". term then is changed to "(var^2+sin(x)^2)+3"
-		//this is nessesary, as the match will be replaced. 
-		bool match_and_transform(intern::Pattern& pattern);
 
 		std::complex<double> evaluate(const std::string name_, std::complex<double> value_) const;
 		std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const;

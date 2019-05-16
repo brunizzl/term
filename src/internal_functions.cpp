@@ -117,7 +117,7 @@ State bmath::intern::type_subterm(const std::string & name, const std::vector<Po
 		return s_exponentiation;
 	}
 	//searching for parenthesis operators 
-	for (int op_state = 0; op_state < static_cast<int>(error); op_state++) {
+	for (int op_state = 0; op_state < static_cast<int>(op_error); op_state++) {
 		op = rfind_skip_pars(name, op_name(static_cast<Par_Op_State>(op_state)), pars);
 		if (op != std::string::npos) {
 			par_op_state = static_cast<Par_Op_State>(op_state);
@@ -146,39 +146,39 @@ State bmath::intern::type_subterm(const std::string & name, const std::vector<Po
 const char* bmath::intern::op_name(Par_Op_State op_state)
 {
 	switch (op_state) {
-	case log10:
+	case op_log10:
 		return "log10(";
-	case asinh:
+	case op_asinh:
 		return "asinh(";
-	case acosh:
+	case op_acosh:
 		return "acosh(";
-	case atanh:
+	case op_atanh:
 		return "atanh(";
-	case asin:
+	case op_asin:
 		return "asin(";
-	case acos:
+	case op_acos:
 		return "acos(";
-	case atan:
+	case op_atan:
 		return "atan(";
-	case sinh:
+	case op_sinh:
 		return "sinh(";
-	case cosh:
+	case op_cosh:
 		return "cosh(";
-	case tanh:
+	case op_tanh:
 		return "tanh(";
-	case sqrt:
+	case op_sqrt:
 		return "sqrt(";
-	case exp:
+	case op_exp:
 		return "exp(";
-	case sin:
+	case op_sin:
 		return "sin(";
-	case cos:
+	case op_cos:
 		return "cos(";
-	case tan:
+	case op_tan:
 		return "tan(";
-	case abs:
+	case op_abs:
 		return "abs(";
-	case ln:
+	case op_ln:
 		return "ln(";
 	}
 	return nullptr;

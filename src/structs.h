@@ -20,12 +20,6 @@
 namespace bmath {
 	namespace intern {
 
-		//contains position of parentheses in constructor string
-		struct Pos_Pars {
-			std::size_t start;	//position of '('
-			std::size_t end;	//position of ')'
-		};
-
 		//specifies actual type of Basic_Term 
 		//(types ordered for parentheses to allow > / < / == etc. operators to test whether parentheses are needed)
 		enum State {
@@ -36,31 +30,37 @@ namespace bmath {
 			s_variable,
 			s_pattern_variable,
 			s_product,
-			s_exponentiation
+			s_exponentiation,
 		};
 
 		//used in Par_Operator class to specify whitch operator is actually used 
 		//(comments are corresponding cmath functions)
 		//states names are sorted by length
 		enum Par_Op_State {
-			log10,		//log10()
-			asinh,		//asinh()
-			acosh,		//acosh()
-			atanh,		//atanh()
-			asin,		//asin()
-			acos,		//acos()
-			atan,		//atan()
-			sinh,		//sinh()
-			cosh,		//cosh()
-			tanh,		//tanh()
-			sqrt,		//sqrt()
-			exp,		//exp()
-			sin,		//sin()
-			cos,		//cos()
-			tan,		//tan()
-			abs,		//fabs()
-			ln,			//log()
-			error		//needs to be last element to enable loops to go trough the states (used as break condition)
+			op_log10,		//log10()
+			op_asinh,		//asinh()
+			op_acosh,		//acosh()
+			op_atanh,		//atanh()
+			op_asin,		//asin()
+			op_acos,		//acos()
+			op_atan,		//atan()
+			op_sinh,		//sinh()
+			op_cosh,		//cosh()
+			op_tanh,		//tanh()
+			op_sqrt,		//sqrt()
+			op_exp,			//exp()
+			op_sin,			//sin()
+			op_cos,			//cos()
+			op_tan,			//tan()
+			op_abs,			//abs()
+			op_ln,			//log()
+			op_error,		//needs to be last element to enable loops to go trough the states (used as break condition)
+		};
+
+		//contains position of parentheses in constructor string
+		struct Pos_Pars {
+			std::size_t start;	//position of '('
+			std::size_t end;	//position of ')'
 		};
 
 		//return of function combine_values()

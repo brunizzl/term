@@ -19,6 +19,7 @@
 
 namespace bmath {
 	namespace intern {
+		class Basic_Term;
 
 		//specifies actual type of Basic_Term 
 		//(types ordered for parentheses to allow > / < / == etc. operators to test whether parentheses are needed)
@@ -29,6 +30,7 @@ namespace bmath {
 			s_value,
 			s_variable,
 			s_pattern_variable,
+			s_variadic_pattern_op,
 			s_product,
 			s_exponentiation,
 		};

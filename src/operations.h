@@ -13,20 +13,20 @@ namespace bmath {
 
 			Product(Basic_Term* parent_);
 			Product(std::string name_, Basic_Term* parent_, std::size_t op);
-			Product(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
+			Product(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Basic_Term*>& variables);
 			Product(const Product& source, Basic_Term* parent_ = nullptr);
 			~Product();
 
 			void to_str(std::string& str) const override;
 			State get_state_intern() const override;
 			void combine_layers(Basic_Term*& storage_key) override;
-			Vals_Combined combine_values() override;
+			Vals_Combined combine_values() override; 
 			Vals_Combined evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key) override;
 			bool valid_state() const override;
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
-			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;	//NOCH NICHT GANZ IMPLEMENTIERT!
+			Basic_Term** match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key) override;	//NOCH NICHT GANZ IMPLEMENTIERT!
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -40,7 +40,7 @@ namespace bmath {
 
 			Sum(Basic_Term* parent_);
 			Sum(std::string name_, Basic_Term* parent_, std::size_t op);
-			Sum(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
+			Sum(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Basic_Term*>& variables);
 			Sum(const Sum& source, Basic_Term* parent_ = nullptr);
 			~Sum();
 
@@ -53,7 +53,7 @@ namespace bmath {
 			bool valid_state() const override;
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
-			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;	//NOCH NICHT GANZ IMPLEMENTIERT!
+			Basic_Term** match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key) override;	//NOCH NICHT GANZ IMPLEMENTIERT!
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -67,7 +67,7 @@ namespace bmath {
 
 			Exponentiation(Basic_Term* parent_);
 			Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op);
-			Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
+			Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Basic_Term*>& variables);
 			Exponentiation(const Exponentiation& source, Basic_Term* parent_ = nullptr);
 			~Exponentiation();
 
@@ -80,7 +80,7 @@ namespace bmath {
 			bool valid_state() const override;
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
-			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
+			Basic_Term** match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -97,7 +97,7 @@ namespace bmath {
 		public:
 			Par_Operator(Basic_Term* parent_);
 			Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_);
-			Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_, std::list<Pattern_Variable*>& variables);
+			Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_, std::list<Basic_Term*>& variables);
 			Par_Operator(const Par_Operator& source, Basic_Term* parent_ = nullptr);
 			~Par_Operator();
 
@@ -110,9 +110,32 @@ namespace bmath {
 			bool valid_state() const override;
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
-			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
+			Basic_Term** match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
+		};
+
+		//used to store remaining summands / factors marked in pattern with "..." (basically is sum or product)
+		class Variadic_Pattern_Operator : public Basic_Term
+		{
+		public:
+			mutable std::list<Basic_Term*> operands;		//summands or factors
+			mutable std::list<Basic_Term*> inv_operands;	//subtractos or divisors
+
+			Variadic_Pattern_Operator(Basic_Term* parent_);
+			~Variadic_Pattern_Operator();
+
+			void to_str(std::string& str) const override;
+			State get_state_intern() const override;
+			Vals_Combined combine_values() override;
+			Vals_Combined evaluate(const std::list<Known_Variable>& known_variables) const override;
+			void search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key) override;
+			bool valid_state() const override;
+			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
+			void sort() override;
+			Basic_Term** match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key) override;
+			bool operator<(const Basic_Term& other) const override;
+			bool operator==(const Basic_Term& other) const override;	//DER BRAUCHT NO NN BISSEL ÜBERLEGUNG
 		};
 
 	} //namespace intern

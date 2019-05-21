@@ -132,6 +132,9 @@ State bmath::intern::type_subterm(const std::string & name, const std::vector<Po
 	if (name.find_last_of("i") != std::string::npos && op == std::string::npos) {
 		return s_value;
 	}
+	if (name == "...") {	//only makes sense for patterns
+		return s_variadic_pattern_op;
+	}
 	if (op != std::string::npos) {
 		return s_variable;
 	}
@@ -226,36 +229,6 @@ State bmath::intern::get_state(const Basic_Term* obj)
 	}
 }
 
-Basic_Term* bmath::intern::standardize_structure(Basic_Term* obj)
-{
-	switch (obj->get_state_intern()) {
-	case s_product: {
-		Product* product = static_cast<Product*>(obj);
-		//this access to front in product.factors already assumes, if product contains a value,
-		// it is the only value in factors and divisors and placed at first position.
-		//aka. it is assumed combine_values() did already run.
-		if (!product->factors.empty() && product->factors.front()->re_smaller_than_0()) {
-			Sum* new_sum = new Sum(product->parent);
-			new_sum->subtractors.push_back(product);
-			product->parent = new_sum;
-			return new_sum;
-		}
-		break;
-	}
-	case s_exponentiation: {
-		Exponentiation* exponentiation = static_cast<Exponentiation*>(obj);
-		if (exponentiation->exponent->re_smaller_than_0()) {
-			Product* new_product = new Product(exponentiation->parent);
-			new_product->divisors.push_back(exponentiation);
-			exponentiation->parent = new_product;
-			return new_product;
-		}
-		break;
-	}
-	}
-	return obj;
-}
-
 Basic_Term* bmath::intern::build_subterm(std::string& subtermstr, Basic_Term* parent_)
 {
 	std::vector<Pos_Pars> pars;
@@ -289,7 +262,7 @@ Basic_Term* bmath::intern::build_subterm(std::string& subtermstr, Basic_Term* pa
 	return nullptr;
 }
 
-Basic_Term* bmath::intern::build_pattern_subterm(std::string& subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables)
+Basic_Term* bmath::intern::build_pattern_subterm(std::string& subtermstr, Basic_Term* parent_, std::list<Basic_Term*>& variables)
 {
 	std::vector<Pos_Pars> pars;
 	while (subtermstr.size() != 0) {
@@ -310,9 +283,11 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string& subtermstr, Basic_
 			return new Par_Operator(subtermstr, parent_, par_op_state, variables);
 		case s_value:
 			return new Value(subtermstr, parent_);
+		case s_variadic_pattern_op:
+			return new Variadic_Pattern_Operator(parent_);
 		case s_variable:
-			for (auto variable : variables) {
-				if (variable->name == subtermstr) {
+			for (auto& variable : variables) {
+				if (variable->get_state_intern() == s_pattern_variable && static_cast<Pattern_Variable*>(variable)->name == subtermstr) {
 					return variable;
 				}
 			}
@@ -356,14 +331,24 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* pa
 		}
 	}
 	}
-	std::cout << "Error: function copy_subterm expected known type to copy: " << type << '\n';
+	std::cout << "Error: function copy_subterm expected known type to copy, got: \"" << type << "\"\n";
 	return nullptr;
 }
 
-void bmath::intern::reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses)
+void bmath::intern::reset_pattern_vars(std::list<Basic_Term*>& var_adresses)
 {
 	for (auto& pattern_var : var_adresses) {
-		static_cast<Pattern_Variable*>(pattern_var)->pattern_value = nullptr;
+		switch (pattern_var->get_state_intern()) {
+		case s_pattern_variable:
+			static_cast<Pattern_Variable*>(pattern_var)->pattern_value = nullptr;
+			break;
+		case s_variadic_pattern_op:
+			static_cast<Variadic_Pattern_Operator*>(pattern_var)->operands.clear();
+			static_cast<Variadic_Pattern_Operator*>(pattern_var)->inv_operands.clear();
+			break;
+		default:
+			std::cout << "Error: function reset_pattern_var() did not expect to find anything besides pattern components in var_adresses.\n";
+		}
 	}
 }
 

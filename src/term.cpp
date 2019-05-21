@@ -4,9 +4,9 @@ using namespace bmath::intern;
 
 //rules to simplify terms (left string -> right string)
 std::array<Pattern*, 3> patterns{
-	new Pattern("sin(x)^2+cos(x)^2", "1"),
-	new Pattern("a*c+a*b", "a*(c+b)"),
-	new Pattern("ln(a)+ln(b)", "ln(a*b)"),
+	new Pattern("sin(x)^2+cos(x)^2+...", "1+..."),
+	new Pattern("a*c+a*b+...", "a*(c+b)+..."),
+	new Pattern("ln(a)+ln(b)+...", "ln(a*b)+..."),
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -170,7 +170,7 @@ void bmath::Term::combine()
 	this->combine_values();
 	this->term_ptr->sort();
 
-	std::list<recurring_term> recurring_terms;
+	//std::list<recurring_term> recurring_terms;
 	//HIER MUSS DIE liste MIT DOPPELTEN VARIABLEN GEFÜLLT WERDEN UND DIE VARIABLEN DANN VON IHREN FREUNDEN ABGESPALTET WERDEN.
 	//GRAUSAM ABER NOTWENDIG 
 	//UND DANN WERDEN DIE FÜR IMMER VON EINANDER WEGSORTIERT
@@ -305,7 +305,7 @@ bmath::intern::Pattern::Pattern_Term::Pattern_Term()
 {
 }
 
-void bmath::intern::Pattern::Pattern_Term::build(std::string name, std::list<Pattern_Variable*>& var_adresses)
+void bmath::intern::Pattern::Pattern_Term::build(std::string name, std::list<Basic_Term*>& var_adresses)
 {
 	if (term_ptr != nullptr) {
 		std::cout << "Error: Pattern_Term has already been build.\n";

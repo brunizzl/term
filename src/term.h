@@ -64,7 +64,7 @@ namespace bmath {
 			//storage_key is pointer to the pointer to "this" in the object that owns "this"
 			//only differs from operator== on first layer, as it calls operator== itself.
 			//first tries to match this to pattern, then tries to match subterms
-			virtual Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) = 0;
+			virtual Basic_Term** match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key) = 0;
 
 			//works only on sorted terms
 			virtual bool operator<(const Basic_Term& other) const = 0;
@@ -80,7 +80,7 @@ namespace bmath {
 				intern::Basic_Term* term_ptr;
 
 				Pattern_Term();
-				void build(std::string name, std::list<Pattern_Variable*>& var_adresses);
+				void build(std::string name, std::list<Basic_Term*>& var_adresses);
 				~Pattern_Term();
 
 				Basic_Term* copy(Basic_Term* parent_);
@@ -95,23 +95,11 @@ namespace bmath {
 		public:
 			Pattern(const char* original_, const char* changed_);
 			//members:
-			std::list<Pattern_Variable*> var_adresses;
+			std::list<Basic_Term*> var_adresses;
 			Pattern_Term original;	//pattern to be compared to term opject
 			Pattern_Term changed;	//pattern to replace match in term object
 
-			std::string print();
-		};
-
-
-		//used when combining variables to split recurring terms of other summands/ factors for easier matching
-		struct ocurrence {
-			std::list<Basic_Term*>::iterator list_pos;
-			Basic_Term* list_owner;
-		};
-
-		struct recurring_term {
-			Basic_Term* term;	//points to one instance of recurring term
-			std::list<ocurrence> ocurrences;	//holds positiones of all recurring terms in sums/products
+			std::string print();	//just for debugging
 		};
 
 	} //namespace intern

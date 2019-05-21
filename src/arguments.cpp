@@ -135,7 +135,7 @@ void bmath::intern::Value::sort()
 	//nothing to be done here
 }
 
-Basic_Term** bmath::intern::Value::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
+Basic_Term** bmath::intern::Value::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 	if (*this == *pattern) {
 		return storage_key;
@@ -256,7 +256,7 @@ void bmath::intern::Variable::sort()
 	//nothing to be done here
 }
 
-Basic_Term** bmath::intern::Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
+Basic_Term** bmath::intern::Variable::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 	if (*this == *pattern) {
 		return storage_key;
@@ -327,21 +327,21 @@ State bmath::intern::Pattern_Variable::get_state_intern() const
 Vals_Combined bmath::intern::Pattern_Variable::combine_values()
 {
 	std::cout << "Error: pattern_variable used instead of variable!\n";
-	std::cout << "(try running bmath::pattern_initialize() function first.)\n";
+	std::cout << "function combine_values() makes no sense to run in pattern\n";
 	return Vals_Combined();
 }
 
 Vals_Combined bmath::intern::Pattern_Variable::evaluate(const std::list<Known_Variable>& known_variables) const
 {
 	std::cout << "Error: pattern_variable used instead of variable!\n";
-	std::cout << "(try running bmath::pattern_initialize() function first.)\n";
+	std::cout << "function evaluate() makes no sense to run in pattern\n";
 	return Vals_Combined();
 }
 
 void bmath::intern::Pattern_Variable::search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key)
 {
 	std::cout << "Error: pattern_variable used instead of variable!\n";
-	std::cout << "(try running bmath::pattern_initialize() function first.)\n";
+	std::cout << "function search_and_replace() makes no sense to run in pattern\n";
 }
 
 bool bmath::intern::Pattern_Variable::valid_state() const
@@ -361,7 +361,7 @@ void bmath::intern::Pattern_Variable::sort()
 	//nothing to be done here
 }
 
-Basic_Term** bmath::intern::Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
+Basic_Term** bmath::intern::Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 	std::cout << "Error: did not expect Pattern_Variable calling match_intern()\n";
 	return nullptr;

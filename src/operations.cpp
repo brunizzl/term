@@ -34,7 +34,7 @@ bmath::intern::Product::Product(std::string name_, Basic_Term* parent_, std::siz
 	this->factors.push_front(build_subterm(name_, this));
 }
 
-bmath::intern::Product::Product(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
+bmath::intern::Product::Product(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Basic_Term*>& variables)
 	:Basic_Term(parent_)
 {
 	LOG_C("baue Produkt: " << name_);
@@ -277,7 +277,7 @@ void bmath::intern::Product::sort()
 	this->divisors.sort([](Basic_Term * &a, Basic_Term * &b) -> bool {return *a < *b; });
 }
 
-Basic_Term** bmath::intern::Product::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
+Basic_Term** bmath::intern::Product::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 	if (this->get_state_intern() == pattern->get_state_intern()) {
 		Product* pattern_product = static_cast<Product*>(pattern);
@@ -470,7 +470,7 @@ bmath::intern::Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op)
 	}
 }
 
-bmath::intern::Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
+bmath::intern::Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Basic_Term*>& variables)
 	:Basic_Term(parent_)
 {
 	LOG_C("baue Summe: " << name_);
@@ -711,7 +711,7 @@ void bmath::intern::Sum::sort()
 	this->subtractors.sort([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; });
 }
 
-Basic_Term** bmath::intern::Sum::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
+Basic_Term** bmath::intern::Sum::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 	//MUSS NOCH VERGLEICHEN, OB NUR TEILE VON THIS GLEICH GANZEM PATTERN SIND
 	if (*this == *pattern) {
@@ -834,7 +834,7 @@ bmath::intern::Exponentiation::Exponentiation(std::string name_, Basic_Term* par
 	this->base = build_subterm(name_, this);
 }
 
-bmath::intern::Exponentiation::Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
+bmath::intern::Exponentiation::Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Basic_Term*>& variables)
 	:Basic_Term(parent_)
 {
 	LOG_C("baue Potenz: " << name_);
@@ -976,7 +976,7 @@ void bmath::intern::Exponentiation::sort()
 	this->exponent->sort();
 }
 
-Basic_Term** bmath::intern::Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
+Basic_Term** bmath::intern::Exponentiation::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 	if (*this == *pattern) {
 		return storage_key;
@@ -1097,7 +1097,7 @@ bmath::intern::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_
 	this->argument = build_subterm(name_, this);
 }
 
-bmath::intern::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_, std::list<Pattern_Variable*>& variables)
+bmath::intern::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_, std::list<Basic_Term*>& variables)
 	:Basic_Term(parent_), op_state(op_state_), argument(nullptr)
 {
 	LOG_C("baue Par_Operator: " << name_);
@@ -1173,7 +1173,7 @@ void bmath::intern::Par_Operator::sort()
 	this->argument->sort();
 }
 
-Basic_Term** bmath::intern::Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
+Basic_Term** bmath::intern::Par_Operator::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 	if (*this == *pattern) {
 		return storage_key;
@@ -1226,4 +1226,88 @@ bool bmath::intern::Par_Operator::operator==(const Basic_Term& other) const
 		return false;
 	}
 	return true;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Variadic_Pattern_Operator\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bmath::intern::Variadic_Pattern_Operator::Variadic_Pattern_Operator(Basic_Term* parent_)
+	:Basic_Term(parent_)
+{
+}
+
+bmath::intern::Variadic_Pattern_Operator::~Variadic_Pattern_Operator()
+{
+	//this class does not own any pointers it holds.
+}
+
+void bmath::intern::Variadic_Pattern_Operator::to_str(std::string& str) const
+{
+	str.append("...");
+}
+
+State bmath::intern::Variadic_Pattern_Operator::get_state_intern() const
+{
+	return s_variadic_pattern_op;
+}
+
+Vals_Combined bmath::intern::Variadic_Pattern_Operator::combine_values()
+{
+	std::cout << "Error: variadic_pattern_operator called combine_values()\n";
+	std::cout << "function combine_values() makes no sense to run in pattern\n";
+	return Vals_Combined();
+}
+
+Vals_Combined bmath::intern::Variadic_Pattern_Operator::evaluate(const std::list<Known_Variable>& known_variables) const
+{
+	std::cout << "Error: variadic_pattern_operator called combine_values()\n";
+	std::cout << "function evaluate() makes no sense to run in pattern\n";
+	return Vals_Combined();
+}
+
+void bmath::intern::Variadic_Pattern_Operator::search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key)
+{
+	std::cout << "function search_and_replace() makes no sense to run in pattern\n";
+}
+
+bool bmath::intern::Variadic_Pattern_Operator::valid_state() const
+{
+	return true;
+}
+
+void bmath::intern::Variadic_Pattern_Operator::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
+{
+	if (listed_state == s_variadic_pattern_op) {
+		subterms.push_back(const_cast<Variadic_Pattern_Operator*>(this));
+	}
+}
+
+void bmath::intern::Variadic_Pattern_Operator::sort()
+{
+	//nothing to be one here
+}
+
+Basic_Term** bmath::intern::Variadic_Pattern_Operator::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key)
+{
+
+	std::cout << "Error: did not expect Variadic_Pattern_Operator calling match_intern()\n";
+	return nullptr;
+}
+
+bool bmath::intern::Variadic_Pattern_Operator::operator<(const Basic_Term& other) const
+{
+
+	if (this->get_state_intern() != other.get_state_intern()) {
+		return this->get_state_intern() < other.get_state_intern();
+	}
+	else {
+		std::cout << "Error: please use \"...\" only once per product / sum\n";
+		return false;
+	}
+}
+
+bool bmath::intern::Variadic_Pattern_Operator::operator==(const Basic_Term& other) const
+{
+	return false;
 }

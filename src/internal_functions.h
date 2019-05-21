@@ -30,7 +30,7 @@ namespace bmath {
 		//behaves like build_subterm, exept when a variable is build, it checks in variables if this exists already.
 		//if so: it will just return the adress of the existing variable. (and variables will become pattern_variables)
 		//(needs modification if new termtype is added)
-		Basic_Term* build_pattern_subterm(std::string& subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
+		Basic_Term* build_pattern_subterm(std::string& subtermstr, Basic_Term* parent_, std::list<Basic_Term*>& variables);
 
 		//returns pointer to newly build term of right type (u now have ownership of object)
 		//(needs modification if new termtype is added)
@@ -49,12 +49,8 @@ namespace bmath {
 		//same as get_state_intern(), but returns "s_undefined" if obj == nullptr
 		State get_state(const Basic_Term* obj);
 
-		//needs to be run before combine_variables() makes sense to run
-		//products with negative factor get wrapped in a sum, exponentiations with negative exponents into a product
-		//DERZEIT UNGENUTZT (soll sowieso obszolet werden, weil summe und produkt noch operanden umkehroperationen verlieren)
-		Basic_Term* standardize_structure(Basic_Term* obj);
-
-		void reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
+		//list only expects pattern_variables and variadic_pattern_operators. function resets their pointers to compared subterms
+		void reset_pattern_vars(std::list<Basic_Term*>& var_adresses);
 
 	} //namespace intern
 } //namespace bmath

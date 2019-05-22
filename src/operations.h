@@ -119,8 +119,12 @@ namespace bmath {
 		class Variadic_Pattern_Operator : public Basic_Term
 		{
 		public:
-			mutable std::list<Basic_Term*> operands;		//summands or factors
+			bool is_product;	//true -> is product, false -> is sum
+			mutable std::list<Basic_Term*> operands;		//summands or factors		(the "...")
 			mutable std::list<Basic_Term*> inv_operands;	//subtractos or divisors
+
+			std::list<Pattern_Variable*> pattern_operands;		//these lists contain explicit written pattern_vaiables 
+			std::list<Pattern_Variable*> inv_pattern_operands;	// (everything but "...")
 
 			Variadic_Pattern_Operator(Basic_Term* parent_);
 			~Variadic_Pattern_Operator();

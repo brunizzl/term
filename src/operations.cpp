@@ -295,7 +295,7 @@ Basic_Term** bmath::intern::Product::match_intern(Basic_Term* pattern, std::list
 			for (auto& pattern_factor : pattern_product->factors) {
 				bool factor_match;
 				for (; this_factor != this->factors.end(); ++this_factor) {
-					factor_match = (*this_factor) == pattern_factor;
+					factor_match = (*this_factor)->equal_to_pattern(pattern_factor);
 					if (factor_match) {
 						matched_factors.splice(matched_factors.end(), this->factors, this_factor);
 						break;
@@ -311,8 +311,7 @@ Basic_Term** bmath::intern::Product::match_intern(Basic_Term* pattern, std::list
 				for (auto& pattern_divisor : pattern_product->divisors) {
 					bool divisor_match;
 					for (; this_divisor != this->divisors.end(); ++this_divisor) {
-						divisor_match = (*this_divisor)->match_intern(pattern_divisor, pattern_var_adresses, &(*this_divisor));
-						divisor_match = (*this_divisor) == pattern_divisor;
+						divisor_match = (*this_divisor)->equal_to_pattern(pattern_divisor);
 						if (divisor_match) {
 							matched_divisors.splice(matched_divisors.end(), this->divisors, this_divisor);
 							break;
@@ -388,7 +387,7 @@ bool bmath::intern::Product::equal_to_pattern(const Basic_Term* pattern) const
 		return false;
 	}
 	//already_matched[i] == true -> the factor "i" in other_product->factors already has a match (and shall not be matched again)
-	std::unique_ptr<bool[]> already_matched_factors(new bool[pattern_product->factors.size()]{ false });
+	std::unique_ptr<bool[]> already_matched_factors = std::make_unique<bool[]>(pattern_product->factors.size());
 	for (auto& this_factor : this->factors) {
 		bool found = false;
 		std::size_t pos = -1;	//keeps the position of other_factor in the list
@@ -397,13 +396,14 @@ bool bmath::intern::Product::equal_to_pattern(const Basic_Term* pattern) const
 			if (!already_matched_factors[pos] && this_factor->equal_to_pattern(other_factor)) {
 				found = true;
 				already_matched_factors[pos] = true;
+				break;
 			}
 		}
 		if (!found) {
 			return false;
 		}
 	}
-	std::unique_ptr<bool[]> already_matched_divisors(new bool[pattern_product->divisors.size()]{ false });
+	std::unique_ptr<bool[]> already_matched_divisors = std::make_unique<bool[]>(pattern_product->divisors.size());
 	for (auto& this_divisor : this->divisors) {
 		bool found = false;
 		std::size_t pos = -1;
@@ -412,6 +412,7 @@ bool bmath::intern::Product::equal_to_pattern(const Basic_Term* pattern) const
 			if (!already_matched_divisors[pos] && this_divisor->equal_to_pattern(other_divisor)) {
 				found = true;
 				already_matched_divisors[pos] = true;
+				break;
 			}
 		}
 		if (!found) {
@@ -762,7 +763,7 @@ void bmath::intern::Sum::sort()
 Basic_Term** bmath::intern::Sum::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 	//MUSS NOCH VERGLEICHEN, OB NUR TEILE VON THIS GLEICH GANZEM PATTERN SIND
-	if (*this == *pattern) {
+	if (this->equal_to_pattern(pattern)) {
 		return storage_key;
 	}
 	else {
@@ -791,7 +792,7 @@ bool bmath::intern::Sum::equal_to_pattern(const Basic_Term* pattern) const
 {
 	LOG_P(" vergleiche  " << *this << " und " << other);
 	switch (pattern->get_state_intern()) {
-	case s_product:
+	case s_sum:
 		break;
 	case s_pattern_variable:
 	case s_variadic_pattern_op:
@@ -807,7 +808,7 @@ bool bmath::intern::Sum::equal_to_pattern(const Basic_Term* pattern) const
 		return false;
 	}
 	//already_matched[i] == true -> the summand "i" in other_product->factors already has a match (and shall not be matched again)
-	std::unique_ptr<bool[]> already_matched_summands(new bool[pattern_sum->summands.size()]{ false });
+	std::unique_ptr<bool[]> already_matched_summands = std::make_unique<bool[]>(pattern_sum->summands.size());
 	for (auto& this_summand : this->summands) {
 		bool found = false;
 		std::size_t pos = -1;	//keeps the position of other_factor in the list
@@ -822,7 +823,7 @@ bool bmath::intern::Sum::equal_to_pattern(const Basic_Term* pattern) const
 			return false;
 		}
 	}
-	std::unique_ptr<bool[]> already_matched_subtractors(new bool[pattern_sum->subtractors.size()]{ false });
+	std::unique_ptr<bool[]> already_matched_subtractors = std::make_unique<bool[]>(pattern_sum->subtractors.size());
 	for (auto& this_subtractor : this->subtractors) {
 		bool found = false;
 		std::size_t pos = -1;
@@ -1074,7 +1075,7 @@ void bmath::intern::Exponentiation::sort()
 
 Basic_Term** bmath::intern::Exponentiation::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key)
 {
-	if (*this == *pattern) {
+	if (this->equal_to_pattern(pattern)) {
 		return storage_key;
 	}
 	else {
@@ -1287,7 +1288,7 @@ void bmath::intern::Par_Operator::sort()
 
 Basic_Term** bmath::intern::Par_Operator::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key)
 {
-	if (*this == *pattern) {
+	if (this->equal_to_pattern(pattern)) {
 		return storage_key;
 	}
 	else {
@@ -1473,6 +1474,7 @@ Basic_Term** bmath::intern::Variadic_Pattern_Operator::match_intern(Basic_Term* 
 bool bmath::intern::Variadic_Pattern_Operator::equal_to_pattern(const Basic_Term* pattern) const
 {
 	//HILFE DER IST KAKA
+	return false;
 }
 
 bool bmath::intern::Variadic_Pattern_Operator::operator<(const Basic_Term& other) const

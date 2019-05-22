@@ -137,7 +137,7 @@ void bmath::intern::Value::sort()
 
 Basic_Term** bmath::intern::Value::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key)
 {
-	if (*this == *pattern) {
+	if (this->equal_to_pattern(pattern)) {
 		return storage_key;
 	}
 	else {
@@ -268,7 +268,7 @@ void bmath::intern::Variable::sort()
 
 Basic_Term** bmath::intern::Variable::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key)
 {
-	if (*this == *pattern) {
+	if (this->equal_to_pattern(pattern)) {
 		return storage_key;
 	}
 	else {

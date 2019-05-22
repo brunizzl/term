@@ -4,8 +4,8 @@ using namespace bmath::intern;
 
 //rules to simplify terms (left string -> right string)
 std::array<Pattern*, 3> patterns{
-	new Pattern("sin(x)^2+cos(x)^2+...", "1+..."),
-	new Pattern("a*c+a*b+...", "a*(c+b)+..."),
+	new Pattern("sin(x)^2+cos(x)^2", "1"),
+	new Pattern("a*b+a*c", "a*(b+c)"),
 	new Pattern("ln(a)+ln(b)+...", "ln(a*b)+..."),
 };
 

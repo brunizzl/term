@@ -8,6 +8,8 @@
 #include <iostream>
 #include <cmath>
 #include <complex>
+#include <memory>
+#include <algorithm>
 
 #include "structs.h"
 
@@ -60,11 +62,16 @@ namespace bmath {
 			//needs to be run befor == makes sense to be used
 			virtual void sort() = 0;
 
-			//returns subterm matching pattern or nullptr (basically operator==, but with pattern matching) 
+			//returns subterm matching pattern or nullptr 
 			//storage_key is pointer to the pointer to "this" in the object that owns "this"
 			//only differs from operator== on first layer, as it calls operator== itself.
 			//first tries to match this to pattern, then tries to match subterms
 			virtual Basic_Term** match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key) = 0;
+
+			//because Variadic_Pattern_Operator schould be able to compare to sum/ product with true, we can not use operator== in match_intern.
+			//this funktion compares a Basic_Term* owned by a normal Term to a Basic_Term* owned by a Pattern_Term.
+			//it should NEVER call operator==
+			virtual bool equal_to_pattern(const Basic_Term* pattern) const = 0;
 
 			//works only on sorted terms
 			virtual bool operator<(const Basic_Term& other) const = 0;

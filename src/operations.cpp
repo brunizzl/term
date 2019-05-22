@@ -368,6 +368,59 @@ Basic_Term** bmath::intern::Product::match_intern(Basic_Term* pattern, std::list
 	return nullptr;
 }
 
+bool bmath::intern::Product::equal_to_pattern(const Basic_Term* pattern) const
+{
+	LOG_P(" vergleiche  " << *this << " und " << other);
+	switch (pattern->get_state_intern()) {
+	case s_product:
+		break;
+	case s_pattern_variable:
+	case s_variadic_pattern_op:
+		return pattern->equal_to_pattern(this);
+	default:
+		return false;
+	}
+	const Product* pattern_product = static_cast<const Product*>(pattern);
+	if (this->factors.size() != pattern_product->factors.size()) {
+		return false;
+	}
+	if (this->divisors.size() != pattern_product->divisors.size()) {
+		return false;
+	}
+	//already_matched[i] == true -> the factor "i" in other_product->factors already has a match (and shall not be matched again)
+	std::unique_ptr<bool[]> already_matched_factors(new bool[pattern_product->factors.size()]{ false });
+	for (auto& this_factor : this->factors) {
+		bool found = false;
+		std::size_t pos = -1;	//keeps the position of other_factor in the list
+		for (auto& other_factor : pattern_product->factors) {
+			pos++;
+			if (!already_matched_factors[pos] && this_factor->equal_to_pattern(other_factor)) {
+				found = true;
+				already_matched_factors[pos] = true;
+			}
+		}
+		if (!found) {
+			return false;
+		}
+	}
+	std::unique_ptr<bool[]> already_matched_divisors(new bool[pattern_product->divisors.size()]{ false });
+	for (auto& this_divisor : this->divisors) {
+		bool found = false;
+		std::size_t pos = -1;
+		for (auto& other_divisor : pattern_product->divisors) {
+			pos++;
+			if (!already_matched_divisors[pos] && this_divisor->equal_to_pattern(other_divisor)) {
+				found = true;
+				already_matched_divisors[pos] = true;
+			}
+		}
+		if (!found) {
+			return false;
+		}
+	}
+	return true;
+}
+
 bool bmath::intern::Product::operator<(const Basic_Term& other) const
 {
 	if (this->get_state_intern() != other.get_state_intern()) {
@@ -403,12 +456,7 @@ bool bmath::intern::Product::operator<(const Basic_Term& other) const
 bool bmath::intern::Product::operator==(const Basic_Term& other) const
 {
 	LOG_P(" vergleiche  " << *this << " und " << other);
-	switch (other.get_state_intern()) {
-	case s_product:
-		break;
-	case s_pattern_variable:
-		return other == *this;
-	default:
+	if (this->get_state_intern() != other.get_state_intern()) {
 		return false;
 	}
 	const Product* other_product = static_cast<const Product*>(&other);
@@ -418,7 +466,7 @@ bool bmath::intern::Product::operator==(const Basic_Term& other) const
 	if (this->divisors.size() != other_product->divisors.size()) {
 		return false;
 	}
-	//the operator assumes from now on to have sorted products to compare
+	//the function assumes from now on to have sorted products to compare
 	auto it_this = this->factors.begin();
 	auto it_other = other_product->factors.begin();
 	for (; it_this != this->factors.end() && it_other != other_product->factors.end(); ++it_this, ++it_other) {
@@ -739,6 +787,59 @@ Basic_Term** bmath::intern::Sum::match_intern(Basic_Term* pattern, std::list<Bas
 	return nullptr;
 }
 
+bool bmath::intern::Sum::equal_to_pattern(const Basic_Term* pattern) const
+{
+	LOG_P(" vergleiche  " << *this << " und " << other);
+	switch (pattern->get_state_intern()) {
+	case s_product:
+		break;
+	case s_pattern_variable:
+	case s_variadic_pattern_op:
+		return pattern->equal_to_pattern(this);
+	default:
+		return false;
+	}
+	const Sum* pattern_sum = static_cast<const Sum*>(pattern);
+	if (this->summands.size() != pattern_sum->summands.size()) {
+		return false;
+	}
+	if (this->subtractors.size() != pattern_sum->subtractors.size()) {
+		return false;
+	}
+	//already_matched[i] == true -> the summand "i" in other_product->factors already has a match (and shall not be matched again)
+	std::unique_ptr<bool[]> already_matched_summands(new bool[pattern_sum->summands.size()]{ false });
+	for (auto& this_summand : this->summands) {
+		bool found = false;
+		std::size_t pos = -1;	//keeps the position of other_factor in the list
+		for (auto& other_summand : pattern_sum->summands) {
+			pos++;
+			if (!already_matched_summands[pos] && this_summand->equal_to_pattern(other_summand)) {
+				found = true;
+				already_matched_summands[pos] = true;
+			}
+		}
+		if (!found) {
+			return false;
+		}
+	}
+	std::unique_ptr<bool[]> already_matched_subtractors(new bool[pattern_sum->subtractors.size()]{ false });
+	for (auto& this_subtractor : this->subtractors) {
+		bool found = false;
+		std::size_t pos = -1;
+		for (auto& other_subtractor : pattern_sum->subtractors) {
+			pos++;
+			if (!already_matched_subtractors[pos] && this_subtractor->equal_to_pattern(other_subtractor)) {
+				found = true;
+				already_matched_subtractors[pos] = true;
+			}
+		}
+		if (!found) {
+			return false;
+		}
+	}
+	return true;
+}
+
 bool bmath::intern::Sum::operator<(const Basic_Term& other) const
 {
 	if (this->get_state_intern() != other.get_state_intern()) {
@@ -780,12 +881,7 @@ bool bmath::intern::Sum::operator<(const Basic_Term& other) const
 bool bmath::intern::Sum::operator==(const Basic_Term& other) const
 {
 	LOG_P(" vergleiche  " << *this << " und " << other);
-	switch (other.get_state_intern()) {
-	case s_sum:
-		break;
-	case s_pattern_variable:
-		return other == *this;
-	default:
+	if (this->get_state_intern() != other.get_state_intern()) {
 		return false;
 	}
 	const Sum* other_product = static_cast<const Sum*>(&other);
@@ -998,6 +1094,27 @@ Basic_Term** bmath::intern::Exponentiation::match_intern(Basic_Term* pattern, st
 	}
 }
 
+bool bmath::intern::Exponentiation::equal_to_pattern(const Basic_Term* pattern) const
+{
+	LOG_P(" vergleiche  " << *this << " und " << other);
+	switch (pattern->get_state_intern()) {
+	case s_exponentiation:
+		break;
+	case s_pattern_variable:
+		return pattern->equal_to_pattern(this);
+	default:
+		return false;
+	}
+	const Exponentiation* other_exp = static_cast<const Exponentiation*>(pattern);
+	if (!(this->base->equal_to_pattern(other_exp->base))) {
+		return false;
+	}
+	if (!(this->exponent->equal_to_pattern(other_exp->exponent))) {
+		return false;
+	}
+	return true;
+}
+
 bool bmath::intern::Exponentiation::operator<(const Basic_Term& other) const
 {
 	if (this->get_state_intern() != other.get_state_intern()) {
@@ -1018,12 +1135,7 @@ bool bmath::intern::Exponentiation::operator<(const Basic_Term& other) const
 bool bmath::intern::Exponentiation::operator==(const Basic_Term& other) const
 {
 	LOG_P(" vergleiche  " << *this << " und " << other);
-	switch (other.get_state_intern()) {
-	case s_exponentiation:
-		break;
-	case s_pattern_variable:
-		return other == *this;
-	default:
+	if (this->get_state_intern() != other.get_state_intern()) {
 		return false;
 	}
 	const Exponentiation* other_exp = static_cast<const Exponentiation*>(&other);
@@ -1190,6 +1302,27 @@ Basic_Term** bmath::intern::Par_Operator::match_intern(Basic_Term* pattern, std:
 	}
 }
 
+bool bmath::intern::Par_Operator::equal_to_pattern(const Basic_Term* pattern) const
+{
+	LOG_P(" vergleiche  " << *this << " und " << other);
+	switch (pattern->get_state_intern()) {
+	case s_par_operator:
+		break;
+	case s_pattern_variable:
+		return pattern->equal_to_pattern(this);
+	default:
+		return false;
+	}
+	const Par_Operator* other_par_op = static_cast<const Par_Operator*>(pattern);
+	if (this->op_state != other_par_op->op_state) {
+		return false;
+	}
+	if (!(this->argument->equal_to_pattern(other_par_op->argument))) {
+		return false;
+	}
+	return true;
+}
+
 bool bmath::intern::Par_Operator::operator<(const Basic_Term& other) const
 {
 	if (this->get_state_intern() != other.get_state_intern()) {
@@ -1210,12 +1343,7 @@ bool bmath::intern::Par_Operator::operator<(const Basic_Term& other) const
 bool bmath::intern::Par_Operator::operator==(const Basic_Term& other) const
 {
 	LOG_P(" vergleiche  " << *this << " und " << other);
-	switch (other.get_state_intern()) {
-	case s_par_operator:
-		break;
-	case s_pattern_variable:
-		return other == *this;
-	default:
+	if (this->get_state_intern() != other.get_state_intern()) {
 		return false;
 	}
 	const Par_Operator* other_par_op = static_cast<const Par_Operator*>(&other);
@@ -1232,9 +1360,38 @@ bool bmath::intern::Par_Operator::operator==(const Basic_Term& other) const
 //Variadic_Pattern_Operator\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bmath::intern::Variadic_Pattern_Operator::Variadic_Pattern_Operator(Basic_Term* parent_)
-	:Basic_Term(parent_)
+bmath::intern::Variadic_Pattern_Operator::Variadic_Pattern_Operator(std::string name_, Basic_Term* parent_, std::size_t op, bool is_product_, std::list<Basic_Term*>& variables)
+	:Basic_Term(parent_), is_product(is_product_)
 {
+	char* operators;
+	if (is_product) {
+		operators = "*/";
+	}
+	else {
+		operators = "+-";
+	}
+	LOG_C("baue Variadic_Pattern_Operator: " << name_);
+	std::vector<Pos_Pars> pars;
+	find_pars(name_, pars);
+	std::string subterm;
+	while (op != std::string::npos) {
+		subterm = name_.substr(op + 1);
+		if (subterm != "...") {	//"..." gets only cut out, not stored anywere. (it is only used to build this, instead of sum/ product. 
+			switch (name_[op]) {
+			case '*':
+			case '+':
+				this->operands.push_front(build_pattern_subterm(subterm, this, variables));
+				break;
+			case '/':
+			case '-':
+				this->inv_operands.push_front(build_pattern_subterm(subterm, this, variables));
+				break;
+			}
+		}
+		name_.erase(op);
+		op = find_last_of_skip_pars(name_, operators, pars);
+	}
+	this->operands.push_front(build_pattern_subterm(name_, this, variables));
 }
 
 bmath::intern::Variadic_Pattern_Operator::~Variadic_Pattern_Operator()
@@ -1273,6 +1430,17 @@ void bmath::intern::Variadic_Pattern_Operator::search_and_replace(const std::str
 
 bool bmath::intern::Variadic_Pattern_Operator::valid_state() const
 {
+	for (auto it : this->operands) {
+
+		if (it == nullptr || it->valid_state() == false) {
+			return false;
+		}
+	}
+	for (auto it : this->inv_operands) {
+		if (it == nullptr || it->valid_state() == false) {
+			return false;
+		}
+	}
 	return true;
 }
 
@@ -1285,7 +1453,14 @@ void bmath::intern::Variadic_Pattern_Operator::list_subterms(std::list<Basic_Ter
 
 void bmath::intern::Variadic_Pattern_Operator::sort()
 {
-	//nothing to be one here
+	for (auto& it : this->operands) {
+		it->sort();
+	}
+	for (auto& it : this->inv_operands) {
+		it->sort();
+	}
+	this->operands.sort([](Basic_Term * &a, Basic_Term * &b) -> bool {return *a < *b; });
+	this->inv_operands.sort([](Basic_Term * &a, Basic_Term * &b) -> bool {return *a < *b; });
 }
 
 Basic_Term** bmath::intern::Variadic_Pattern_Operator::match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key)
@@ -1293,6 +1468,11 @@ Basic_Term** bmath::intern::Variadic_Pattern_Operator::match_intern(Basic_Term* 
 
 	std::cout << "Error: did not expect Variadic_Pattern_Operator calling match_intern()\n";
 	return nullptr;
+}
+
+bool bmath::intern::Variadic_Pattern_Operator::equal_to_pattern(const Basic_Term* pattern) const
+{
+	//HILFE DER IST KAKA
 }
 
 bool bmath::intern::Variadic_Pattern_Operator::operator<(const Basic_Term& other) const
@@ -1309,5 +1489,6 @@ bool bmath::intern::Variadic_Pattern_Operator::operator<(const Basic_Term& other
 
 bool bmath::intern::Variadic_Pattern_Operator::operator==(const Basic_Term& other) const
 {
+	std::cout << "Error: variadic_pattern_operator schould never call operator==\n";
 	return false;
 }

@@ -54,13 +54,13 @@ void test_strings_2() {
 		"(e^sin(2/3*pi))+3",
 		"(cos((2)))",
 		"(tan((2)))",
-		"(asin((2)))",
-		"(acos((2)))",
-		"(atan((2)))",
+		"(arcsin((2)))",
+		"(arccos((2)))",
+		"(arctan((2)))",
 		"(sinh((2)))",
 		"(cosh((2)))",
 		"(tanh((2)))",
-		"(atan((2)))",
+		"(arctan((2)))",
 	};
 	baue_teststrs(teststrs);
 }

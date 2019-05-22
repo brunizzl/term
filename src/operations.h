@@ -11,9 +11,9 @@ namespace bmath {
 			std::list<Basic_Term*> factors;
 			std::list<Basic_Term*> divisors;
 
-			Product(Basic_Term* parent_);
-			Product(std::string name_, Basic_Term* parent_, std::size_t op);
-			Product(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Basic_Term*>& variables);
+			Product(Basic_Term* parent_);	//KANN VIELLEICHT ENTFERNT WERDEN
+			Product(std::string name_, Basic_Term* parent_, std::size_t op);									//standard constructor
+			Product(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Basic_Term*>& variables);	//used to build patterns
 			Product(const Product& source, Basic_Term* parent_ = nullptr);
 			~Product();
 
@@ -26,7 +26,8 @@ namespace bmath {
 			bool valid_state() const override;
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
-			Basic_Term** match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key) override;	//NOCH NICHT GANZ IMPLEMENTIERT!
+			Basic_Term** match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key) override;
+			bool equal_to_pattern(const Basic_Term* pattern) const override;	//MUSS NOCH ALLE KOMBOS DURCHPERMUTIEREN
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -53,7 +54,8 @@ namespace bmath {
 			bool valid_state() const override;
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
-			Basic_Term** match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key) override;	//NOCH NICHT GANZ IMPLEMENTIERT!
+			Basic_Term** match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key) override;
+			bool equal_to_pattern(const Basic_Term* pattern) const override;	//MUSS NOCH ALLE KOMBOS DURCHPERMUTIEREN
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -81,6 +83,7 @@ namespace bmath {
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key) override;
+			bool equal_to_pattern(const Basic_Term* pattern) const override;	//MUSS NOCH ALLE KOMBOS DURCHPERMUTIEREN
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -111,6 +114,7 @@ namespace bmath {
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key) override;
+			bool equal_to_pattern(const Basic_Term* pattern) const override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -119,14 +123,14 @@ namespace bmath {
 		class Variadic_Pattern_Operator : public Basic_Term
 		{
 		public:
-			bool is_product;	//true -> is product, false -> is sum
-			mutable std::list<Basic_Term*> operands;		//summands or factors		(the "...")
-			mutable std::list<Basic_Term*> inv_operands;	//subtractos or divisors
+			bool is_product;									//true -> this is product, false -> this is sum
+			mutable std::list<Basic_Term*> operands;			//summands or factors		(the "...")
+			mutable std::list<Basic_Term*> inv_operands;		//subtractos or divisors
 
-			std::list<Pattern_Variable*> pattern_operands;		//these lists contain explicit written pattern_vaiables 
-			std::list<Pattern_Variable*> inv_pattern_operands;	// (everything but "...")
+			std::list<Pattern_Variable*> pattern_operands;		//these lists contain explicit written operands
+			std::list<Pattern_Variable*> inv_pattern_operands;	// (everything but "...", for example the "a" and "b" in "a + b + ..."
 
-			Variadic_Pattern_Operator(Basic_Term* parent_);
+			Variadic_Pattern_Operator(std::string name_, Basic_Term* parent_, std::size_t op, bool is_product_, std::list<Basic_Term*>& variables);
 			~Variadic_Pattern_Operator();
 
 			void to_str(std::string& str) const override;
@@ -138,8 +142,9 @@ namespace bmath {
 			void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const override;
 			void sort() override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Basic_Term*>& pattern_var_adresses, Basic_Term** storage_key) override;
+			bool equal_to_pattern(const Basic_Term* pattern) const override;		//DER BRAUCHT NO NEN BISSEL ÜBERLEGUNG
 			bool operator<(const Basic_Term& other) const override;
-			bool operator==(const Basic_Term& other) const override;	//DER BRAUCHT NO NN BISSEL ÜBERLEGUNG
+			bool operator==(const Basic_Term& other) const override;
 		};
 
 	} //namespace intern

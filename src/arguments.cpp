@@ -146,6 +146,22 @@ Basic_Term** bmath::intern::Value::match_intern(Basic_Term* pattern, std::list<B
 	}
 }
 
+bool bmath::intern::Value::equal_to_pattern(const Basic_Term* pattern) const
+{
+	LOG_P(" vergleiche  " << *this << " und " << other);
+	switch (pattern->get_state_intern()) {
+	case s_value:
+		break;
+	case s_pattern_variable:
+		return pattern->equal_to_pattern(this);
+	default:
+		LOG_P("wert ungleich (verschiedener state) " << this->get_state_intern() << " =/= " << other.get_state_intern());
+		return false;
+	}
+	const Value* other_val = static_cast<const Value*>(pattern);
+	return this->value == other_val->value;	//not the basic_term operator==, but the std::complex one. so no need to replace with call of comp_to_pattern
+}
+
 bool bmath::intern::Value::operator<(const Basic_Term& other) const
 {
 	if (this->get_state_intern() != other.get_state_intern()) {
@@ -165,13 +181,7 @@ bool bmath::intern::Value::operator<(const Basic_Term& other) const
 bool bmath::intern::Value::operator==(const Basic_Term& other) const
 {
 	LOG_P(" vergleiche  " << *this << " und " << other);
-	switch (other.get_state_intern()) {
-	case s_value:
-		break;
-	case s_pattern_variable:
-		return other == *this;
-	default:
-		LOG_P("wert ungleich (verschiedener state) " << this->get_state_intern() << " =/= " << other.get_state_intern());
+	if (this->get_state_intern() != other.get_state_intern()) {
 		return false;
 	}
 	const Value* other_val = static_cast<const Value*>(&other);
@@ -267,6 +277,20 @@ Basic_Term** bmath::intern::Variable::match_intern(Basic_Term* pattern, std::lis
 	}
 }
 
+bool bmath::intern::Variable::equal_to_pattern(const Basic_Term* pattern) const
+{
+	LOG_P(" vergleiche  " << *this << " und " << other);
+	switch (pattern->get_state_intern()) {
+	case s_variable:
+		std::cout << "Error: compared two normal variables in comp_to_pattern()\n";
+		return false;
+	case s_pattern_variable:
+		return pattern->equal_to_pattern(this);
+	default:
+		return false;
+	}
+}
+
 bool bmath::intern::Variable::operator<(const Basic_Term& other) const
 {
 	if (this->get_state_intern() != other.get_state_intern()) {
@@ -281,12 +305,7 @@ bool bmath::intern::Variable::operator<(const Basic_Term& other) const
 bool bmath::intern::Variable::operator==(const Basic_Term& other) const
 {
 	LOG_P(" vergleiche  " << *this << " und " << other);
-	switch (other.get_state_intern()) {
-	case s_variable:
-		break;
-	case s_pattern_variable:
-		return other == *this;
-	default:
+	if (this->get_state_intern() != other.get_state_intern()) {
 		return false;
 	}
 	const Variable* other_var = static_cast<const Variable*>(&other);
@@ -367,6 +386,22 @@ Basic_Term** bmath::intern::Pattern_Variable::match_intern(Basic_Term* pattern, 
 	return nullptr;
 }
 
+bool bmath::intern::Pattern_Variable::equal_to_pattern(const Basic_Term* pattern) const
+{
+	LOG_P(" vergleiche  " << *this << " und " << *pattern);
+	if (this->pattern_value == nullptr) {
+		this->pattern_value = const_cast<Basic_Term*>(pattern);
+		LOG_P("pattern_var matched mit " << other);
+		return true;
+	}
+	else {
+		bool match = *(this->pattern_value) == *pattern;	//from now on there is no pattern on eighter side, so operator== is allowed.
+
+		LOG_P("pattern_var " << *this << (match ? " === " : " =/= ") << other);
+		return match;
+	}
+}
+
 bool bmath::intern::Pattern_Variable::operator<(const Basic_Term& other) const
 {
 	if (this->get_state_intern() != other.get_state_intern()) {
@@ -380,16 +415,6 @@ bool bmath::intern::Pattern_Variable::operator<(const Basic_Term& other) const
 
 bool bmath::intern::Pattern_Variable::operator==(const Basic_Term& other) const
 {
-	LOG_P(" vergleiche  " << *this << " und " << other);
-	if (this->pattern_value == nullptr) {
-		this->pattern_value = const_cast<Basic_Term*>(&other);
-		LOG_P("pattern_var matched mit " << other);
-		return true;
-	}
-	else {
-		bool match = *(this->pattern_value) == other;
-
-		LOG_P("pattern_var " << *this << (match ? " === " : " =/= ") << other);
-		return match;
-	}
+	std::cout << "Error: pattern_variable schould never call operator==\n";
+	return false;
 }

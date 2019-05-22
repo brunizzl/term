@@ -29,6 +29,7 @@ namespace bmath {
 
 		//behaves like build_subterm, exept when a variable is build, it checks in variables if this exists already.
 		//if so: it will just return the adress of the existing variable. (and variables will become pattern_variables)
+		//also expects sums and products to have "..." as operand. if so, it will return Variadic_pattern_operator, not sum/ product
 		//(needs modification if new termtype is added)
 		Basic_Term* build_pattern_subterm(std::string& subtermstr, Basic_Term* parent_, std::list<Basic_Term*>& variables);
 

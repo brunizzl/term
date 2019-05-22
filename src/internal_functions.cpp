@@ -12,7 +12,7 @@ std::size_t bmath::intern::find_closed_par(std::size_t open_par, const std::stri
 		nxt_par = name.find_first_of("()", nxt_par + 1);
 		if (nxt_par == std::string::npos) {
 			std::cout << "Error: function find_closed_par() expected more closed parentheses in \"" << name << "\".\n";
-			return 0;
+			return std::string::npos;
 		}
 		switch (name[nxt_par]) {
 		case '(':
@@ -25,7 +25,7 @@ std::size_t bmath::intern::find_closed_par(std::size_t open_par, const std::stri
 			break;
 		default:
 			std::cout << "Error: function find_closed_par() string search error (no parentheses)\n";
-			return 0;
+			return std::string::npos;
 		}
 	}
 }
@@ -36,7 +36,7 @@ void bmath::intern::find_pars(const std::string & name, std::vector<Pos_Pars>& p
 	while (open_par != std::string::npos) {
 		std::size_t clsd_par = find_closed_par(open_par, name);
 		if (clsd_par == std::string::npos) {
-			std::cout << "Error: expected more closed parentheses in \"" << name << "\".\n";
+			std::cout << "Error: function find_pars() expected more closed parentheses in \"" << name << "\".\n";
 			return;
 		}
 		else {
@@ -124,16 +124,13 @@ State bmath::intern::type_subterm(const std::string & name, const std::vector<Po
 			return s_par_operator;
 		}
 	}
-	if (pars.size() != 0) {
+	if (pars.size() != 0 || name.find_last_of("()") != std::string::npos) {
 		return s_undefined;
 	}
 	//staring search for arguments (variable or value)
 	op = name.find_last_of("abcdefghjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]_$");
 	if (name.find_last_of("i") != std::string::npos && op == std::string::npos) {
 		return s_value;
-	}
-	if (name == "...") {	//only makes sense for patterns
-		return s_variadic_pattern_op;
 	}
 	if (op != std::string::npos) {
 		return s_variable;
@@ -142,7 +139,7 @@ State bmath::intern::type_subterm(const std::string & name, const std::vector<Po
 	if (op != std::string::npos) {
 		return s_value;
 	}
-	std::cout << "error: string " << name << " is not of expected format.\n";
+	std::cout << "error: string " << name << " is not of expected format in function type_subterm().\n";
 	return s_undefined;
 }
 
@@ -152,17 +149,17 @@ const char* bmath::intern::op_name(Par_Op_State op_state)
 	case op_log10:
 		return "log10(";
 	case op_asinh:
-		return "asinh(";
+		return "arcsinh(";
 	case op_acosh:
-		return "acosh(";
+		return "arccosh(";
 	case op_atanh:
-		return "atanh(";
+		return "arctanh(";
 	case op_asin:
-		return "asin(";
+		return "arcsin(";
 	case op_acos:
-		return "acos(";
+		return "arccos(";
 	case op_atan:
-		return "atan(";
+		return "arctan(";
 	case op_sinh:
 		return "sinh(";
 	case op_cosh:
@@ -253,10 +250,16 @@ Basic_Term* bmath::intern::build_subterm(std::string& subtermstr, Basic_Term* pa
 		case s_par_operator:
 			return new Par_Operator(subtermstr, parent_, par_op_state);
 		}
-		subtermstr.pop_back();
-		subtermstr.erase(0, 1);
-		pars.clear();
-		//LOG_C("shortened name to: " << subtermstr << " in build_subterm");
+		if (pars.size() == 1 && pars.front().start == 0 && pars.front().end == subtermstr.size() - 1) {
+			subtermstr.pop_back();
+			subtermstr.erase(0, 1);
+			pars.clear();
+		}
+		else {
+			std::cout << "Error: could not find any type to build term (function build_subterm)\n";
+			std::cout << "buildstring: \"" << subtermstr << "\"\n";
+			return nullptr;
+		}
 	}
 	std::cout << "Error: could not find any type to build term (function build_subterm)\n";
 	return nullptr;
@@ -276,15 +279,25 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string& subtermstr, Basic_
 		case s_exponentiation:
 			return new Exponentiation(subtermstr, parent_, op, variables);
 		case s_product:
-			return new Product(subtermstr, parent_, op, variables);
+			if (rfind_skip_pars(subtermstr, "...", pars) != std::string::npos) {
+				Variadic_Pattern_Operator* new_pattern_op = new Variadic_Pattern_Operator(subtermstr, parent_, op, true, variables);
+				variables.push_back(new_pattern_op);
+				return new_pattern_op;
+			}
+			else {
+				return new Product(subtermstr, parent_, op, variables);
+			}
 		case s_sum:
-			return new Sum(subtermstr, parent_, op, variables);
+			if (rfind_skip_pars(subtermstr, "...", pars) != std::string::npos) {
+				return new Variadic_Pattern_Operator(subtermstr, parent_, op, false, variables);
+			}
+			else {
+				return new Sum(subtermstr, parent_, op, variables);
+			}
 		case s_par_operator:
 			return new Par_Operator(subtermstr, parent_, par_op_state, variables);
 		case s_value:
 			return new Value(subtermstr, parent_);
-		case s_variadic_pattern_op:
-			return new Variadic_Pattern_Operator(parent_);
 		case s_variable:
 			for (auto& variable : variables) {
 				if (variable->get_state_intern() == s_pattern_variable && static_cast<Pattern_Variable*>(variable)->name == subtermstr) {
@@ -295,10 +308,16 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string& subtermstr, Basic_
 			variables.push_back(new_variable);
 			return new_variable;
 		}
-		subtermstr.pop_back();
-		subtermstr.erase(0, 1);
-		pars.clear();
-		//LOG_C("shortened name to: " << subtermstr << " in build_subterm");
+		if (pars.size() == 1 && pars.front().start == 0 && pars.front().end == subtermstr.size() - 1) {
+			subtermstr.pop_back();
+			subtermstr.erase(0, 1);
+			pars.clear();
+		}
+		else {
+			std::cout << "Error: could not find any type to build term (function build_pattern_subterm)\n";
+			std::cout << "buildstring: \"" << subtermstr << "\"\n";
+			return nullptr;
+		}
 	}
 	std::cout << "Error: could not find any type to build term (function build_pattern_subterm)\n";
 	return nullptr;
@@ -326,12 +345,12 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* pa
 			return copy_subterm(pattern_variable->pattern_value, parent_);
 		}
 		else {
-			std::cout << "Error: can not copy Pattern_Variable with pattern_value nullptr.\n";
+			std::cout << "Error: can not copy Pattern_Variable with pattern_value nullptr in function copy_subterm().\n";
 			return nullptr;
 		}
 	}
 	}
-	std::cout << "Error: function copy_subterm expected known type to copy, got: \"" << type << "\"\n";
+	std::cout << "Error: function copy_subterm() expected known type to copy, got: \"" << type << "\"\n";
 	return nullptr;
 }
 

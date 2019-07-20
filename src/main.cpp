@@ -6,17 +6,15 @@ extern std::array<bmath::intern::Pattern*, 2> patterns;
 
 int main()
 {
-	//test_timing();
-	//test_strings();
-	//test_strings_2();
-	//test_length();
-	//test_function("atan(x)");
-	bmath::Term test("a+b");
 	try {
-		std::cout << test.evaluate({ { "a", 1 }, { "b", {1, 1} } }) << std::endl;
+		//test_timing();
+		test_strings();
+		test_strings_2();
+		test_length();
+		test_function("atan(x)");
+		test_rechner();
 	}
-	catch (bmath::XTermCouldNotBeEvaluated err) {
+	catch (bmath::XTermConstructionError err) {
 		std::cout << err.what() << std::endl;
 	}
-	test_rechner();
 }

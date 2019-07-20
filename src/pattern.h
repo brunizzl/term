@@ -58,14 +58,20 @@ namespace bmath {
 				Pattern_Term& operator=(const Pattern_Term& source) = delete;
 				Pattern_Term& operator=(Pattern_Term&& source) = delete;
 			};
-		public:
+
+			//private constructor -> only member "static const std::vector<Pattern*> patterns" can be build
 			Pattern(const char* original_, const char* changed_);
+
+		public:
 			//members:
 			std::list<Pattern_Variable*> var_adresses;
 			Pattern_Term original;	//pattern to be compared to term opject
 			Pattern_Term changed;	//pattern to replace match in term object
 
 			std::string print();
+
+			//only instances of pattern
+			static const std::vector<Pattern*> patterns;
 		};
 
 	} //namespace intern

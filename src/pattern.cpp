@@ -144,3 +144,12 @@ std::string Pattern::print()
 	this->changed.term_ptr->to_str(str);
 	return str;
 }
+
+//rules to simplify terms (left string -> right string)
+const std::vector<Pattern*> Pattern::patterns = {
+	new Pattern("sin(x)^2+cos(x)^2", "1"),
+	new Pattern("a*c+a*b", "a*(c+b)"),
+	new Pattern("ln(a)+ln(b)", "ln(a*b)"),
+};
+
+

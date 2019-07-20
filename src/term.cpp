@@ -2,13 +2,6 @@
 
 using namespace bmath::intern;
 
-//rules to simplify terms (left string -> right string)
-std::array<Pattern*, 3> patterns{
-	new Pattern("sin(x)^2+cos(x)^2", "1"),
-	new Pattern("a*c+a*b", "a*(c+b)"),
-	new Pattern("ln(a)+ln(b)", "ln(a*b)"),
-};
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Basic_Term\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -173,8 +166,8 @@ void bmath::Term::combine()
 	//GRAUSAM ABER NOTWENDIG 
 	//UND DANN WERDEN DIE FÜR IMMER VON EINANDER WEGSORTIERT
 
-	for (unsigned int i = 0; i < patterns.size(); i++) {
-		if (this->match_and_transform(*patterns[i])) {
+	for (unsigned int i = 0; i < Pattern::patterns.size(); i++) {
+		if (this->match_and_transform(*Pattern::patterns[i])) {
 			i = -1;	//if match was successfull, pattern search starts again.
 			this->term_ptr->combine_layers(this->term_ptr);
 			this->combine_values();

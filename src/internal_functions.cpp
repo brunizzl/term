@@ -283,7 +283,11 @@ Basic_Term* bmath::intern::build_subterm(std::string& subtermstr, Basic_Term* pa
 		case s_par_operator:
 			return new Par_Operator(subtermstr, parent_, par_op_state);
 		case s_undefined:
-			throw XTermConstructionError("could not determine operation in string \"" + subtermstr + "\"  (function build_subterm)");
+			//not variable/value -> string contains parentheses, but no operation outside was found. 
+			//if parentheses dont enclose all of the subterm, there is something wrong.
+			if (pars.front().start != 0 || pars.front().end != subtermstr.size() - 1) {
+				throw XTermConstructionError("could not determine operation in string \"" + subtermstr + "\"  (function build_subterm)");
+			}			
 		}
 		subtermstr.pop_back();
 		subtermstr.erase(0, 1);

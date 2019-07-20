@@ -10,6 +10,7 @@
 #include <complex>
 
 #include "structs.h"
+#include "exceptions.h"
 
 namespace bmath {
 	namespace intern {

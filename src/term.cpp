@@ -13,6 +13,21 @@ std::array<Pattern*, 3> patterns{
 //Basic_Term\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+bmath::intern::Basic_Term::Basic_Term(Basic_Term* parent_)
+	:parent(parent_)
+{
+}
+
+bmath::intern::Basic_Term::Basic_Term(const Basic_Term& source)
+	:parent(source.parent)
+{
+}
+
+bmath::intern::Basic_Term::~Basic_Term()
+{
+	//cleaning up the tree is done in derived classes
+}
+
 void bmath::intern::Basic_Term::combine_layers(Basic_Term*& storage_key)
 {
 	//the base class does not know of the tree structures, the derived classes provide.
@@ -30,21 +45,6 @@ bool bmath::intern::Basic_Term::re_smaller_than_0()
 bool bmath::intern::Basic_Term::operator!=(const Basic_Term& other) const
 {
 	return !(*this == other);
-}
-
-bmath::intern::Basic_Term::Basic_Term(Basic_Term* parent_)
-	:parent(parent_)
-{
-}
-
-bmath::intern::Basic_Term::Basic_Term(const Basic_Term& source)
-	:parent(source.parent)
-{
-}
-
-bmath::intern::Basic_Term::~Basic_Term()
-{
-	//cleaning up the tree is done in derived classes
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

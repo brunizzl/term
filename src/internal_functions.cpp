@@ -11,8 +11,7 @@ std::size_t bmath::intern::find_closed_par(std::size_t open_par, const std::stri
 	while (true) {
 		nxt_par = name.find_first_of("()", nxt_par + 1);
 		if (nxt_par == std::string::npos) {
-			std::cout << "Error: function find_closed_par() expected more closed parentheses in \"" << name << "\".\n";
-			return 0;
+			throw XTermConstructionError("function find_closed_par() expected more closed parentheses in \"" + name + "\".");
 		}
 		switch (name[nxt_par]) {
 		case '(':
@@ -24,8 +23,7 @@ std::size_t bmath::intern::find_closed_par(std::size_t open_par, const std::stri
 			}
 			break;
 		default:
-			std::cout << "Error: function find_closed_par() string search error (no parentheses)\n";
-			return 0;
+			throw XTermConstructionError("function find_closed_par() string search error (no parentheses)");
 		}
 	}
 }
@@ -36,8 +34,7 @@ void bmath::intern::find_pars(const std::string & name, std::vector<Pos_Pars>& p
 	while (open_par != std::string::npos) {
 		std::size_t clsd_par = find_closed_par(open_par, name);
 		if (clsd_par == std::string::npos) {
-			std::cout << "Error: expected more closed parentheses in \"" << name << "\".\n";
-			return;
+			throw XTermConstructionError("expected more closed parentheses in \"" + name + "\".");
 		}
 		else {
 			pars.push_back({ open_par, clsd_par });
@@ -139,8 +136,7 @@ State bmath::intern::type_subterm(const std::string & name, const std::vector<Po
 	if (op != std::string::npos) {
 		return s_value;
 	}
-	std::cout << "error: string " << name << " is not of expected format.\n";
-	return s_undefined;
+	throw XTermConstructionError("string " + name + " is not of expected format.");
 }
 
 const char* bmath::intern::op_name(Par_Op_State op_state)
@@ -204,14 +200,11 @@ bool bmath::intern::preprocess_str(std::string& str)
 		}
 	}
 	if (par_diff != 0) {
-		std::cout << "Error: the parenthesis of string \"" << str << "\" do not obey the syntax rules.\n";
-		return false;
+		throw XTermConstructionError("the parenthesis of string \"" + str + "\" do not obey the syntax rules.");
 	}
 	const char* allowed_chars = "1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()_$";
 	if (str.find_first_not_of(allowed_chars) != std::string::npos) {
-		std::cout << "Error: String \"" << str << "\" contains characters other than: \n";
-		std::cout << allowed_chars << '\n';
-		return false;
+		throw XTermConstructionError("String \"" + str + "\" contains characters other than: " + allowed_chars);
 	}
 	return true;
 }
@@ -285,8 +278,7 @@ Basic_Term* bmath::intern::build_subterm(std::string& subtermstr, Basic_Term* pa
 		pars.clear();
 		//LOG_C("shortened name to: " << subtermstr << " in build_subterm");
 	}
-	std::cout << "Error: could not find any type to build term (function build_subterm)\n";
-	return nullptr;
+	throw XTermConstructionError("could not find any type to build term (function build_subterm)");
 }
 
 Basic_Term* bmath::intern::build_pattern_subterm(std::string& subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables)
@@ -325,8 +317,7 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string& subtermstr, Basic_
 		pars.clear();
 		//LOG_C("shortened name to: " << subtermstr << " in build_subterm");
 	}
-	std::cout << "Error: could not find any type to build term (function build_pattern_subterm)\n";
-	return nullptr;
+	throw XTermConstructionError("could not find any type to build term (function build_pattern_subterm)");
 }
 
 Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* parent_)
@@ -351,13 +342,11 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* pa
 			return copy_subterm(pattern_variable->pattern_value, parent_);
 		}
 		else {
-			std::cout << "Error: can not copy Pattern_Variable with pattern_value nullptr.\n";
-			return nullptr;
+			throw XTermConstructionError("can not copy Pattern_Variable with pattern_value nullptr.");
 		}
 	}
 	}
-	std::cout << "Error: function copy_subterm expected known type to copy: " << type << '\n';
-	return nullptr;
+	throw XTermConstructionError("function copy_subterm expected known type to copy: " + type);
 }
 
 void bmath::intern::reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses)

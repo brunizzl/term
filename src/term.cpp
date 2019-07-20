@@ -140,28 +140,26 @@ void bmath::Term::combine_values()
 	}
 }
 
-std::complex<double> bmath::Term::evaluate(const std::string name_, std::complex<double> value_) const
+std::complex<double> bmath::Term::evaluate(const std::string& name_, std::complex<double> value_) const
 {
 	std::list<Known_Variable> known_variables{ Known_Variable{ name_, value_ } };
-	return this->term_ptr->evaluate(known_variables).val;
+	return this->term_ptr->evaluate(known_variables);
 }
 
 std::complex<double> bmath::Term::evaluate(const std::list<Known_Variable>& known_variables) const
 {
-	return this->term_ptr->evaluate(known_variables).val;
+	return this->term_ptr->evaluate(known_variables);
 }
 
 void bmath::Term::search_and_replace(const std::string& name_, std::complex<double> value_)
 {
-	this->term_ptr->search_and_replace(name_, value_, this->term_ptr);
+	Value value_term(value_, nullptr);
+	this->term_ptr->search_and_replace(name_, &value_term, this->term_ptr);
 }
 
-bool bmath::Term::valid_state() const
+void bmath::Term::search_and_replace(const std::string& name_, const bmath::Term& value_)
 {
-	if (this->term_ptr == nullptr) {
-		return false;
-	}
-	return this->term_ptr->valid_state();
+	this->term_ptr->search_and_replace(name_, value_.term_ptr, this->term_ptr);
 }
 
 void bmath::Term::combine()

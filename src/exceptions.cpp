@@ -2,17 +2,32 @@
 
 using namespace bmath;
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//XTermConstructionError\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 XTermConstructionError::XTermConstructionError(const std::string& message_)
 	:message(message_)
 {
 }
 
-XTermConstructionError::~XTermConstructionError() throw()
+const char* XTermConstructionError::what() const throw()
 {
-	//no directly owned dynamic memory
+	return message.c_str();
 }
 
-const char* XTermConstructionError::what() const throw()
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//XTermCouldNotBeEvaluated\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bmath::XTermCouldNotBeEvaluated::XTermCouldNotBeEvaluated(const std::string& message_)
+	:message(message_)
+{
+}
+
+const char* bmath::XTermCouldNotBeEvaluated::what() const throw()
 {
 	return message.c_str();
 }

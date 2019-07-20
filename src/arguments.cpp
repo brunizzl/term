@@ -96,20 +96,14 @@ Vals_Combined bmath::intern::Value::combine_values()
 	return Vals_Combined{ true, this->value };
 }
 
-Vals_Combined bmath::intern::Value::evaluate(const std::list<Known_Variable>& known_variables) const
+std::complex<double> bmath::intern::Value::evaluate(const std::list<Known_Variable>& known_variables) const
 {
-	return Vals_Combined{true, this->value};
+	return this->value;
 }
 
-void bmath::intern::Value::search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key)
+void bmath::intern::Value::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
 	//nothing to be done here
-}
-
-bool bmath::intern::Value::valid_state() const
-{
-	//holds no pointers that could be invalid
-	return true;
 }
 
 bool bmath::intern::Value::re_smaller_than_0()
@@ -220,28 +214,22 @@ Vals_Combined bmath::intern::Variable::combine_values()
 	return Vals_Combined{false, 0};
 }
 
-Vals_Combined bmath::intern::Variable::evaluate(const std::list<Known_Variable>& known_variables) const
+std::complex<double> bmath::intern::Variable::evaluate(const std::list<Known_Variable>& known_variables) const
 {
 	for (auto& it : known_variables) {
 		if (it.name == this->name) {
-			return Vals_Combined{ true, it.value };
+			return it.value;
 		}
 	}
-	return Vals_Combined{ false, 0 };
+	throw XTermCouldNotBeEvaluated("variable " + this->name + " not part of list with matching values");
 }
 
-void bmath::intern::Variable::search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key)
+void bmath::intern::Variable::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
 	if (this->name == name_) {
-		storage_key = new Value(value_, this->parent);
+		storage_key = copy_subterm(value_, this->parent);
 		delete this;
 	}
-}
-
-bool bmath::intern::Variable::valid_state() const
-{
-	//holds no pointers that could be invalid
-	return true;
 }
 
 void bmath::intern::Variable::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
@@ -331,22 +319,17 @@ Vals_Combined bmath::intern::Pattern_Variable::combine_values()
 	return Vals_Combined();
 }
 
-Vals_Combined bmath::intern::Pattern_Variable::evaluate(const std::list<Known_Variable>& known_variables) const
+std::complex<double> bmath::intern::Pattern_Variable::evaluate(const std::list<Known_Variable>& known_variables) const
 {
 	std::cout << "Error: pattern_variable used instead of variable!\n";
 	std::cout << "(try running bmath::pattern_initialize() function first.)\n";
-	return Vals_Combined();
+	return 0;
 }
 
-void bmath::intern::Pattern_Variable::search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key)
+void bmath::intern::Pattern_Variable::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
 	std::cout << "Error: pattern_variable used instead of variable!\n";
 	std::cout << "(try running bmath::pattern_initialize() function first.)\n";
-}
-
-bool bmath::intern::Pattern_Variable::valid_state() const
-{
-	return true;
 }
 
 void bmath::intern::Pattern_Variable::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const

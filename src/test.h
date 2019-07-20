@@ -98,11 +98,9 @@ void test_rechner() {
 		try {
 			bmath::Term test(name); 
 			replace_constants(test);
-			if (test.valid_state()) {
-				test.combine();
-				test.cut_rounding_error();
-				std::cout << "-> " << test << '\n';
-			}
+			test.combine();
+			test.cut_rounding_error();
+			std::cout << "-> " << test << '\n';
 		}
 		catch (bmath::XTermConstructionError& err) {
 			std::cout << "faulty construction string: " << err.what() << std::endl;

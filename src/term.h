@@ -39,17 +39,14 @@ namespace bmath {
 			//values are added, multiplied, etc.
 			virtual Vals_Combined combine_values() = 0;
 
-			//returns {true, whatever it adds up to} if only variables of names of known_variables is present
-			//returns {fale, undefined} if more variables are present
-			virtual Vals_Combined evaluate(const std::list<Known_Variable>& known_variables) const = 0;
+			//returns {true, whatever it adds up to} if only variables with names of known_variables are present
+			//returns {false, undefined} if more variables are present
+			virtual std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const = 0;
 
 			//searches an replaces all variables with name "name_" with values of value "value_" 
 			//storage_key refers to the pointer to this in the object that owns this
 			//this function is meant for permanent changes. else use evaluate()
-			virtual void search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key) = 0;
-
-			//true if no subterm holds nullptr, false if otherwise
-			virtual bool valid_state() const = 0;
+			virtual void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) = 0;
 
 			//used to bring tree in well defined state bevore combine_variables() can be used
 			//returns false if class != value, returns true and modifies value if re(value) < 0
@@ -78,7 +75,7 @@ namespace bmath {
 		private:
 			class Pattern_Term {	//like term, but holds pattern_variables instead of variables.
 			public:
-				intern::Basic_Term* term_ptr;
+				Basic_Term* term_ptr;
 
 				Pattern_Term();
 				void build(std::string name, std::list<Pattern_Variable*>& var_adresses);
@@ -144,21 +141,19 @@ namespace bmath {
 		//returns the tree converted into a string
 		std::string to_str() const;
 
-		//true if no subterm holds nullptr, false if otherwise
-		bool valid_state() const;
-
 		//performs equivalent transfomations to combine subterms and simplify
 		void combine();
 
-		//sets every number to 0 if it is smaller than 10^(pow_of_10_diff_to_set_0) times the average of all numbers
+		//sets every number to 0 if it is smaller than 10^(pow_of_10_diff_to_set_0) times the aritmetic average of all numbers
 		void cut_rounding_error(int pow_of_10_diff_to_set_0 = 15);
 
 		//adds all variable names in this to list
 		std::set<std::string> get_var_names() const;
 
-		std::complex<double> evaluate(const std::string name_, std::complex<double> value_) const;
+		std::complex<double> evaluate(const std::string& name_, std::complex<double> value_) const;
 		std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const;
 		void search_and_replace(const std::string& name_, std::complex<double> value_);
+		void search_and_replace(const std::string& name_, const bmath::Term& value_);
 
 		//arithmetic operators
 		Term& operator+=(const Term& operand2);

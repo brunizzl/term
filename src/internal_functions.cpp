@@ -117,6 +117,10 @@ State bmath::intern::type_subterm(const std::string & name, const std::vector<Po
 	for (int op_state = 0; op_state < static_cast<int>(op_error); op_state++) {
 		op = rfind_skip_pars(name, op_name(static_cast<Par_Op_State>(op_state)), pars);
 		if (op != std::string::npos) {
+			//tests if op marks only substring of longer, fauly parenthesis operator (for example "tan(" beeing substring of "arctan(" (term knows "arctan" as "atan"))
+			if (name.find_last_of("abcdefghjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]_$", op - 1) == op - 1) {
+				continue;
+			}
 			par_op_state = static_cast<Par_Op_State>(op_state);
 			return s_par_operator;
 		}
@@ -174,8 +178,14 @@ const char* bmath::intern::op_name(Par_Op_State op_state)
 		return "tan(";
 	case op_abs:
 		return "abs(";
+	case op_arg:
+		return "arg(";
 	case op_ln:
 		return "ln(";
+	case op_re:
+		return "re(";
+	case op_im:
+		return "im(";
 	}
 	return nullptr;
 }
@@ -272,11 +282,12 @@ Basic_Term* bmath::intern::build_subterm(std::string& subtermstr, Basic_Term* pa
 			return new Value(subtermstr, parent_);
 		case s_par_operator:
 			return new Par_Operator(subtermstr, parent_, par_op_state);
+		case s_undefined:
+			throw XTermConstructionError("could not determine operation in string \"" + subtermstr + "\"  (function build_subterm)");
 		}
 		subtermstr.pop_back();
 		subtermstr.erase(0, 1);
 		pars.clear();
-		//LOG_C("shortened name to: " << subtermstr << " in build_subterm");
 	}
 	throw XTermConstructionError("could not find any type to build term (function build_subterm)");
 }

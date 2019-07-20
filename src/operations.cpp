@@ -202,31 +202,21 @@ Vals_Combined bmath::intern::Product::combine_values()
 	return Vals_Combined{ false, 0 };
 }
 
-Vals_Combined bmath::intern::Product::evaluate(const std::list<Known_Variable>& known_variables) const
+std::complex<double> bmath::intern::Product::evaluate(const std::list<Known_Variable>& known_variables) const
 {
-	Vals_Combined result{ true, 1 };
+	std::complex<double> result(1);
 	for (auto it : this->factors) {
-		Vals_Combined factor_combined = it->evaluate(known_variables);
-		if (factor_combined.known) {
-			result.val *= factor_combined.val;
-		}
-		else {
-			return Vals_Combined{ false, 0 };
-		}
+		std::complex<double> factor_combined = it->evaluate(known_variables);
+		result *= factor_combined;
 	}
 	for (auto it : this->divisors) {
-		Vals_Combined divisor_combined = it->evaluate(known_variables);
-		if (divisor_combined.known) {
-			result.val /= divisor_combined.val;
-		}
-		else {
-			return Vals_Combined{ false, 0 };
-		}
+		std::complex<double> divisor_combined = it->evaluate(known_variables);
+		result /= divisor_combined;
 	}
 	return result;
 }
 
-void bmath::intern::Product::search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key)
+void bmath::intern::Product::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
 	for (auto& it : this->factors) {
 		it->search_and_replace(name_, value_, it);
@@ -234,22 +224,6 @@ void bmath::intern::Product::search_and_replace(const std::string& name_, std::c
 	for (auto& it : this->divisors) {
 		it->search_and_replace(name_, value_, it);
 	}
-}
-
-bool bmath::intern::Product::valid_state() const
-{
-	for (auto it : this->factors) {
-
-		if (it == nullptr || it->valid_state() == false) {
-			return false;
-		}
-	}
-	for (auto it : this->divisors) {
-		if (it == nullptr || it->valid_state() == false) {
-			return false;
-		}
-	}
-	return true;
 }
 
 void bmath::intern::Product::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
@@ -636,31 +610,21 @@ Vals_Combined bmath::intern::Sum::combine_values()
 	return Vals_Combined{ false, 0 };
 }
 
-Vals_Combined bmath::intern::Sum::evaluate(const std::list<Known_Variable>& known_variables) const
+std::complex<double> bmath::intern::Sum::evaluate(const std::list<Known_Variable>& known_variables) const
 {
-	Vals_Combined result{ true, 0 };
+	std::complex<double> result(0);
 	for (auto it : this->summands) {
-		Vals_Combined summand_combined = it->evaluate(known_variables);
-		if (summand_combined.known) {
-			result.val += summand_combined.val;
-		}
-		else {
-			return Vals_Combined{ false, 0 };
-		}
+		std::complex<double> summand_combined = it->evaluate(known_variables);
+		result += summand_combined;
 	}
 	for (auto it : this->subtractors) {
-		Vals_Combined subtractor_combined = it->evaluate(known_variables);
-		if (subtractor_combined.known) {
-			result.val -= subtractor_combined.val;
-		}
-		else {
-			return Vals_Combined{ false, 0 };
-		}
+		std::complex<double> subtractor_combined = it->evaluate(known_variables);
+		result -= subtractor_combined;
 	}
 	return result;
 }
 
-void bmath::intern::Sum::search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key)
+void bmath::intern::Sum::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
 	for (auto& it : this->summands) {
 		it->search_and_replace(name_, value_, it);
@@ -668,21 +632,6 @@ void bmath::intern::Sum::search_and_replace(const std::string& name_, std::compl
 	for (auto& it : this->subtractors) {
 		it->search_and_replace(name_, value_, it);
 	}
-}
-
-bool bmath::intern::Sum::valid_state() const
-{
-	for (auto it : this->summands) {
-		if (it == nullptr || it->valid_state() == false) {
-			return false;
-		}
-	}
-	for (auto it : this->subtractors) {
-		if (it == nullptr || it->valid_state() == false) {
-			return false;
-		}
-	}
-	return true;
 }
 
 void bmath::intern::Sum::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
@@ -936,29 +885,17 @@ Vals_Combined bmath::intern::Exponentiation::combine_values()
 	return Vals_Combined{ false, 0 };
 }
 
-Vals_Combined bmath::intern::Exponentiation::evaluate(const std::list<Known_Variable>& known_variables) const
+std::complex<double> bmath::intern::Exponentiation::evaluate(const std::list<Known_Variable>& known_variables) const
 {
-	Vals_Combined base_ = this->base->evaluate(known_variables);
-	Vals_Combined exponent_ = this->exponent->evaluate(known_variables);
-	if (base_.known && exponent_.known) {
-		std::complex<double> result = std::pow(base_.val, exponent_.val);
-		return Vals_Combined{ true, result };
-	}
-	return Vals_Combined{ false, 0 };
+	std::complex<double> base_ = this->base->evaluate(known_variables);
+	std::complex<double> exponent_ = this->exponent->evaluate(known_variables);
+	return std::pow(base_, exponent_);
 }
 
-void bmath::intern::Exponentiation::search_and_replace(const std::string& name_, std::complex<double> value_, Basic_Term*& storage_key)
+void bmath::intern::Exponentiation::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
 	this->base->search_and_replace(name_, value_, this->base);
 	this->exponent->search_and_replace(name_, value_, this->exponent);
-}
-
-bool bmath::intern::Exponentiation::valid_state() const
-{
-	if (this->base == nullptr || this->exponent == nullptr) {
-		return false;
-	}
-	return this->base->valid_state() && this->exponent->valid_state();
 }
 
 void bmath::intern::Exponentiation::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
@@ -1080,9 +1017,15 @@ Vals_Combined bmath::intern::Par_Operator::internal_combine(Vals_Combined argume
 		case op_tan:
 			return Vals_Combined{ true, std::tan(argument_.val) };
 		case op_abs:
-			return Vals_Combined{ true, std::abs(argument_.val) };;
+			return Vals_Combined{ true, std::abs(argument_.val) };
+		case op_arg:
+			return Vals_Combined{ true, std::arg(argument_.val) };
 		case op_ln:
 			return Vals_Combined{ true, std::log(argument_.val) };
+		case op_re:
+			return Vals_Combined{ true, std::real(argument_.val) };
+		case op_im:
+			return Vals_Combined{ true, std::imag(argument_.val) };
 		}
 	}
 	return Vals_Combined{ false, 0 };
@@ -1141,23 +1084,16 @@ Vals_Combined bmath::intern::Par_Operator::combine_values()
 	return this->internal_combine(argument->combine_values());
 }
 
-Vals_Combined bmath::intern::Par_Operator::evaluate(const std::list<Known_Variable>& known_variables) const
+std::complex<double> bmath::intern::Par_Operator::evaluate(const std::list<Known_Variable>& known_variables) const
 {
-	return this->internal_combine(argument->evaluate(known_variables));
+	//the return type an parameter of internal_combine is not std::complex but Vals_Combined. However, this contains std::complex as val
+	return this->internal_combine(Vals_Combined{ true, argument->evaluate(known_variables) }).val;
 }
 
-void bmath::intern::Par_Operator::search_and_replace(const std::string & name_, std::complex<double> value_, Basic_Term*& storage_key)
+void bmath::intern::Par_Operator::search_and_replace(const std::string & name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
 	this->argument->search_and_replace(name_, value_, this->argument);
 	
-}
-
-bool bmath::intern::Par_Operator::valid_state() const
-{
-	if (this->argument == nullptr) {
-		return false;
-	}
-	return this->argument->valid_state();
 }
 
 void bmath::intern::Par_Operator::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const

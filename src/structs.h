@@ -53,7 +53,10 @@ namespace bmath {
 			op_cos,			//cos()
 			op_tan,			//tan()
 			op_abs,			//abs()
+			op_arg,			//arg()
 			op_ln,			//log()
+			op_re,			//real()
+			op_im,			//imag()
 			op_error,		//needs to be last element to enable loops to go trough the states (used as break condition)
 		};
 

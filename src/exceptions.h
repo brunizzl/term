@@ -11,10 +11,21 @@ namespace bmath {
 		// error message 
 		std::string message;
 	public:
-
 		XTermConstructionError(const std::string& message_);
-		virtual ~XTermConstructionError() throw();
 
+		//overloaded from std::exception
+		const char* what() const throw();
+	};
+
+	class XTermCouldNotBeEvaluated : public std::exception
+	{
+	private:
+		// name of variable preventing evaluation
+		std::string message;
+	public:
+		XTermCouldNotBeEvaluated(const std::string& message_);
+
+		//overloaded from std::exception
 		const char* what() const throw();
 	};
 

@@ -16,9 +16,12 @@
 
 #include <string>
 #include <complex>
+#include <list>
 
 namespace bmath {
 	namespace intern {
+
+		class Basic_Term;
 
 		//specifies actual type of Basic_Term 
 		//(types ordered for parentheses to allow > / < / == etc. operators to test whether parentheses are needed)
@@ -72,6 +75,17 @@ namespace bmath {
 		struct Vals_Combined {
 			bool known;
 			std::complex<double> val;
+		};
+
+		//used when combining variables to split recurring terms of other summands/ factors for easier matching
+		struct ocurrence {
+			std::list<Basic_Term*>::iterator list_pos;
+			Basic_Term* list_owner;
+		};
+
+		struct recurring_term {
+			Basic_Term* term;	//points to one instance of recurring term
+			std::list<ocurrence> ocurrences;	//holds positiones of all recurring terms in sums/products
 		};
 
 	} //namespace intern

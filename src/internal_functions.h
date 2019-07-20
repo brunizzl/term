@@ -2,8 +2,10 @@
 
 #include <string>
 #include <array>
-#include "term.h"
+
 #include "structs.h"
+#include "term.h"
+#include "pattern.h"
 
 namespace bmath {
 	namespace intern {

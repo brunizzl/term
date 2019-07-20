@@ -11,5 +11,12 @@ int main()
 	//test_strings_2();
 	//test_length();
 	//test_function("atan(x)");
+	bmath::Term test("a+b");
+	try {
+		std::cout << test.evaluate({ { "a", 1 }, { "b", {1, 1} } }) << std::endl;
+	}
+	catch (bmath::XTermCouldNotBeEvaluated err) {
+		std::cout << err.what() << std::endl;
+	}
 	test_rechner();
 }

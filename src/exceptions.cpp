@@ -22,12 +22,12 @@ const char* XTermConstructionError::what() const throw()
 //XTermCouldNotBeEvaluated\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bmath::XTermCouldNotBeEvaluated::XTermCouldNotBeEvaluated(const std::string& message_)
+XTermCouldNotBeEvaluated::XTermCouldNotBeEvaluated(const std::string& message_)
 	:message(message_)
 {
 }
 
-const char* bmath::XTermCouldNotBeEvaluated::what() const throw()
+const char* XTermCouldNotBeEvaluated::what() const throw()
 {
 	return message.c_str();
 }

@@ -14,7 +14,9 @@
 
 namespace bmath {
 	namespace intern {
+
 		class Pattern_Variable;
+		class Pattern;
 
 		class Basic_Term
 		{
@@ -69,47 +71,6 @@ namespace bmath {
 
 			virtual bool operator==(const Basic_Term& other) const = 0;
 			virtual bool operator!=(const Basic_Term& other) const;
-		};
-
-		class  Pattern {	//used to pattern match stuff that can then be simplified
-		private:
-			class Pattern_Term {	//like term, but holds pattern_variables instead of variables.
-			public:
-				Basic_Term* term_ptr;
-
-				Pattern_Term();
-				void build(std::string name, std::list<Pattern_Variable*>& var_adresses);
-				~Pattern_Term();
-
-				Basic_Term* copy(Basic_Term* parent_);
-
-				//patterns should not be copied nor changed
-				Pattern_Term(const Pattern_Term& source) = delete;
-				Pattern_Term(Pattern_Term&& source) = delete;
-				Pattern_Term& operator=(const Pattern_Term& source) = delete;
-				Pattern_Term& operator=(Pattern_Term&& source) = delete;
-			};
-
-		public:
-			Pattern(const char* original_, const char* changed_);
-			//members:
-			std::list<Pattern_Variable*> var_adresses;
-			Pattern_Term original;	//pattern to be compared to term opject
-			Pattern_Term changed;	//pattern to replace match in term object
-
-			std::string print();
-		};
-
-
-		//used when combining variables to split recurring terms of other summands/ factors for easier matching
-		struct ocurrence {
-			std::list<Basic_Term*>::iterator list_pos;
-			Basic_Term* list_owner;
-		};
-
-		struct recurring_term {
-			Basic_Term* term;	//points to one instance of recurring term
-			std::list<ocurrence> ocurrences;	//holds positiones of all recurring terms in sums/products
 		};
 
 	} //namespace intern
@@ -172,3 +133,4 @@ namespace bmath {
 #include "internal_functions.h"
 #include "arguments.h"
 #include "operations.h"
+#include "pattern.h"

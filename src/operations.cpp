@@ -6,12 +6,12 @@ using namespace bmath::intern;
 //Product\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bmath::intern::Product::Product(Basic_Term* parent_)
+Product::Product(Basic_Term* parent_)
 	:Basic_Term(parent_)
 {
 }
 
-bmath::intern::Product::Product(std::string name_, Basic_Term* parent_, std::size_t op)
+Product::Product(std::string name_, Basic_Term* parent_, std::size_t op)
 	:Basic_Term(parent_)
 {
 	LOG_C("baue Produkt: " << name_);
@@ -34,7 +34,7 @@ bmath::intern::Product::Product(std::string name_, Basic_Term* parent_, std::siz
 	this->factors.push_front(build_subterm(name_, this));
 }
 
-bmath::intern::Product::Product(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
+Product::Product(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
 	:Basic_Term(parent_)
 {
 	LOG_C("baue Produkt: " << name_);
@@ -57,7 +57,7 @@ bmath::intern::Product::Product(std::string name_, Basic_Term* parent_, std::siz
 	this->factors.push_front(build_pattern_subterm(name_, this, variables));
 }
 
-bmath::intern::Product::Product(const Product& source, Basic_Term* parent_)
+Product::Product(const Product& source, Basic_Term* parent_)
 	:Basic_Term(parent_)
 {
 	LOG_C("kopiere Produkt: " << source);
@@ -70,7 +70,7 @@ bmath::intern::Product::Product(const Product& source, Basic_Term* parent_)
 }
 
 
-bmath::intern::Product::~Product()
+Product::~Product()
 {
 	LOG_C("loesche Produkt: " << *this);
 	for (auto it : factors) {
@@ -81,7 +81,7 @@ bmath::intern::Product::~Product()
 	}
 }
 
-void bmath::intern::Product::to_str(std::string& str) const
+void Product::to_str(std::string& str) const
 {
 	if (get_state(this->parent) >= this->get_state_intern()) {
 		str.push_back('(');
@@ -105,12 +105,12 @@ void bmath::intern::Product::to_str(std::string& str) const
 	}
 }
 
-State bmath::intern::Product::get_state_intern() const
+State Product::get_state_intern() const
 {
 	return s_product;
 }
 
-void bmath::intern::Product::combine_layers(Basic_Term*& storage_key)
+void Product::combine_layers(Basic_Term*& storage_key)
 {
 	for (auto it = this->factors.begin(); it != this->factors.end();) {
 		(*it)->combine_layers(*it);
@@ -159,7 +159,7 @@ void bmath::intern::Product::combine_layers(Basic_Term*& storage_key)
 	}
 }
 
-Vals_Combined bmath::intern::Product::combine_values()
+Vals_Combined Product::combine_values()
 {
 	std::complex<double> buffer_factor = 1;
 	bool only_known = true;
@@ -202,7 +202,7 @@ Vals_Combined bmath::intern::Product::combine_values()
 	return Vals_Combined{ false, 0 };
 }
 
-std::complex<double> bmath::intern::Product::evaluate(const std::list<Known_Variable>& known_variables) const
+std::complex<double> Product::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
 	std::complex<double> result(1);
 	for (auto it : this->factors) {
@@ -216,7 +216,7 @@ std::complex<double> bmath::intern::Product::evaluate(const std::list<Known_Vari
 	return result;
 }
 
-void bmath::intern::Product::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
+void Product::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
 	for (auto& it : this->factors) {
 		it->search_and_replace(name_, value_, it);
@@ -226,7 +226,7 @@ void bmath::intern::Product::search_and_replace(const std::string& name_, const 
 	}
 }
 
-void bmath::intern::Product::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
+void Product::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
 {
 	if (listed_state == s_product) {
 		subterms.push_back(const_cast<Product*>(this));
@@ -239,7 +239,7 @@ void bmath::intern::Product::list_subterms(std::list<Basic_Term*>& subterms, Sta
 	}
 }
 
-void bmath::intern::Product::sort()
+void Product::sort()
 {
 	for (auto& it : this->factors) {
 		it->sort();
@@ -251,7 +251,7 @@ void bmath::intern::Product::sort()
 	this->divisors.sort([](Basic_Term * &a, Basic_Term * &b) -> bool {return *a < *b; });
 }
 
-Basic_Term** bmath::intern::Product::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
+Basic_Term** Product::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 	if (this->get_state_intern() == pattern->get_state_intern()) {
 		Product* pattern_product = static_cast<Product*>(pattern);
@@ -342,7 +342,7 @@ Basic_Term** bmath::intern::Product::match_intern(Basic_Term* pattern, std::list
 	return nullptr;
 }
 
-bool bmath::intern::Product::operator<(const Basic_Term& other) const
+bool Product::operator<(const Basic_Term& other) const
 {
 	if (this->get_state_intern() != other.get_state_intern()) {
 		return this->get_state_intern() < other.get_state_intern();
@@ -374,7 +374,7 @@ bool bmath::intern::Product::operator<(const Basic_Term& other) const
 	}
 }
 
-bool bmath::intern::Product::operator==(const Basic_Term& other) const
+bool Product::operator==(const Basic_Term& other) const
 {
 	LOG_P(" vergleiche  " << *this << " und " << other);
 	switch (other.get_state_intern()) {
@@ -414,12 +414,12 @@ bool bmath::intern::Product::operator==(const Basic_Term& other) const
 //Sum\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bmath::intern::Sum::Sum(Basic_Term* parent_)
+Sum::Sum(Basic_Term* parent_)
 	:Basic_Term(parent_)
 {
 }
 
-bmath::intern::Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op)
+Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op)
 	:Basic_Term(parent_)
 {
 	LOG_C("baue Summe: " << name_);
@@ -444,7 +444,7 @@ bmath::intern::Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op)
 	}
 }
 
-bmath::intern::Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
+Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
 	:Basic_Term(parent_)
 {
 	LOG_C("baue Summe: " << name_);
@@ -469,7 +469,7 @@ bmath::intern::Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op, 
 	}
 }
 
-bmath::intern::Sum::Sum(const Sum& source, Basic_Term* parent_)
+Sum::Sum(const Sum& source, Basic_Term* parent_)
 	:Basic_Term(parent_)
 {
 	LOG_C("kopiere Summe: " << source);
@@ -481,7 +481,7 @@ bmath::intern::Sum::Sum(const Sum& source, Basic_Term* parent_)
 	}
 }
 
-bmath::intern::Sum::~Sum()
+Sum::~Sum()
 {
 	LOG_C("loesche Summe: " << *this);
 	for (auto it : summands) {
@@ -492,7 +492,7 @@ bmath::intern::Sum::~Sum()
 	}
 }
 
-void bmath::intern::Sum::to_str(std::string& str) const
+void Sum::to_str(std::string& str) const
 {
 	if (get_state(this->parent) >= this->get_state_intern()) {
 		str.push_back('(');
@@ -513,12 +513,12 @@ void bmath::intern::Sum::to_str(std::string& str) const
 	}
 }
 
-State bmath::intern::Sum::get_state_intern() const
+State Sum::get_state_intern() const
 {
 	return s_sum;
 }
 
-void bmath::intern::Sum::combine_layers(Basic_Term*& storage_key)
+void Sum::combine_layers(Basic_Term*& storage_key)
 {
 	for (auto it = this->summands.begin(); it != this->summands.end();) {
 		(*it)->combine_layers(*it);
@@ -567,7 +567,7 @@ void bmath::intern::Sum::combine_layers(Basic_Term*& storage_key)
 	}
 }
 
-Vals_Combined bmath::intern::Sum::combine_values()
+Vals_Combined Sum::combine_values()
 {
 	std::complex<double> buffer_summand = 0;
 	bool only_known = true;
@@ -610,7 +610,7 @@ Vals_Combined bmath::intern::Sum::combine_values()
 	return Vals_Combined{ false, 0 };
 }
 
-std::complex<double> bmath::intern::Sum::evaluate(const std::list<Known_Variable>& known_variables) const
+std::complex<double> Sum::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
 	std::complex<double> result(0);
 	for (auto it : this->summands) {
@@ -624,7 +624,7 @@ std::complex<double> bmath::intern::Sum::evaluate(const std::list<Known_Variable
 	return result;
 }
 
-void bmath::intern::Sum::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
+void Sum::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
 	for (auto& it : this->summands) {
 		it->search_and_replace(name_, value_, it);
@@ -634,7 +634,7 @@ void bmath::intern::Sum::search_and_replace(const std::string& name_, const Basi
 	}
 }
 
-void bmath::intern::Sum::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
+void Sum::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
 {
 	if (listed_state == s_sum) {
 		subterms.push_back(const_cast<Sum*>(this));
@@ -647,7 +647,7 @@ void bmath::intern::Sum::list_subterms(std::list<Basic_Term*>& subterms, State l
 	}
 }
 
-void bmath::intern::Sum::sort()
+void Sum::sort()
 {
 	//vielleicht hier vor noch die standardisierung mit produkt einfügen etc.?
 	for (auto& it : this->summands) {
@@ -660,7 +660,7 @@ void bmath::intern::Sum::sort()
 	this->subtractors.sort([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; });
 }
 
-Basic_Term** bmath::intern::Sum::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
+Basic_Term** Sum::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 	//MUSS NOCH VERGLEICHEN, OB NUR TEILE VON THIS GLEICH GANZEM PATTERN SIND
 	if (*this == *pattern) {
@@ -688,7 +688,7 @@ Basic_Term** bmath::intern::Sum::match_intern(Basic_Term* pattern, std::list<Pat
 	return nullptr;
 }
 
-bool bmath::intern::Sum::operator<(const Basic_Term& other) const
+bool Sum::operator<(const Basic_Term& other) const
 {
 	if (this->get_state_intern() != other.get_state_intern()) {
 		return this->get_state_intern() < other.get_state_intern();
@@ -726,7 +726,7 @@ bool bmath::intern::Sum::operator<(const Basic_Term& other) const
 	}
 }
 
-bool bmath::intern::Sum::operator==(const Basic_Term& other) const
+bool Sum::operator==(const Basic_Term& other) const
 {
 	LOG_P(" vergleiche  " << *this << " und " << other);
 	switch (other.get_state_intern()) {
@@ -767,12 +767,12 @@ bool bmath::intern::Sum::operator==(const Basic_Term& other) const
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bmath::intern::Exponentiation::Exponentiation(Basic_Term* parent_)
+Exponentiation::Exponentiation(Basic_Term* parent_)
 	:Basic_Term(parent_), base(nullptr), exponent(nullptr)
 {
 }
 
-bmath::intern::Exponentiation::Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op)
+Exponentiation::Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op)
 	:Basic_Term(parent_)
 {
 	LOG_C("baue Potenz: " << name_);
@@ -783,7 +783,7 @@ bmath::intern::Exponentiation::Exponentiation(std::string name_, Basic_Term* par
 	this->base = build_subterm(name_, this);
 }
 
-bmath::intern::Exponentiation::Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
+Exponentiation::Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
 	:Basic_Term(parent_)
 {
 	LOG_C("baue Potenz: " << name_);
@@ -794,20 +794,20 @@ bmath::intern::Exponentiation::Exponentiation(std::string name_, Basic_Term* par
 	this->base = build_pattern_subterm(name_, this, variables);
 }
 
-bmath::intern::Exponentiation::Exponentiation(const Exponentiation& source, Basic_Term* parent_)
+Exponentiation::Exponentiation(const Exponentiation& source, Basic_Term* parent_)
 	:Basic_Term(parent_), base(copy_subterm(source.base, this)), exponent(copy_subterm(source.exponent, this))
 {
 	LOG_C("kopiere Potenz: " << source);
 }
 
-bmath::intern::Exponentiation::~Exponentiation()
+Exponentiation::~Exponentiation()
 {
 	LOG_C("loesche Potenz: " << *this);
 	delete exponent;
 	delete base;
 }
 
-void bmath::intern::Exponentiation::to_str(std::string& str) const
+void Exponentiation::to_str(std::string& str) const
 {
 	if (get_state(this->parent) > this->get_state_intern()) {
 		str.push_back('(');
@@ -820,12 +820,12 @@ void bmath::intern::Exponentiation::to_str(std::string& str) const
 	}
 }
 
-State bmath::intern::Exponentiation::get_state_intern() const
+State Exponentiation::get_state_intern() const
 {
 	return s_exponentiation;
 }
 
-void bmath::intern::Exponentiation::combine_layers(Basic_Term*& storage_key)
+void Exponentiation::combine_layers(Basic_Term*& storage_key)
 {
 	this->base->combine_layers(this->base);
 	this->exponent->combine_layers(this->exponent);
@@ -861,7 +861,7 @@ void bmath::intern::Exponentiation::combine_layers(Basic_Term*& storage_key)
 	}
 }
 
-Vals_Combined bmath::intern::Exponentiation::combine_values()
+Vals_Combined Exponentiation::combine_values()
 {
 	Vals_Combined base_ = this->base->combine_values();
 	Vals_Combined exponent_ = this->exponent->combine_values();
@@ -885,20 +885,20 @@ Vals_Combined bmath::intern::Exponentiation::combine_values()
 	return Vals_Combined{ false, 0 };
 }
 
-std::complex<double> bmath::intern::Exponentiation::evaluate(const std::list<Known_Variable>& known_variables) const
+std::complex<double> Exponentiation::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
 	std::complex<double> base_ = this->base->evaluate(known_variables);
 	std::complex<double> exponent_ = this->exponent->evaluate(known_variables);
 	return std::pow(base_, exponent_);
 }
 
-void bmath::intern::Exponentiation::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
+void Exponentiation::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
 	this->base->search_and_replace(name_, value_, this->base);
 	this->exponent->search_and_replace(name_, value_, this->exponent);
 }
 
-void bmath::intern::Exponentiation::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
+void Exponentiation::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
 {
 	if (listed_state == s_exponentiation) {
 		subterms.push_back(const_cast<Exponentiation*>(this));
@@ -907,13 +907,13 @@ void bmath::intern::Exponentiation::list_subterms(std::list<Basic_Term*>& subter
 	this->exponent->list_subterms(subterms, listed_state);
 }
 
-void bmath::intern::Exponentiation::sort()
+void Exponentiation::sort()
 {
 	this->base->sort();
 	this->exponent->sort();
 }
 
-Basic_Term** bmath::intern::Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
+Basic_Term** Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 	if (*this == *pattern) {
 		return storage_key;
@@ -935,7 +935,7 @@ Basic_Term** bmath::intern::Exponentiation::match_intern(Basic_Term* pattern, st
 	}
 }
 
-bool bmath::intern::Exponentiation::operator<(const Basic_Term& other) const
+bool Exponentiation::operator<(const Basic_Term& other) const
 {
 	if (this->get_state_intern() != other.get_state_intern()) {
 		return this->get_state_intern() < other.get_state_intern();
@@ -952,7 +952,7 @@ bool bmath::intern::Exponentiation::operator<(const Basic_Term& other) const
 	return false;
 }
 
-bool bmath::intern::Exponentiation::operator==(const Basic_Term& other) const
+bool Exponentiation::operator==(const Basic_Term& other) const
 {
 	LOG_P(" vergleiche  " << *this << " und " << other);
 	switch (other.get_state_intern()) {
@@ -977,12 +977,12 @@ bool bmath::intern::Exponentiation::operator==(const Basic_Term& other) const
 //Parenthesis_Operator\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bmath::intern::Par_Operator::Par_Operator(Basic_Term* parent_)
+Par_Operator::Par_Operator(Basic_Term* parent_)
 	:Basic_Term(parent_), argument(nullptr), op_state(op_error)
 {
 }
 
-Vals_Combined bmath::intern::Par_Operator::internal_combine(Vals_Combined argument_) const
+Vals_Combined Par_Operator::internal_combine(Vals_Combined argument_) const
 {
 	if (argument_.known) {
 		switch (this->op_state) {
@@ -1031,7 +1031,7 @@ Vals_Combined bmath::intern::Par_Operator::internal_combine(Vals_Combined argume
 	return Vals_Combined{ false, 0 };
 }
 
-bmath::intern::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_)
+Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_)
 	:Basic_Term(parent_), op_state(op_state_), argument(nullptr)
 {
 	LOG_C("baue Par_Operator: " << name_);
@@ -1040,7 +1040,7 @@ bmath::intern::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_
 	this->argument = build_subterm(name_, this);
 }
 
-bmath::intern::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_, std::list<Pattern_Variable*>& variables)
+Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_, std::list<Pattern_Variable*>& variables)
 	:Basic_Term(parent_), op_state(op_state_), argument(nullptr)
 {
 	LOG_C("baue Par_Operator: " << name_);
@@ -1050,53 +1050,53 @@ bmath::intern::Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_
 }
 
 
-bmath::intern::Par_Operator::Par_Operator(const Par_Operator & source, Basic_Term * parent_)
+Par_Operator::Par_Operator(const Par_Operator & source, Basic_Term * parent_)
 	:Basic_Term(parent_), argument(copy_subterm(source.argument, this)), op_state(source.op_state)
 {
 	LOG_C("kopiere Par_Operator: " << source);
 }
 
-bmath::intern::Par_Operator::~Par_Operator()
+Par_Operator::~Par_Operator()
 {
 	LOG_C("loesche Par_Operator: " << *this);
 	delete this->argument;
 }
 
-void bmath::intern::Par_Operator::to_str(std::string & str) const
+void Par_Operator::to_str(std::string & str) const
 {
 	str.append(op_name(this->op_state));
 	this->argument->to_str(str);
 	str.push_back(')');
 }
 
-State bmath::intern::Par_Operator::get_state_intern() const
+State Par_Operator::get_state_intern() const
 {
 	return s_par_operator;
 }
 
-void bmath::intern::Par_Operator::combine_layers(Basic_Term*& storage_key)
+void Par_Operator::combine_layers(Basic_Term*& storage_key)
 {
 	this->argument->combine_layers(this->argument);
 }
 
-Vals_Combined bmath::intern::Par_Operator::combine_values()
+Vals_Combined Par_Operator::combine_values()
 {
 	return this->internal_combine(argument->combine_values());
 }
 
-std::complex<double> bmath::intern::Par_Operator::evaluate(const std::list<Known_Variable>& known_variables) const
+std::complex<double> Par_Operator::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
 	//the return type an parameter of internal_combine is not std::complex but Vals_Combined. However, this contains std::complex as val
 	return this->internal_combine(Vals_Combined{ true, argument->evaluate(known_variables) }).val;
 }
 
-void bmath::intern::Par_Operator::search_and_replace(const std::string & name_, const Basic_Term* value_, Basic_Term*& storage_key)
+void Par_Operator::search_and_replace(const std::string & name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
 	this->argument->search_and_replace(name_, value_, this->argument);
 	
 }
 
-void bmath::intern::Par_Operator::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
+void Par_Operator::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
 {
 	if (listed_state == s_par_operator) {
 		subterms.push_back(const_cast<Par_Operator*>(this));
@@ -1104,12 +1104,12 @@ void bmath::intern::Par_Operator::list_subterms(std::list<Basic_Term*>& subterms
 	this->argument->list_subterms(subterms, listed_state);
 }
 
-void bmath::intern::Par_Operator::sort()
+void Par_Operator::sort()
 {
 	this->argument->sort();
 }
 
-Basic_Term** bmath::intern::Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
+Basic_Term** Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
 	if (*this == *pattern) {
 		return storage_key;
@@ -1126,7 +1126,7 @@ Basic_Term** bmath::intern::Par_Operator::match_intern(Basic_Term* pattern, std:
 	}
 }
 
-bool bmath::intern::Par_Operator::operator<(const Basic_Term& other) const
+bool Par_Operator::operator<(const Basic_Term& other) const
 {
 	if (this->get_state_intern() != other.get_state_intern()) {
 		return this->get_state_intern() < other.get_state_intern();
@@ -1143,7 +1143,7 @@ bool bmath::intern::Par_Operator::operator<(const Basic_Term& other) const
 	return false;
 }
 
-bool bmath::intern::Par_Operator::operator==(const Basic_Term& other) const
+bool Par_Operator::operator==(const Basic_Term& other) const
 {
 	LOG_P(" vergleiche  " << *this << " und " << other);
 	switch (other.get_state_intern()) {

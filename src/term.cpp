@@ -13,22 +13,22 @@ std::array<Pattern*, 3> patterns{
 //Basic_Term\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bmath::intern::Basic_Term::Basic_Term(Basic_Term* parent_)
+Basic_Term::Basic_Term(Basic_Term* parent_)
 	:parent(parent_)
 {
 }
 
-bmath::intern::Basic_Term::Basic_Term(const Basic_Term& source)
+Basic_Term::Basic_Term(const Basic_Term& source)
 	:parent(source.parent)
 {
 }
 
-bmath::intern::Basic_Term::~Basic_Term()
+Basic_Term::~Basic_Term()
 {
 	//cleaning up the tree is done in derived classes
 }
 
-void bmath::intern::Basic_Term::combine_layers(Basic_Term*& storage_key)
+void Basic_Term::combine_layers(Basic_Term*& storage_key)
 {
 	//the base class does not know of the tree structures, the derived classes provide.
 	//therefore, no tree can be combined.
@@ -36,13 +36,13 @@ void bmath::intern::Basic_Term::combine_layers(Basic_Term*& storage_key)
 	//every derived class not beeing leaf needs an overriding function.
 }
 
-bool bmath::intern::Basic_Term::re_smaller_than_0()
+bool Basic_Term::re_smaller_than_0()
 {
 	//only value needs overloading
 	return false;
 }
 
-bool bmath::intern::Basic_Term::operator!=(const Basic_Term& other) const
+bool Basic_Term::operator!=(const Basic_Term& other) const
 {
 	return !(*this == other);
 }
@@ -291,51 +291,4 @@ bmath::Term bmath::Term::operator/(const Term& operand2) const
 {
 	bmath::Term operand1(*this);
 	return std::move(operand1 /= operand2);
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Pattern\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-bmath::intern::Pattern::Pattern_Term::Pattern_Term()
-	:term_ptr(nullptr)
-{
-}
-
-void bmath::intern::Pattern::Pattern_Term::build(std::string name, std::list<Pattern_Variable*>& var_adresses)
-{
-	if (term_ptr != nullptr) {
-		std::cout << "Error: Pattern_Term has already been build.\n";
-		return;
-	}
-	if (preprocess_str(name)) {
-		this->term_ptr = build_pattern_subterm(name, nullptr, var_adresses);
-	}
-}
-
-bmath::intern::Pattern::Pattern_Term::~Pattern_Term()
-{
-	delete this->term_ptr;
-}
-
-Basic_Term* bmath::intern::Pattern::Pattern_Term::copy(Basic_Term* parent_)
-{
-	return copy_subterm(this->term_ptr, parent_);
-}
-
-bmath::intern::Pattern::Pattern(const char* original_, const char* changed_)
-	:var_adresses(), original(), changed()
-{
-	original.build(original_, this->var_adresses);
-	changed.build(changed_, this->var_adresses);
-}
-
-std::string bmath::intern::Pattern::print()
-{
-	std::string str;
-	this->original.term_ptr->to_str(str);
-	str.append(" -> ");
-	this->changed.term_ptr->to_str(str);
-	return str;
 }

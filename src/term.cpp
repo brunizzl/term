@@ -101,6 +101,11 @@ std::string bmath::Term::to_str() const
 	return std::move(str);
 }
 
+std::string bmath::Term::to_tree() const
+{
+	return std::string();	//HIER MUSS NOCH RUMPF REIN
+}
+
 std::set<std::string> bmath::Term::get_var_names() const
 {
 	std::set<std::string> names;

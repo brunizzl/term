@@ -102,6 +102,9 @@ namespace bmath {
 		//returns the tree converted into a string
 		std::string to_str() const;
 
+		//returns visualized tree structure as string
+		std::string to_tree() const;
+
 		//performs equivalent transfomations to combine subterms and simplify
 		void combine();
 

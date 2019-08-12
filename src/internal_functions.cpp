@@ -115,7 +115,7 @@ State bmath::intern::type_subterm(const std::string & name, const std::vector<Po
 	}
 	//searching for parenthesis operators 
 	for (int op_state = 0; op_state < static_cast<int>(op_error); op_state++) {
-		op = rfind_skip_pars(name, op_name(static_cast<Par_Op_State>(op_state)), pars);
+		op = rfind_skip_pars(name, Par_Operator::op_name(static_cast<Par_Op_State>(op_state)), pars);
 		if (op != std::string::npos) {
 			//tests if op marks only substring of longer, fauly parenthesis operator (for example "tan(" beeing substring of "arctan(" (term knows "arctan" as "atan"))
 			if (name.find_last_of("abcdefghjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]_$", op - 1) == op - 1) {
@@ -141,53 +141,6 @@ State bmath::intern::type_subterm(const std::string & name, const std::vector<Po
 		return s_value;
 	}
 	throw XTermConstructionError("string " + name + " is not of expected format.");
-}
-
-const char* bmath::intern::op_name(Par_Op_State op_state)
-{
-	switch (op_state) {
-	case op_log10:
-		return "log10(";
-	case op_asinh:
-		return "asinh(";
-	case op_acosh:
-		return "acosh(";
-	case op_atanh:
-		return "atanh(";
-	case op_asin:
-		return "asin(";
-	case op_acos:
-		return "acos(";
-	case op_atan:
-		return "atan(";
-	case op_sinh:
-		return "sinh(";
-	case op_cosh:
-		return "cosh(";
-	case op_tanh:
-		return "tanh(";
-	case op_sqrt:
-		return "sqrt(";
-	case op_exp:
-		return "exp(";
-	case op_sin:
-		return "sin(";
-	case op_cos:
-		return "cos(";
-	case op_tan:
-		return "tan(";
-	case op_abs:
-		return "abs(";
-	case op_arg:
-		return "arg(";
-	case op_ln:
-		return "ln(";
-	case op_re:
-		return "re(";
-	case op_im:
-		return "im(";
-	}
-	return nullptr;
 }
 
 bool bmath::intern::preprocess_str(std::string& str)
@@ -375,7 +328,7 @@ void bmath::intern::append_last_line(std::vector<std::string>& tree_lines, char 
 	std::size_t column = tree_lines.back().find_first_not_of(' ');
 	if (column > 0) {
 		column -= 5;
-		tree_lines.back()[column] = LINE_UP_RIGHT;						// adding angle char before "----"
+		tree_lines.back()[column] = LINE_UP_RIGHT;						// adding angle char
 		if (operation != '\0') {
 			tree_lines.back()[column + 1] = '{';
 			tree_lines.back()[column + 2] = operation;

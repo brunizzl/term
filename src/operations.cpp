@@ -1018,6 +1018,53 @@ bool Exponentiation::operator==(const Basic_Term& other) const
 //Parenthesis_Operator\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+const char* Par_Operator::op_name(Par_Op_State op_state)
+{
+	switch (op_state) {
+	case op_log10:
+		return "log10(";
+	case op_asinh:
+		return "asinh(";
+	case op_acosh:
+		return "acosh(";
+	case op_atanh:
+		return "atanh(";
+	case op_asin:
+		return "asin(";
+	case op_acos:
+		return "acos(";
+	case op_atan:
+		return "atan(";
+	case op_sinh:
+		return "sinh(";
+	case op_cosh:
+		return "cosh(";
+	case op_tanh:
+		return "tanh(";
+	case op_sqrt:
+		return "sqrt(";
+	case op_exp:
+		return "exp(";
+	case op_sin:
+		return "sin(";
+	case op_cos:
+		return "cos(";
+	case op_tan:
+		return "tan(";
+	case op_abs:
+		return "abs(";
+	case op_arg:
+		return "arg(";
+	case op_ln:
+		return "ln(";
+	case op_re:
+		return "re(";
+	case op_im:
+		return "im(";
+	}
+	return nullptr;
+}
+
 Par_Operator::Par_Operator(Basic_Term* parent_)
 	:Basic_Term(parent_), argument(nullptr), op_state(op_error)
 {

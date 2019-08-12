@@ -129,6 +129,9 @@ namespace bmath {
 		public:
 			~Par_Operator();
 
+			//returns c string of operator as written in input/output
+			static const char* op_name(Par_Op_State op_state);
+
 			void to_str(std::string& str) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			State get_state_intern() const override;

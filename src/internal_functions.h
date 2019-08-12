@@ -42,10 +42,7 @@ namespace bmath {
 		//(needs modification if new termtype is added)
 		State type_subterm(const std::string& name, const std::vector<Pos_Pars>& pars, std::size_t& op, Par_Op_State& type_par_op);
 
-		//returns c string of operator as written in input/output
-		const char* op_name(Par_Op_State op_state);
-
-		//so far: deletes spaces and counts parentheses
+		//deletes spaces and checks parentheses
 		bool preprocess_str(std::string& str);
 
 		//same as get_state_intern(), but returns "s_undefined" if obj == nullptr

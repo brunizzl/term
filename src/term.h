@@ -109,7 +109,8 @@ namespace bmath {
 		std::string to_str() const;
 
 		//returns visualized tree structure as string
-		std::string to_tree() const;
+		//offset is amount of spaces seperating tree from left rim of console
+		std::string to_tree(std::size_t offset = 0) const;
 
 		//performs equivalent transfomations to combine subterms and simplify
 		void combine();

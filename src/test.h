@@ -17,7 +17,7 @@ void baue_teststrs(std::array<std::string, N>& teststrs) {
 			bmath::Term test(str);
 			test.combine();
 			std::cout << "print:  \t" << test << '\n';
-			std::cout << "tree:\n" << test.to_tree() << std::endl;
+			std::cout << "tree:\n" << test.to_tree(16) << std::endl;
 		}
 	}
 }

@@ -101,15 +101,18 @@ std::string bmath::Term::to_str() const
 	return std::move(str);
 }
 
-std::string bmath::Term::to_tree() const
+std::string bmath::Term::to_tree(std::size_t offset) const
 {
 	std::vector<std::string> tree_lines;
 	term_ptr->to_tree_str(tree_lines, 0, '\0');
 
 	std::string return_str;
-	for (int pos = 0; pos < tree_lines.size(); pos++) {
+	for (unsigned int pos = 0; pos < tree_lines.size(); pos++) {
 		if (pos != 0) {
 			return_str.push_back('\n');
+		}
+		if (offset > 0) {
+			return_str.append(std::string(offset, ' '));
 		}
 		return_str.append(tree_lines[pos]);
 	}

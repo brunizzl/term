@@ -103,7 +103,17 @@ std::string bmath::Term::to_str() const
 
 std::string bmath::Term::to_tree() const
 {
-	return std::string();	//HIER MUSS NOCH RUMPF REIN
+	std::vector<std::string> tree_lines;
+	term_ptr->to_tree_str(tree_lines, 0, '\0');
+
+	std::string return_str;
+	for (int pos = 0; pos < tree_lines.size(); pos++) {
+		if (pos != 0) {
+			return_str.push_back('\n');
+		}
+		return_str.append(tree_lines[pos]);
+	}
+	return return_str;
 }
 
 std::set<std::string> bmath::Term::get_var_names() const

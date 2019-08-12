@@ -105,6 +105,21 @@ void Product::to_str(std::string& str) const
 	}
 }
 
+void Product::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
+{
+	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
+	new_line.append("product");
+	tree_lines.push_back(new_line);
+	append_last_line(tree_lines, line_prefix);
+
+	for (auto factor : this->factors) {
+		factor->to_tree_str(tree_lines, dist_root + 1, '*');
+	}
+	for (auto divisor : this->divisors) {
+		divisor->to_tree_str(tree_lines, dist_root + 1, '/');
+	}
+}
+
 State Product::get_state_intern() const
 {
 	return s_product;
@@ -513,6 +528,21 @@ void Sum::to_str(std::string& str) const
 	}
 }
 
+void Sum::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
+{
+	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
+	new_line.append("sum");
+	tree_lines.push_back(new_line);
+	append_last_line(tree_lines, line_prefix);
+
+	for (auto summand : this->summands) {
+		summand->to_tree_str(tree_lines, dist_root + 1, '+');
+	}
+	for (auto subtractor : this->subtractors) {
+		subtractor->to_tree_str(tree_lines, dist_root + 1, '-');
+	}
+}
+
 State Sum::get_state_intern() const
 {
 	return s_sum;
@@ -820,6 +850,17 @@ void Exponentiation::to_str(std::string& str) const
 	}
 }
 
+void bmath::intern::Exponentiation::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
+{
+	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
+	new_line.append("exponentiation");
+	tree_lines.push_back(new_line);
+	append_last_line(tree_lines, line_prefix);
+
+	this->base->to_tree_str(tree_lines, dist_root + 1, '_');
+	this->exponent->to_tree_str(tree_lines, dist_root + 1, '^');
+}
+
 State Exponentiation::get_state_intern() const
 {
 	return s_exponentiation;
@@ -1067,6 +1108,17 @@ void Par_Operator::to_str(std::string & str) const
 	str.append(op_name(this->op_state));
 	this->argument->to_str(str);
 	str.push_back(')');
+}
+
+void bmath::intern::Par_Operator::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
+{
+	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
+	new_line.append(op_name(this->op_state));
+	new_line.pop_back();
+	tree_lines.push_back(new_line);
+	append_last_line(tree_lines, line_prefix);
+
+	this->argument->to_tree_str(tree_lines, dist_root + 1, '\0');
 }
 
 State Par_Operator::get_state_intern() const

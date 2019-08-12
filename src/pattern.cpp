@@ -27,6 +27,15 @@ void Pattern_Variable::to_str(std::string& str) const
 	str.push_back('}');
 }
 
+void bmath::intern::Pattern_Variable::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
+{
+	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
+	this->to_str(new_line);
+
+	tree_lines.push_back(std::move(new_line));
+	append_last_line(tree_lines, line_prefix);
+}
+
 State Pattern_Variable::get_state_intern() const
 {
 	return s_pattern_variable;

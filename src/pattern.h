@@ -25,6 +25,7 @@ namespace bmath {
 			~Pattern_Variable();
 
 			void to_str(std::string& str) const override;
+			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			State get_state_intern() const override;
 			Vals_Combined combine_values() override;
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;

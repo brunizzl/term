@@ -56,6 +56,9 @@ namespace bmath {
 		//DERZEIT UNGENUTZT (soll sowieso obszolet werden, weil summe und produkt noch operanden umkehroperationen verlieren)
 		Basic_Term* standardize_structure(Basic_Term* obj);
 
+		//used in output as tree to visually connect new subterm with rest of tree
+		void append_last_line(std::vector<std::string>& tree_lines, char operation);
+
 		void reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
 
 	} //namespace intern

@@ -37,7 +37,7 @@ namespace bmath {
 		};
 
 		//used in Par_Operator class to specify whitch operator is actually used 
-		//(comments are corresponding cmath functions)
+		//(comments are corresponding std::complex functions)
 		//states names are sorted by length
 		enum Par_Op_State {
 			op_log10,		//log10()

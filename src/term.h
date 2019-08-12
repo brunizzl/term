@@ -8,6 +8,7 @@
 #include <iostream>
 #include <cmath>
 #include <complex>
+#include <assert.h>
 
 #include "structs.h"
 #include "exceptions.h"
@@ -30,6 +31,11 @@ namespace bmath {
 
 			//appends this to str
 			virtual void to_str(std::string& str) const = 0;
+
+			//called in function to_tree() of bmath::term
+			// tree_lines holds output line by line, dist_root stores distance from this vertex to root, 
+			// line prefix is meant to be set in front of content of this
+			virtual void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const = 0;
 
 			//returns kinda true type of term (sum, product, value, etc.)
 			virtual State get_state_intern() const = 0;

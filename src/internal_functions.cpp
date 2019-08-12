@@ -364,6 +364,39 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* pa
 	throw XTermConstructionError("function copy_subterm expected known type to copy: " + type);
 }
 
+// used to create lines of tree output
+constexpr char LINE_UP_DOWN = static_cast<char>(179);
+constexpr char LINE_UP_RIGHT = static_cast<char>(192);
+constexpr char LINE_UP_RIGHT_DOWN = static_cast<char>(195);
+constexpr char LINE_LEFT_RIGHT = static_cast<char>(196);
+
+void bmath::intern::append_last_line(std::vector<std::string>& tree_lines, char operation)
+{
+	std::size_t column = tree_lines.back().find_first_not_of(' ');
+	if (column > 0) {
+		column -= 5;
+		tree_lines.back()[column] = LINE_UP_RIGHT;						// adding angle char before "----"
+		if (operation != '\0') {
+			tree_lines.back()[column + 1] = '{';
+			tree_lines.back()[column + 2] = operation;
+			tree_lines.back()[column + 3] = '}';
+			tree_lines.back()[column + 4] = LINE_LEFT_RIGHT;
+		}
+		else {
+			tree_lines.back().replace(column + 1, 4, 4, LINE_LEFT_RIGHT);
+		}
+
+		std::size_t line = tree_lines.size() - 2;
+		while (tree_lines[line][column] == ' ') {						// adding bars to connect angle with tree above
+			tree_lines[line][column] = LINE_UP_DOWN;
+			line--;
+		}
+		if (tree_lines[line][column] == LINE_UP_RIGHT) {
+			tree_lines[line][column] = LINE_UP_RIGHT_DOWN;				//connecting bars to previous angle char
+		}
+	}
+}
+
 void bmath::intern::reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses)
 {
 	for (auto& pattern_var : var_adresses) {

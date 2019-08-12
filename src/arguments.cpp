@@ -81,6 +81,15 @@ void Value::to_str(std::string& str) const
 	}
 }
 
+void Value::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
+{
+	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
+	this->to_str(new_line);
+
+	tree_lines.push_back(std::move(new_line));
+	append_last_line(tree_lines, line_prefix);
+}
+
 State Value::get_state_intern() const
 {
 	return s_value;
@@ -192,6 +201,15 @@ Variable::~Variable()
 void Variable::to_str(std::string& str) const
 {
 	str.append(this->name);
+}
+
+void Variable::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
+{
+	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
+	this->to_str(new_line);
+
+	tree_lines.push_back(std::move(new_line));
+	append_last_line(tree_lines, line_prefix);
 }
 
 State Variable::get_state_intern() const

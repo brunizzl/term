@@ -365,10 +365,10 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* pa
 }
 
 // used to create lines of tree output
-constexpr char LINE_UP_DOWN = static_cast<char>(179);
-constexpr char LINE_UP_RIGHT = static_cast<char>(192);
-constexpr char LINE_UP_RIGHT_DOWN = static_cast<char>(195);
-constexpr char LINE_LEFT_RIGHT = static_cast<char>(196);
+constexpr char LINE_UP_DOWN = 179;
+constexpr char LINE_UP_RIGHT = 192;
+constexpr char LINE_UP_RIGHT_DOWN = 195;
+constexpr char LINE_LEFT_RIGHT = 196;
 
 void bmath::intern::append_last_line(std::vector<std::string>& tree_lines, char operation)
 {

@@ -18,5 +18,4 @@ int main()
 	catch (bmath::XTermConstructionError err) {
 		std::cout << err.what() << std::endl;
 	}
-	std::cin.get();
 }

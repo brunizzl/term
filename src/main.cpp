@@ -8,8 +8,8 @@ int main()
 {
 	std::cout << std::endl;
 	try {
-		//test_timing();
-		test_strings();
+		test_timing();
+		//test_strings();
 		//test_strings_2();
 		//test_length();
 		//test_function("atan(x)");

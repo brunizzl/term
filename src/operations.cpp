@@ -109,7 +109,7 @@ void Product::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dis
 {
 	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
 	new_line.append("product");
-	tree_lines.push_back(new_line);
+	tree_lines.push_back(std::move(new_line));
 	append_last_line(tree_lines, line_prefix);
 
 	for (auto factor : this->factors) {
@@ -532,7 +532,7 @@ void Sum::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_ro
 {
 	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
 	new_line.append("sum");
-	tree_lines.push_back(new_line);
+	tree_lines.push_back(std::move(new_line));
 	append_last_line(tree_lines, line_prefix);
 
 	for (auto summand : this->summands) {
@@ -854,7 +854,7 @@ void bmath::intern::Exponentiation::to_tree_str(std::vector<std::string>& tree_l
 {
 	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
 	new_line.append("exponentiation");
-	tree_lines.push_back(new_line);
+	tree_lines.push_back(std::move(new_line));
 	append_last_line(tree_lines, line_prefix);
 
 	this->base->to_tree_str(tree_lines, dist_root + 1, '_');
@@ -1124,7 +1124,7 @@ Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State 
 {
 	LOG_C("baue Par_Operator: " << name_);
 	name_.pop_back();							//closing parenthesis gets cut of
-	name_.erase(0, strlen(op_name(op_state)));	//funktionname and opening parenthesis gets cut of
+	name_.erase(0, strlen(op_name(op_state)));	//funktionname and opening parenthesis get cut of
 	this->argument = build_subterm(name_, this);
 }
 
@@ -1133,7 +1133,7 @@ Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State 
 {
 	LOG_C("baue Par_Operator: " << name_);
 	name_.pop_back();							//closing parenthesis gets cut of
-	name_.erase(0, strlen(op_name(op_state)));	//funktionname and opening parenthesis gets cut of
+	name_.erase(0, strlen(op_name(op_state)));	//funktionname and opening parenthesis get cut of
 	this-> argument = build_pattern_subterm(name_, this, variables);
 }
 
@@ -1162,7 +1162,7 @@ void bmath::intern::Par_Operator::to_tree_str(std::vector<std::string>& tree_lin
 	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
 	new_line.append(op_name(this->op_state));
 	new_line.pop_back();
-	tree_lines.push_back(new_line);
+	tree_lines.push_back(std::move(new_line));
 	append_last_line(tree_lines, line_prefix);
 
 	this->argument->to_tree_str(tree_lines, dist_root + 1, '\0');

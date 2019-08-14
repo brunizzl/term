@@ -98,7 +98,7 @@ std::string bmath::Term::to_str() const
 {
 	std::string str;
 	this->term_ptr->to_str(str);
-	return std::move(str);
+	return str;
 }
 
 std::string bmath::Term::to_tree(std::size_t offset) const
@@ -127,7 +127,7 @@ std::set<std::string> bmath::Term::get_var_names() const
 	for (auto it : variables) {
 		names.insert(static_cast<Variable*>(it)->name);
 	}
-	return std::move(names);
+	return names;
 }
 
 bool bmath::Term::match_and_transform(Pattern& pattern)
@@ -283,23 +283,23 @@ bmath::Term& bmath::Term::operator/=(const Term& operand2)
 bmath::Term bmath::Term::operator+(const Term& operand2) const
 {
 	bmath::Term operand1(*this);
-	return std::move(operand1 += operand2);
+	return operand1 += operand2;
 }
 
 bmath::Term bmath::Term::operator-(const Term& operand2) const
 {
 	bmath::Term operand1(*this);
-	return std::move(operand1 -= operand2);
+	return operand1 -= operand2;
 }
 
 bmath::Term bmath::Term::operator*(const Term& operand2) const
 {
 	bmath::Term operand1(*this);
-	return std::move(operand1 *= operand2);
+	return operand1 *= operand2;
 }
 
 bmath::Term bmath::Term::operator/(const Term& operand2) const
 {
 	bmath::Term operand1(*this);
-	return std::move(operand1 /= operand2);
+	return operand1 /= operand2;
 }

@@ -30,7 +30,7 @@ void replace_constants(bmath::Term& term) {
 }
 
 void test_strings() {
-	std::array<std::string, 11> teststrs = {
+	std::array<std::string, 12> teststrs = {
 		"(1*(2^(-2)*3*(4*(a^5))))",
 		"(5+a)/(7-b)*4-(c*d)^(-2)",
 		"(3*x-2*y)/5",
@@ -42,6 +42,7 @@ void test_strings() {
 		"-4*q/s^2",
 		"(((-a-b)))",
 		"(log10((2)))",
+		"sin(x+300*cos(pi))^a",
 	};
 	baue_teststrs(teststrs);
 }
@@ -117,12 +118,15 @@ void test_timing() {
 	bmath::Term t2("1-2*b");
 	t1.combine();
 	t2.combine();
-	int repetitions = 100000;
+	int repetitions = 1000000;
 	auto start = std::chrono::high_resolution_clock::now();
 	for (int i = 0; i < repetitions; i++) {
 		bmath::Term t3(t1);
 		bmath::Term t4(t2);
 		t3 += t4;
+		if (i % (repetitions / 10) == 0) {
+			std::cout << t3 << std::endl;
+		}
 	}
 	auto end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> duration1 = end - start;
@@ -136,6 +140,9 @@ void test_timing() {
 		std::complex<double> c3(c1);
 		std::complex<double> c4(c2);
 		c3 += c4;
+		if (i % (repetitions / 10) == 0) {
+			std::cout << c3 << std::endl;
+		}
 	}
 	end = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> duration2 = end - start;

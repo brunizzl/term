@@ -34,6 +34,7 @@
 #ordner
 .vs/
 Debug/
+Release/
 
 #dateien
 *.sln

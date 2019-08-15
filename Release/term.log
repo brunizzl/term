@@ -1,3 +1,0 @@
-﻿  main.cpp
-LINK : warning LNK4075: /INCREMENTAL wird aufgrund der Angabe von /OPT:ICF ignoriert.
-  term.vcxproj -> C:\BrunoProgramme\term\Release\term.exe

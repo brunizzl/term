@@ -218,7 +218,7 @@ void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 
 bmath::Term& bmath::Term::operator+=(const Term& operand2)
 {
-	if (this->term_ptr->get_state_intern() == s_value && operand2.term_ptr->get_state_intern() == s_value) {
+	if (this->term_ptr->get_state() == s_value && operand2.term_ptr->get_state() == s_value) {
 		static_cast<Value*>(this->term_ptr)->value += static_cast<Value*>(operand2.term_ptr)->value;
 	}
 	else {
@@ -234,7 +234,7 @@ bmath::Term& bmath::Term::operator+=(const Term& operand2)
 
 bmath::Term& bmath::Term::operator-=(const Term& operand2)
 {
-	if (this->term_ptr->get_state_intern() == s_value && operand2.term_ptr->get_state_intern() == s_value) {
+	if (this->term_ptr->get_state() == s_value && operand2.term_ptr->get_state() == s_value) {
 		static_cast<Value*>(this->term_ptr)->value -= static_cast<Value*>(operand2.term_ptr)->value;
 	}
 	else {
@@ -250,7 +250,7 @@ bmath::Term& bmath::Term::operator-=(const Term& operand2)
 
 bmath::Term& bmath::Term::operator*=(const Term& operand2)
 {
-	if (this->term_ptr->get_state_intern() == s_value && operand2.term_ptr->get_state_intern() == s_value) {
+	if (this->term_ptr->get_state() == s_value && operand2.term_ptr->get_state() == s_value) {
 		static_cast<Value*>(this->term_ptr)->value *= static_cast<Value*>(operand2.term_ptr)->value;
 	}
 	else {
@@ -266,7 +266,7 @@ bmath::Term& bmath::Term::operator*=(const Term& operand2)
 
 bmath::Term& bmath::Term::operator/=(const Term& operand2)
 {
-	if (this->term_ptr->get_state_intern() == s_value && operand2.term_ptr->get_state_intern() == s_value) {
+	if (this->term_ptr->get_state() == s_value && operand2.term_ptr->get_state() == s_value) {
 		static_cast<Value*>(this->term_ptr)->value /= static_cast<Value*>(operand2.term_ptr)->value;
 	}
 	else {

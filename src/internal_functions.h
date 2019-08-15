@@ -26,7 +26,6 @@ namespace bmath {
 		void del_pars_after(std::vector<Pos_Pars>& pars, const std::string& name);
 
 		//returns pointer to newly build term of right type (u now have ownership of object)
-		//(needs modification if new termtype is added)
 		Basic_Term* build_subterm(std::string& subtermstr, Basic_Term* parent_);
 
 		//behaves like build_subterm, exept when a variable is build, it checks in variables if this exists already.
@@ -38,15 +37,15 @@ namespace bmath {
 		//(needs modification if new termtype is added)
 		Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 
-		//decides type of next subterm (finds the next operation to split)
+		//decides type of next subterm (finds the next operation to split string and create subterm from)
 		//(needs modification if new termtype is added)
 		State type_subterm(const std::string& name, const std::vector<Pos_Pars>& pars, std::size_t& op, Par_Op_State& type_par_op);
 
 		//deletes spaces and checks parentheses
 		bool preprocess_str(std::string& str);
 
-		//same as get_state_intern(), but returns "s_undefined" if obj == nullptr
-		State get_state(const Basic_Term* obj);
+		//returns actual type of obj (sum, product, exponentiation...) but if obj is nullptr returns s_undefined
+		State state(const Basic_Term* obj);
 
 		//needs to be run before combine_variables() makes sense to run
 		//products with negative factor get wrapped in a sum, exponentiations with negative exponents into a product

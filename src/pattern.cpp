@@ -36,7 +36,7 @@ void bmath::intern::Pattern_Variable::to_tree_str(std::vector<std::string>& tree
 	append_last_line(tree_lines, line_prefix);
 }
 
-State Pattern_Variable::get_state_intern() const
+State Pattern_Variable::get_state() const
 {
 	return s_pattern_variable;
 }
@@ -81,8 +81,8 @@ Basic_Term** Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Patte
 
 bool Pattern_Variable::operator<(const Basic_Term& other) const
 {
-	if (this->get_state_intern() != other.get_state_intern()) {
-		return this->get_state_intern() < other.get_state_intern();
+	if (this->get_state() != other.get_state()) {
+		return this->get_state() < other.get_state();
 	}
 	else {
 		const Pattern_Variable* other_var = static_cast<const Pattern_Variable*>(&other);

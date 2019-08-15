@@ -49,7 +49,7 @@ void Value::to_str(std::string& str) const
 	double re = this->value.real();
 	double im = this->value.imag();
 	if (re != 0 && im != 0) {
-		if (get_state(this->parent) >= this->get_state_intern()) {
+		if (state(this->parent) >= this->get_state()) {
 			str.push_back('(');
 		}
 		std::stringstream stream_re;
@@ -59,7 +59,7 @@ void Value::to_str(std::string& str) const
 		str.append(stream_re.str());
 		str.append(stream_im.str());
 		str.push_back('i');
-		if (get_state(this->parent) >= this->get_state_intern()) {
+		if (state(this->parent) >= this->get_state()) {
 			str.push_back(')');
 		}
 	}
@@ -90,7 +90,7 @@ void Value::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_
 	append_last_line(tree_lines, line_prefix);
 }
 
-State Value::get_state_intern() const
+State Value::get_state() const
 {
 	return s_value;
 }
@@ -146,8 +146,8 @@ Basic_Term** Value::match_intern(Basic_Term* pattern, std::list<Pattern_Variable
 
 bool Value::operator<(const Basic_Term& other) const
 {
-	if (this->get_state_intern() != other.get_state_intern()) {
-		return this->get_state_intern() < other.get_state_intern();
+	if (this->get_state() != other.get_state()) {
+		return this->get_state() < other.get_state();
 	}
 	else {
 		const Value* other_val = static_cast<const Value*>(&other);
@@ -163,13 +163,13 @@ bool Value::operator<(const Basic_Term& other) const
 bool Value::operator==(const Basic_Term& other) const
 {
 	LOG_P(" vergleiche  " << *this << " und " << other);
-	switch (other.get_state_intern()) {
+	switch (other.get_state()) {
 	case s_value:
 		break;
 	case s_pattern_variable:
 		return other == *this;
 	default:
-		LOG_P("wert ungleich (verschiedener state) " << this->get_state_intern() << " =/= " << other.get_state_intern());
+		LOG_P("wert ungleich (verschiedener state) " << this->get_state() << " =/= " << other.get_state());
 		return false;
 	}
 	const Value* other_val = static_cast<const Value*>(&other);
@@ -212,7 +212,7 @@ void Variable::to_tree_str(std::vector<std::string>& tree_lines, unsigned int di
 	append_last_line(tree_lines, line_prefix);
 }
 
-State Variable::get_state_intern() const
+State Variable::get_state() const
 {
 	return s_variable;
 }
@@ -265,8 +265,8 @@ Basic_Term** Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Varia
 
 bool Variable::operator<(const Basic_Term& other) const
 {
-	if (this->get_state_intern() != other.get_state_intern()) {
-		return this->get_state_intern() < other.get_state_intern();
+	if (this->get_state() != other.get_state()) {
+		return this->get_state() < other.get_state();
 	}
 	else {
 		const Variable* other_var = static_cast<const Variable*>(&other);
@@ -277,7 +277,7 @@ bool Variable::operator<(const Basic_Term& other) const
 bool Variable::operator==(const Basic_Term& other) const
 {
 	LOG_P(" vergleiche  " << *this << " und " << other);
-	switch (other.get_state_intern()) {
+	switch (other.get_state()) {
 	case s_variable:
 		break;
 	case s_pattern_variable:

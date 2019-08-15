@@ -172,10 +172,10 @@ bool bmath::intern::preprocess_str(std::string& str)
 	return true;
 }
 
-State bmath::intern::get_state(const Basic_Term* obj)
+State bmath::intern::state(const Basic_Term* obj)
 {
 	if (obj != nullptr) {
-		return obj->get_state_intern();
+		return obj->get_state();
 	}
 	else {
 		return s_undefined;
@@ -184,7 +184,7 @@ State bmath::intern::get_state(const Basic_Term* obj)
 
 Basic_Term* bmath::intern::standardize_structure(Basic_Term* obj)
 {
-	switch (obj->get_state_intern()) {
+	switch (obj->get_state()) {
 	case s_product: {
 		Product* product = static_cast<Product*>(obj);
 		//this access to front in product.factors already assumes, if product contains a value,
@@ -290,7 +290,7 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string& subtermstr, Basic_
 
 Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* parent_)
 {
-	State type = get_state(source);
+	State type = state(source);
 	switch (type) {
 	case s_par_operator:
 		return new Par_Operator(*(static_cast<const Par_Operator*>(source)), parent_);
@@ -318,10 +318,10 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* pa
 }
 
 // used to create lines of tree output
-constexpr char LINE_UP_DOWN = 179;
-constexpr char LINE_UP_RIGHT = 192;
-constexpr char LINE_UP_RIGHT_DOWN = 195;
-constexpr char LINE_LEFT_RIGHT = 196;
+static constexpr char LINE_UP_DOWN = 179;
+static constexpr char LINE_UP_RIGHT = 192;
+static constexpr char LINE_UP_RIGHT_DOWN = 195;
+static constexpr char LINE_LEFT_RIGHT = 196;
 
 void bmath::intern::append_last_line(std::vector<std::string>& tree_lines, char operation)
 {

@@ -38,7 +38,7 @@ namespace bmath {
 			virtual void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const = 0;
 
 			//returns kinda true type of term (sum, product, value, etc.)
-			virtual State get_state_intern() const = 0;
+			virtual State get_state() const = 0;
 
 			//if one sum/product holds a pointer to another sum/product, both get combined into one.
 			//IN PLANUNG: WENN NUR NOCH EIN SUMMAND DA, DIE EBENE RAUSNEHMEN

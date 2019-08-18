@@ -198,14 +198,15 @@ void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 {
 	std::list<Basic_Term*> values;
 	this->term_ptr->list_subterms(values, s_value);
-	double re_sum = 0;
-	for (auto it : values) {
-		re_sum += std::abs(static_cast<Value*>(it)->value.real());
+	double quadratic_sum = 0;	//real and imaginary part are added seperatly
+	for (auto &it : values) {
+		quadratic_sum += std::abs(static_cast<Value*>(it)->value.real()) * std::abs(static_cast<Value*>(it)->value.real());
+		quadratic_sum += std::abs(static_cast<Value*>(it)->value.imag()) * std::abs(static_cast<Value*>(it)->value.imag());
 	}
-	if (re_sum != 0) {
-		double re_average = re_sum / values.size();
-		double limit_to_0 = re_average * std::pow(10, -pow_of_10_diff_to_set_0);
-		for (auto it : values) {
+	if (quadratic_sum != 0) {
+		double quadratic_average = sqrt(quadratic_sum / values.size() / 2);	//equal to standard deviation from 0
+		double limit_to_0 = quadratic_average * std::pow(10, -pow_of_10_diff_to_set_0);
+		for (auto &it : values) {
 			if (std::abs(static_cast<Value*>(it)->value.real()) < limit_to_0) {
 				static_cast<Value*>(it)->value.real(0);
 			}

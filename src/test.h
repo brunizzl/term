@@ -93,6 +93,27 @@ void test_function(std::string name) {
 	}
 }
 
+//vergleicht zwei funktionen auf äquivalenz
+void test_vergleich() {
+	
+	bmath::Term spannungsteiler("z4/(z3+z4)*z2/(z1+z2)");
+	bmath::Term Zaus_durch_Zein("(1/(1/z4+1/(z2+z3))) / (z1+1/(1/z2+1/(z3+z4)))");
+	std::cout << "spannungsteiler:\n" << spannungsteiler.to_tree(5) << std::endl << std::endl;
+	std::cout << "Zaus_durch_Zein:\n" << Zaus_durch_Zein.to_tree(5) << std::endl << std::endl;
+
+	for (int i = 0; i < 20; i++) {
+		std::complex<double> z1 = rand() % 1000;
+		std::complex<double> z2 = rand() % 1000;
+		std::complex<double> z3 = rand() % 1000;
+		std::complex<double> z4 = rand() % 1000;
+		std::cout << "z1: " << z1.real() << " z2: " << z2.real() << " z3: " << z3.real() << " z4: " << z4.real() << std::endl;
+		double spannungsteiler_erg = spannungsteiler.evaluate({ { "z1", z1 }, { "z2", z2 }, { "z3", z3 }, { "z4", z4 } }).real();
+		double Zaus_durch_Zein_erg = Zaus_durch_Zein.evaluate({ { "z1", z1 }, { "z2", z2 }, { "z3", z3 }, { "z4", z4 } }).real();
+
+		std::cout << (spannungsteiler_erg - Zaus_durch_Zein_erg) / spannungsteiler_erg << std::endl << std::endl;
+	}	
+}
+
 void test_rechner() {
 	while (true) {
 		std::string name;

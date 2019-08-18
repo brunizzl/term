@@ -115,7 +115,7 @@ namespace bmath {
 		//performs equivalent transfomations to combine subterms and simplify
 		void combine();
 
-		//sets every number to 0 if it is smaller than 10^(pow_of_10_diff_to_set_0) times the aritmetic average of all numbers
+		//sets every number to 0 if it is smaller than 10^(pow_of_10_diff_to_set_0) times the quadratic average of all numbers
 		void cut_rounding_error(int pow_of_10_diff_to_set_0 = 15);
 
 		//adds all variable names in this to list

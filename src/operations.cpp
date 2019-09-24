@@ -233,10 +233,10 @@ std::complex<double> Product::evaluate(const std::list<bmath::Known_Variable>& k
 
 void Product::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
-	for (auto& it : this->factors) {
+	for (auto it : this->factors) {
 		it->search_and_replace(name_, value_, it);
 	}
-	for (auto& it : this->divisors) {
+	for (auto it : this->divisors) {
 		it->search_and_replace(name_, value_, it);
 	}
 }
@@ -256,10 +256,10 @@ void Product::list_subterms(std::list<Basic_Term*>& subterms, State listed_state
 
 void Product::sort()
 {
-	for (auto& it : this->factors) {
+	for (auto it : this->factors) {
 		it->sort();
 	}
-	for (auto& it : this->divisors) {
+	for (auto it : this->divisors) {
 		it->sort();
 	}
 	this->factors.sort([](Basic_Term * &a, Basic_Term * &b) -> bool {return *a < *b; });
@@ -281,7 +281,7 @@ Basic_Term** Product::match_intern(Basic_Term* pattern, std::list<Pattern_Variab
 			//however: the first comparison to a pattern_variable will always be a match (as it is definded in operator== there)
 			//this may result in the nessesity to double some patterns and change the order of variables there, for every product to be simplefied.
 			std::list<Basic_Term*>::iterator this_factor = this->factors.begin();
-			for (auto& pattern_factor : pattern_product->factors) {
+			for (auto pattern_factor : pattern_product->factors) {
 				bool factor_match;
 				for (; this_factor != this->factors.end(); ++this_factor) {
 					factor_match = (*this_factor) == pattern_factor;
@@ -297,7 +297,7 @@ Basic_Term** Product::match_intern(Basic_Term* pattern, std::list<Pattern_Variab
 			}
 			if (full_match) {	//same for divisors
 				std::list<Basic_Term*>::iterator this_divisor = this->divisors.begin();
-				for (auto& pattern_divisor : pattern_product->divisors) {
+				for (auto pattern_divisor : pattern_product->divisors) {
 					bool divisor_match;
 					for (; this_divisor != this->divisors.end(); ++this_divisor) {
 						divisor_match = (*this_divisor)->match_intern(pattern_divisor, pattern_var_adresses, &(*this_divisor));
@@ -319,10 +319,10 @@ Basic_Term** Product::match_intern(Basic_Term* pattern, std::list<Pattern_Variab
 					Product* matched_product = new Product(this);
 					matched_product->factors.splice(matched_product->factors.end(), matched_factors);
 					matched_product->divisors.splice(matched_product->divisors.end(), matched_divisors);
-					for (auto& it : matched_product->factors) {
+					for (auto it : matched_product->factors) {
 						it->parent = matched_product;
 					}
-					for (auto& it : matched_product->divisors) {
+					for (auto it : matched_product->divisors) {
 						it->parent = matched_product;
 					}
 					this->factors.push_back(matched_product);
@@ -338,14 +338,14 @@ Basic_Term** Product::match_intern(Basic_Term* pattern, std::list<Pattern_Variab
 	}
 	else {
 		Basic_Term** argument_match;
-		for (auto& it : factors) {
+		for (auto it : factors) {
 			reset_pattern_vars(pattern_var_adresses);
 			argument_match = it->match_intern(pattern, pattern_var_adresses, &it);
 			if (argument_match != nullptr) {
 				return argument_match;
 			}
 		}
-		for (auto& it : divisors) {
+		for (auto it : divisors) {
 			reset_pattern_vars(pattern_var_adresses);
 			argument_match = it->match_intern(pattern, pattern_var_adresses, &it);
 			if (argument_match != nullptr) {
@@ -656,10 +656,10 @@ std::complex<double> Sum::evaluate(const std::list<bmath::Known_Variable>& known
 
 void Sum::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
-	for (auto& it : this->summands) {
+	for (auto it : this->summands) {
 		it->search_and_replace(name_, value_, it);
 	}
-	for (auto& it : this->subtractors) {
+	for (auto it : this->subtractors) {
 		it->search_and_replace(name_, value_, it);
 	}
 }
@@ -680,10 +680,10 @@ void Sum::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) co
 void Sum::sort()
 {
 	//vielleicht hier vor noch die standardisierung mit produkt einfügen etc.?
-	for (auto& it : this->summands) {
+	for (auto it : this->summands) {
 		it->sort();
 	}
-	for (auto& it : this->subtractors) {
+	for (auto it : this->subtractors) {
 		it->sort();
 	}
 	this->summands.sort([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; });
@@ -699,14 +699,14 @@ Basic_Term** Sum::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>
 	else {
 		LOG_P("nicht matched summe: " << *this << " =/= " << *pattern);
 		Basic_Term** argument_match;
-		for (auto& it : summands) {
+		for (auto it : summands) {
 			reset_pattern_vars(pattern_var_adresses);
 			argument_match = it->match_intern(pattern, pattern_var_adresses, &it);
 			if (argument_match != nullptr) {
 				return argument_match;
 			}
 		}
-		for (auto& it : subtractors) {
+		for (auto it : subtractors) {
 			reset_pattern_vars(pattern_var_adresses);
 			argument_match = it->match_intern(pattern, pattern_var_adresses, &it);
 			if (argument_match != nullptr) {

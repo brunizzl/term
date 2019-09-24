@@ -59,6 +59,10 @@ bmath::Term::Term(std::string name_)
 	LOG_C("baue Term " << this << ": " << *this);
 }
 
+bmath::Term::Term(std::complex<double> val) 
+	:term_ptr(new Value(val, nullptr))
+{}
+
 bmath::Term::Term(const Term& source)
 	:term_ptr(copy_subterm(source.term_ptr, nullptr))
 {

@@ -99,6 +99,7 @@ namespace bmath {
 	public:
 		Term();
 		Term(std::string name_);
+		Term(std::complex<double> val);
 		Term(const Term& source);
 		Term(Term&& source) noexcept;
 		Term& operator=(const Term& source);

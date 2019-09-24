@@ -14,10 +14,7 @@ Value::Value(std::string name_, Basic_Term* parent_)
 		this->value.imag(1);
 	}
 	else {
-		double factor;
-		std::stringstream stream;
-		stream << name_;
-		stream >> factor;
+		double factor = std::stod(name_);
 		if (name_.find_first_of("i") != std::string::npos) {
 			this->value.imag(factor);
 		}

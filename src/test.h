@@ -67,23 +67,6 @@ void test_strings_2() {
 	baue_teststrs(teststrs);
 }
 
-void test_length() {
-	std::cout << "groesse von double:          " << sizeof(double) << " bytes\n";
-	std::cout << "groesse von long double:     " << sizeof(long double) << " bytes\n";
-	std::cout << "groesse von complex<double>: " << sizeof(std::complex<double>) << " bytes\n";
-	std::cout << "groesse von list:            " << sizeof(std::list<bmath::intern::Basic_Term>) << " bytes\n";
-	std::cout << "groesse von Basic_Term:      " << sizeof(bmath::intern::Basic_Term) << " bytes\n";
-	std::cout << "groesse von Basic_Term*:     " << sizeof(bmath::intern::Basic_Term*) << " bytes\n";
-	std::cout << "groesse von Product:         " << sizeof(bmath::intern::Product) << " bytes\n";
-	std::cout << "groesse von Sum:             " << sizeof(bmath::intern::Sum) << " bytes\n";
-	std::cout << "groesse von Exponentiation:  " << sizeof(bmath::intern::Exponentiation) << " bytes\n";
-	std::cout << "groesse von Variable:        " << sizeof(bmath::intern::Variable) << " bytes\n";
-	std::cout << "groesse von Value:           " << sizeof(bmath::intern::Value) << " bytes\n";
-	std::cout << "groesse von Par_Operator:    " << sizeof(bmath::intern::Par_Operator) << " bytes\n";
-	std::cout << "groesse von Term:            " << sizeof(bmath::Term) << " bytes\n";
-	std::cout << '\n';
-}
-
 void test_function(std::string name) {
 	bmath::Term function(name);
 	std::string x_string("x");

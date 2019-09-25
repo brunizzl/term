@@ -45,7 +45,7 @@ Vals_Combined Pattern_Variable::combine_values()
 {
 	std::cout << "Error: pattern_variable used instead of variable!\n";
 	std::cout << "(try running bmath::pattern_initialize() function first.)\n";
-	return Vals_Combined();
+	return Vals_Combined{ false, 0 };
 }
 
 std::complex<double> Pattern_Variable::evaluate(const std::list<bmath::Known_Variable>& known_variables) const

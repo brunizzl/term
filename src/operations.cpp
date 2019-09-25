@@ -140,12 +140,11 @@ void Product::combine_layers(Basic_Term*& storage_key)
 			this->factors.splice(this->factors.end(), redundant->factors);
 			this->divisors.splice(this->divisors.end(), redundant->divisors);
 			delete redundant;
-			std::list<Basic_Term*>::iterator it_2 = it;
-			++it;
-			this->factors.erase(it_2);
-			continue;
+			it = this->factors.erase(it);
 		}
-		++it;
+		else {
+			++it;
+		}
 	}
 	for (auto it = this->divisors.begin(); it != this->divisors.end();) {
 		(*it)->combine_layers(*it);
@@ -160,12 +159,10 @@ void Product::combine_layers(Basic_Term*& storage_key)
 			this->factors.splice(this->factors.end(), redundant->divisors);
 			this->divisors.splice(this->divisors.end(), redundant->factors);
 			delete redundant;
-			std::list<Basic_Term*>::iterator it_2 = it;
+			it = this->divisors.erase(it);
+		} else {
 			++it;
-			this->divisors.erase(it_2);
-			continue;
 		}
-		++it;
 	}
 	if (this->factors.size() == 1 && this->divisors.size() == 0) {
 		storage_key = *(this->factors.begin());
@@ -183,30 +180,24 @@ Vals_Combined Product::combine_values()
 		if (factor.known) {
 			buffer_factor *= factor.val;
 			delete (*it);
-			std::list<Basic_Term*>::iterator it_2 = it;
-			++it;
-			this->factors.erase(it_2);
-			continue;
+			it = this->factors.erase(it);
 		}
 		else {
 			only_known = false;
+			++it;
 		}
-		++it;
 	}
 	for (auto it = this->divisors.begin(); it != this->divisors.end();) {
 		Vals_Combined divisor = (*it)->combine_values();
 		if (divisor.known) {
 			buffer_factor /= divisor.val;
 			delete (*it);
-			std::list<Basic_Term*>::iterator it_2 = it;
-			++it;
-			this->divisors.erase(it_2);
-			continue;
+			it = this->divisors.erase(it);
 		}
 		else {
 			only_known = false;
+			++it;
 		}
-		++it;
 	}
 	if (buffer_factor != std::complex<double>(1, 0)) {
 		this->factors.push_front(new Value(buffer_factor, this));
@@ -563,12 +554,11 @@ void Sum::combine_layers(Basic_Term*& storage_key)
 			this->summands.splice(this->summands.end(), redundant->summands);
 			this->subtractors.splice(this->subtractors.end(), redundant->subtractors);
 			delete redundant;
-			std::list<Basic_Term*>::iterator it_2 = it;
-			++it;
-			this->summands.erase(it_2);
-			continue;
+			it = this->summands.erase(it);
 		}
-		++it;
+		else {
+			++it;
+		}
 	}
 	for (auto it = this->subtractors.begin(); it != this->subtractors.end();) {
 		(*it)->combine_layers(*it);
@@ -583,12 +573,11 @@ void Sum::combine_layers(Basic_Term*& storage_key)
 			this->summands.splice(this->summands.end(), redundant->subtractors);
 			this->subtractors.splice(this->subtractors.end(), redundant->summands);
 			delete redundant;
-			std::list<Basic_Term*>::iterator it_2 = it;
-			++it;
-			this->subtractors.erase(it_2);
-			continue;
+			it = this->subtractors.erase(it);
 		}
-		++it;
+		else {
+			++it;
+		}
 	}
 	if (this->summands.size() == 1 && this->subtractors.size() == 0) {
 		storage_key = *(this->summands.begin());
@@ -606,30 +595,24 @@ Vals_Combined Sum::combine_values()
 		if (summand.known) {
 			buffer_summand += summand.val;
 			delete (*it);
-			std::list<Basic_Term*>::iterator it_2 = it;
-			++it;
-			this->summands.erase(it_2);
-			continue;
+			it = this->summands.erase(it);
 		}
 		else {
 			only_known = false;
+			++it;
 		}
-		++it;
 	}
 	for (std::list<Basic_Term*>::iterator it = this->subtractors.begin(); it != this->subtractors.end();) {
 		Vals_Combined subtractor = (*it)->combine_values();
 		if (subtractor.known) {
 			buffer_summand -= subtractor.val;
 			delete (*it);
-			std::list<Basic_Term*>::iterator it_2 = it;
-			++it;
-			this->subtractors.erase(it_2);
-			continue;
+			it = this->subtractors.erase(it);
 		}
 		else {
 			only_known = false;
+			++it;
 		}
-		++it;
 	}
 	if (buffer_summand != std::complex<double>(0, 0)) {
 		this->summands.push_front(new Value(buffer_summand, this));

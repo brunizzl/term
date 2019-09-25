@@ -9,7 +9,6 @@ int main()
 {
 	try {
 		//test_timing();
-		//test_length();
 		test_strings();
 		test_strings_2();
 		test_function("atan(x)");

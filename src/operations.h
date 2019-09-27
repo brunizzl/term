@@ -1,4 +1,11 @@
+
 #pragma once
+
+#include <string>
+#include <string_view>
+#include <list>
+#include <vector>
+#include <complex>
 
 #include "structs.h"
 #include "term.h"
@@ -10,15 +17,14 @@ namespace bmath {
 		{
 		private:
 			Product(Basic_Term* parent_);
-			Product(std::string name_, Basic_Term* parent_, std::size_t op);
-			Product(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
+			Product(std::string_view name_, Basic_Term* parent_, std::size_t op);
+			Product(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
 			Product(const Product& source, Basic_Term* parent_ = nullptr);
 
 			//access to constructors:
-			friend Basic_Term* build_subterm(std::string& subtermstr, Basic_Term* parent_);
-			friend Basic_Term* build_pattern_subterm(std::string& subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
+			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_);
+			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
-			friend Basic_Term* standardize_structure(Basic_Term* obj);
 			friend class bmath::Term;
 		public:
 			std::list<Basic_Term*> factors;
@@ -45,15 +51,14 @@ namespace bmath {
 		{
 		private:
 			Sum(Basic_Term* parent_);
-			Sum(std::string name_, Basic_Term* parent_, std::size_t op);
-			Sum(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
+			Sum(std::string_view name_, Basic_Term* parent_, std::size_t op);
+			Sum(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
 			Sum(const Sum& source, Basic_Term* parent_ = nullptr);
 
 			//access to constructors:
-			friend Basic_Term* build_subterm(std::string& subtermstr, Basic_Term* parent_);
-			friend Basic_Term* build_pattern_subterm(std::string& subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
+			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_);
+			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
-			friend Basic_Term* standardize_structure(Basic_Term* obj);
 			friend class bmath::Term;
 		public:
 			std::list<Basic_Term*> summands;
@@ -80,13 +85,13 @@ namespace bmath {
 		{
 		private:
 			Exponentiation(Basic_Term* parent_);
-			Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op);
-			Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
+			Exponentiation(std::string_view name_, Basic_Term* parent_, std::size_t op);
+			Exponentiation(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
 			Exponentiation(const Exponentiation& source, Basic_Term* parent_ = nullptr);
 
 			//access to constructors:
-			friend Basic_Term* build_subterm(std::string& subtermstr, Basic_Term* parent_);
-			friend Basic_Term* build_pattern_subterm(std::string& subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
+			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_);
+			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 		public:
 			Basic_Term* exponent;
@@ -118,13 +123,13 @@ namespace bmath {
 			Vals_Combined internal_combine(Vals_Combined argument_) const;
 
 			Par_Operator(Basic_Term* parent_);
-			Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_);
-			Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_, std::list<Pattern_Variable*>& variables);
+			Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_State op_state_);
+			Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_State op_state_, std::list<Pattern_Variable*>& variables);
 			Par_Operator(const Par_Operator& source, Basic_Term* parent_ = nullptr);
 
 			//access to constructors:
-			friend Basic_Term* build_subterm(std::string& subtermstr, Basic_Term* parent_);
-			friend Basic_Term* build_pattern_subterm(std::string& subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
+			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_);
+			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 		public:
 			~Par_Operator();

@@ -1,3 +1,4 @@
+
 #include "exceptions.h"
 
 using namespace bmath;
@@ -7,14 +8,13 @@ using namespace bmath;
 //XTermConstructionError\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-XTermConstructionError::XTermConstructionError(const std::string& message_)
-	:message(message_)
-{
-}
+XTermConstructionError::XTermConstructionError(const char* const message)
+	:std::exception(message)
+{}
 
 const char* XTermConstructionError::what() const throw()
 {
-	return message.c_str();
+	return std::exception::what();
 }
 
 
@@ -22,12 +22,11 @@ const char* XTermConstructionError::what() const throw()
 //XTermCouldNotBeEvaluated\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-XTermCouldNotBeEvaluated::XTermCouldNotBeEvaluated(const std::string& message_)
-	:message(message_)
-{
-}
+XTermCouldNotBeEvaluated::XTermCouldNotBeEvaluated(const char* const var_name)
+	:std::exception(var_name) 
+{}
 
 const char* XTermCouldNotBeEvaluated::what() const throw()
 {
-	return message.c_str();
+	return std::exception::what();
 }

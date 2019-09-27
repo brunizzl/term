@@ -1,3 +1,4 @@
+
 #include "term.h"
 
 using namespace bmath::intern;
@@ -53,10 +54,8 @@ bmath::Term::Term()
 bmath::Term::Term(std::string name_)
 	:term_ptr(nullptr)
 {
-	if (preprocess_str(name_)) {
-		this->term_ptr = build_subterm(name_, nullptr);
-	}
-	LOG_C("baue Term " << this << ": " << *this);
+	preprocess_str(name_);
+	this->term_ptr = build_subterm({ name_.data(), name_.length() }, nullptr);
 }
 
 bmath::Term::Term(std::complex<double> val) 
@@ -66,7 +65,6 @@ bmath::Term::Term(std::complex<double> val)
 bmath::Term::Term(const Term& source)
 	:term_ptr(copy_subterm(source.term_ptr, nullptr))
 {
-	LOG_C("kopiere Term " << &source << " zu " << this << ": " << *this);
 }
 
 bmath::Term::Term(Term&& source) noexcept
@@ -94,7 +92,6 @@ bmath::Term& bmath::Term::operator=(Term&& source) noexcept
 
 bmath::Term::~Term()
 {
-	LOG_C("loesche Term " << this);
 	delete term_ptr;
 }
 
@@ -123,13 +120,13 @@ std::string bmath::Term::to_tree(std::size_t offset) const
 	return return_str;
 }
 
-std::set<std::string> bmath::Term::get_var_names() const
+std::list<std::string> bmath::Term::get_var_names() const
 {
-	std::set<std::string> names;
+	std::list<std::string> names;
 	std::list<Basic_Term*> variables;
 	this->term_ptr->list_subterms(variables, s_variable);
 	for (auto it : variables) {
-		names.insert(static_cast<Variable*>(it)->name);
+		names.push_back(static_cast<Variable*>(it)->name);
 	}
 	return names;
 }
@@ -183,7 +180,7 @@ void bmath::Term::combine()
 	this->combine_values();
 	this->term_ptr->sort();
 
-	std::list<recurring_term> recurring_terms;
+	//std::list<recurring_term> recurring_terms;
 	//HIER MUSS DIE liste MIT DOPPELTEN VARIABLEN GEFÜLLT WERDEN UND DIE VARIABLEN DANN VON IHREN FREUNDEN ABGESPALTET WERDEN.
 	//GRAUSAM ABER NOTWENDIG 
 	//UND DANN WERDEN DIE FÜR IMMER VON EINANDER WEGSORTIERT
@@ -208,8 +205,8 @@ void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 		quadratic_sum += std::abs(static_cast<Value*>(it)->value.imag()) * std::abs(static_cast<Value*>(it)->value.imag());
 	}
 	if (quadratic_sum != 0) {
-		double quadratic_average = sqrt(quadratic_sum / values.size() / 2);	//equal to standard deviation from 0
-		double limit_to_0 = quadratic_average * std::pow(10, -pow_of_10_diff_to_set_0);
+		const double quadratic_average = sqrt(quadratic_sum / values.size() / 2);	//equal to standard deviation from 0
+		const double limit_to_0 = quadratic_average * std::pow(10, -pow_of_10_diff_to_set_0);
 		for (auto &it : values) {
 			if (std::abs(static_cast<Value*>(it)->value.real()) < limit_to_0) {
 				static_cast<Value*>(it)->value.real(0);

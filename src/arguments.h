@@ -1,4 +1,13 @@
+
 #pragma once
+
+#include <string>
+#include <string_view>
+#include <sstream>
+#include <list>
+#include <vector>
+#include <complex>
+#include <charconv>
 
 #include "internal_functions.h"
 #include "structs.h"
@@ -11,13 +20,13 @@ namespace bmath {
 		{
 		private:
 
-			Value(std::string name_, Basic_Term* parent_);
+			Value(std::string_view name_, Basic_Term* parent_);
 			Value(const Value& source, Basic_Term* parent_ = nullptr);
 			Value(std::complex<double> value_, Basic_Term* parent_);
 
 			//access to constructors:
-			friend Basic_Term* build_subterm(std::string& subtermstr, Basic_Term* parent_);
-			friend Basic_Term* build_pattern_subterm(std::string& subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
+			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_);
+			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 			friend class Product;
 			friend class Sum;
@@ -47,12 +56,12 @@ namespace bmath {
 		class Variable : public Basic_Term
 		{
 		private:
-			Variable(std::string name_, Basic_Term* parent_);
+			Variable(std::string_view name_, Basic_Term* parent_);
 			Variable(const Variable& source, Basic_Term* parent_ = nullptr);
 
 			//access to constructors:
-			friend Basic_Term* build_subterm(std::string& subtermstr, Basic_Term* parent_);
-			friend Basic_Term* build_pattern_subterm(std::string& subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
+			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_);
+			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 		public:
 			std::string name;

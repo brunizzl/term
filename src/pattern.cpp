@@ -1,3 +1,4 @@
+
 #include "pattern.h"
 
 using namespace bmath::intern;
@@ -6,7 +7,7 @@ using namespace bmath::intern;
 //Pattern_Variable\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Pattern_Variable::Pattern_Variable(std::string name_, Basic_Term* parent_)
+Pattern_Variable::Pattern_Variable(std::string_view name_, Basic_Term* parent_)
 	:Basic_Term(parent_), name(name_), pattern_value(nullptr)
 {
 }
@@ -92,17 +93,12 @@ bool Pattern_Variable::operator<(const Basic_Term& other) const
 
 bool Pattern_Variable::operator==(const Basic_Term& other) const
 {
-	LOG_P(" vergleiche  " << *this << " und " << other);
 	if (this->pattern_value == nullptr) {
 		this->pattern_value = const_cast<Basic_Term*>(&other);
-		LOG_P("pattern_var matched mit " << other);
 		return true;
 	}
 	else {
-		bool match = *(this->pattern_value) == other;
-
-		LOG_P("pattern_var " << *this << (match ? " === " : " =/= ") << other);
-		return match;
+		return *(this->pattern_value) == other;
 	}
 }
 
@@ -123,9 +119,8 @@ void Pattern::Pattern_Term::build(std::string name, std::list<Pattern_Variable*>
 		std::cout << "Error: Pattern_Term has already been build.\n";
 		return;
 	}
-	if (preprocess_str(name)) {
-		this->term_ptr = build_pattern_subterm(name, nullptr, var_adresses);
-	}
+	preprocess_str(name);
+	this->term_ptr = build_pattern_subterm({ name.data(), name.length() }, nullptr, var_adresses);
 }
 
 Pattern::Pattern_Term::~Pattern_Term()

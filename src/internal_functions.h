@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <string>
@@ -11,27 +12,29 @@ namespace bmath {
 	namespace intern {
 
 		//finds matching closed parethesis to the open_par in name 
-		std::size_t find_closed_par(std::size_t open_par, const std::string& name);
+		std::size_t find_closed_par(std::size_t open_par, const std::string_view name);
 
-		//finds the highest level of parentheses in name
-		void find_pars(const std::string& name, std::vector<Pos_Pars>& pars);
+		//puts the parts of name not enclosed in parentheses in exposed (including the bordering open (not closed) parentheses)
+		//example: name "(2+a)*4/sin(x)" would push the view "*4/sin(" in exposed. 
+		//the open parenthesis is needed to detect par_operator (as sin) in exposed parts 
+		void find_exposed_parts(std::string_view name, std::vector<std::string_view>& exposed);
 
-		//skips parentheses, else finds_last_of characters in name like std::string function
-		std::size_t find_last_of_skip_pars(const std::string& name, const char* characters, const std::vector<Pos_Pars>& pars);
+		//searches characters in views of name, returns position in name
+		std::size_t find_last_of_in_views(const std::string_view name, const std::vector<std::string_view>& views, const char* characters);
 
-		//skips parentheses, else rfind in name like std::string function
-		std::size_t rfind_skip_pars(const std::string& name, const char* searchstr, const std::vector<Pos_Pars>& pars);
+		//searches searchstr in views of name, returns position in name (modified rfind of std::string_view)
+		std::size_t rfind_in_views(const std::string_view name, const std::vector<std::string_view>& views, const char* searchstr);
 
-		//deletes parentheses of parentheses list, which start after the end of the name
-		void del_pars_after(std::vector<Pos_Pars>& pars, const std::string& name);
+		//removes views no longer part of name
+		void update_views(const std::string_view name, std::vector<std::string_view>& views);
 
 		//returns pointer to newly build term of right type (u now have ownership of object)
-		Basic_Term* build_subterm(std::string& subtermstr, Basic_Term* parent_);
+		Basic_Term* build_subterm(std::string_view subterm_view, Basic_Term* parent_);
 
 		//behaves like build_subterm, exept when a variable is build, it checks in variables if this exists already.
 		//if so: it will just return the adress of the existing variable. (and variables will become pattern_variables)
 		//(needs modification if new termtype is added)
-		Basic_Term* build_pattern_subterm(std::string& subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
+		Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
 
 		//returns pointer to newly build term of right type (u now have ownership of object)
 		//(needs modification if new termtype is added)
@@ -39,28 +42,24 @@ namespace bmath {
 
 		//decides type of next subterm (finds the next operation to split string and create subterm from)
 		//(needs modification if new termtype is added)
-		State type_subterm(const std::string& name, const std::vector<Pos_Pars>& pars, std::size_t& op, Par_Op_State& type_par_op);
+		State type_subterm(const std::string_view name, const std::vector<std::string_view>& exposed_parts, std::size_t& op, Par_Op_State& type_par_op);
 
 		//deletes spaces and checks parentheses
-		bool preprocess_str(std::string& str);
+		void preprocess_str(std::string& str);
 
 		//returns actual type of obj (sum, product, exponentiation...) but if obj is nullptr returns s_undefined
 		State state(const Basic_Term* obj);
 
-		//needs to be run before combine_variables() makes sense to run
-		//products with negative factor get wrapped in a sum, exponentiations with negative exponents into a product
-		//DERZEIT UNGENUTZT (soll sowieso obszolet werden, weil summe und produkt noch operanden umkehroperationen verlieren)
-		Basic_Term* standardize_structure(Basic_Term* obj);
-
 		//used in output as tree to visually connect new subterm with rest of tree
 		void append_last_line(std::vector<std::string>& tree_lines, char operation);
 
+		//resets all pattern_values to nullptr (needs to be run, before next match can be found)
 		void reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
 
 	} //namespace intern
 } //namespace bmath
 
-//allows ostream to output terms
+//allows ostream to output Terms
 std::ostream& operator<<(std::ostream& stream, const bmath::Term& term);
 
 //allows ostream to output Basic_Terms

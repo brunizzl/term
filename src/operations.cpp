@@ -1,3 +1,4 @@
+
 #include "operations.h"
 
 using namespace bmath::intern;
@@ -11,48 +12,48 @@ Product::Product(Basic_Term* parent_)
 {
 }
 
-Product::Product(std::string name_, Basic_Term* parent_, std::size_t op)
+Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op)
 	:Basic_Term(parent_)
 {
-	LOG_C("baue Produkt: " << name_);
-	std::vector<Pos_Pars> pars;
-	find_pars(name_, pars);
-	std::string subterm;
+	std::vector<std::string_view> exposed_parts;
+	find_exposed_parts(name_, exposed_parts);
+
 	while (op != std::string::npos) {
-		subterm = name_.substr(op + 1);
+		const std::string_view subterm_view = name_.substr(op + 1);
 		switch (name_[op]) {
 		case '*':
-			this->factors.push_front(build_subterm(subterm, this));
+			this->factors.push_front(build_subterm(subterm_view, this));
 			break;
 		case '/':
-			this->divisors.push_front(build_subterm(subterm, this));
+			this->divisors.push_front(build_subterm(subterm_view, this));
 			break;
 		}
-		name_.erase(op);
-		op = find_last_of_skip_pars(name_, "*/", pars);
+		name_.remove_suffix(name_.length() - op);
+		update_views(name_, exposed_parts);
+		op = find_last_of_in_views(name_, exposed_parts, "*/");
 	}
 	this->factors.push_front(build_subterm(name_, this));
 }
 
-Product::Product(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
+Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
 	:Basic_Term(parent_)
 {
-	LOG_C("baue Produkt: " << name_);
-	std::vector<Pos_Pars> pars;
-	find_pars(name_, pars);
-	std::string subterm;
+	std::vector<std::string_view> exposed_parts;
+	find_exposed_parts(name_, exposed_parts);
+
 	while (op != std::string::npos) {
-		subterm = name_.substr(op + 1);
+		const std::string_view subterm_view = name_.substr(op + 1);
 		switch (name_[op]) {
 		case '*':
-			this->factors.push_front(build_pattern_subterm(subterm, this, variables));
+			this->factors.push_front(build_pattern_subterm(subterm_view, this, variables));
 			break;
 		case '/':
-			this->divisors.push_front(build_pattern_subterm(subterm, this, variables));
+			this->divisors.push_front(build_pattern_subterm(subterm_view, this, variables));
 			break;
 		}
-		name_.erase(op);
-		op = find_last_of_skip_pars(name_, "*/", pars);
+		name_.remove_suffix(name_.length() - op);
+		update_views(name_, exposed_parts);
+		op = find_last_of_in_views(name_, exposed_parts, "*/");
 	}
 	this->factors.push_front(build_pattern_subterm(name_, this, variables));
 }
@@ -60,7 +61,6 @@ Product::Product(std::string name_, Basic_Term* parent_, std::size_t op, std::li
 Product::Product(const Product& source, Basic_Term* parent_)
 	:Basic_Term(parent_)
 {
-	LOG_C("kopiere Produkt: " << source);
 	for (auto it : source.factors) {
 		this->factors.push_back(copy_subterm(it, this));
 	}
@@ -72,7 +72,6 @@ Product::Product(const Product& source, Basic_Term* parent_)
 
 Product::~Product()
 {
-	LOG_C("loesche Produkt: " << *this);
 	for (auto it : factors) {
 		delete it;
 	}
@@ -382,7 +381,6 @@ bool Product::operator<(const Basic_Term& other) const
 
 bool Product::operator==(const Basic_Term& other) const
 {
-	LOG_P(" vergleiche  " << *this << " und " << other);
 	switch (other.get_state()) {
 	case s_product:
 		break;
@@ -425,50 +423,50 @@ Sum::Sum(Basic_Term* parent_)
 {
 }
 
-Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op)
+Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op)
 	:Basic_Term(parent_)
 {
-	LOG_C("baue Summe: " << name_);
-	std::vector<Pos_Pars> pars;
-	find_pars(name_, pars);
-	std::string subterm;
+	std::vector<std::string_view> exposed_parts;
+	find_exposed_parts(name_, exposed_parts);
+
 	while (op != std::string::npos) {
-		subterm = name_.substr(op + 1);
+		const std::string_view subterm_view = name_.substr(op + 1);
 		switch (name_[op]) {
 		case '+':
-			this->summands.push_front(build_subterm(subterm, this));
+			this->summands.push_front(build_subterm(subterm_view, this));
 			break;
 		case '-':
-			this->subtractors.push_front(build_subterm(subterm, this));
+			this->subtractors.push_front(build_subterm(subterm_view, this));
 			break;
 		}
-		name_.erase(op);
-		op = find_last_of_skip_pars(name_, "+-", pars);
+		name_.remove_suffix(name_.length() - op);
+		update_views(name_, exposed_parts);
+		op = find_last_of_in_views(name_, exposed_parts, "+-");
 	}
 	if (name_.size() != 0) {
 		this->summands.push_front(build_subterm(name_, this));
 	}
 }
 
-Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
+Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
 	:Basic_Term(parent_)
 {
-	LOG_C("baue Summe: " << name_);
-	std::vector<Pos_Pars> pars;
-	find_pars(name_, pars);
-	std::string subterm;
+	std::vector<std::string_view> exposed_parts;
+	find_exposed_parts(name_, exposed_parts);
+
 	while (op != std::string::npos) {
-		subterm = name_.substr(op + 1);
+		const std::string_view subterm_view = name_.substr(op + 1);
 		switch (name_[op]) {
 		case '+':
-			this->summands.push_front(build_pattern_subterm(subterm, this, variables));
+			this->summands.push_front(build_pattern_subterm(subterm_view, this, variables));
 			break;
 		case '-':
-			this->subtractors.push_front(build_pattern_subterm(subterm, this, variables));
+			this->subtractors.push_front(build_pattern_subterm(subterm_view, this, variables));
 			break;
 		}
-		name_.erase(op);
-		op = find_last_of_skip_pars(name_, "+-", pars);
+		name_.remove_suffix(name_.length() - op);
+		update_views(name_, exposed_parts);
+		op = find_last_of_in_views(name_, exposed_parts, "+-");
 	}
 	if (name_.size() != 0) {
 		this->summands.push_front(build_pattern_subterm(name_, this, variables));
@@ -478,7 +476,6 @@ Sum::Sum(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Patte
 Sum::Sum(const Sum& source, Basic_Term* parent_)
 	:Basic_Term(parent_)
 {
-	LOG_C("kopiere Summe: " << source);
 	for (auto it : source.summands) {
 		this->summands.push_back(copy_subterm(it, this));
 	}
@@ -489,7 +486,6 @@ Sum::Sum(const Sum& source, Basic_Term* parent_)
 
 Sum::~Sum()
 {
-	LOG_C("loesche Summe: " << *this);
 	for (auto it : summands) {
 		delete it;
 	}
@@ -680,7 +676,6 @@ Basic_Term** Sum::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>
 		return storage_key;
 	}
 	else {
-		LOG_P("nicht matched summe: " << *this << " =/= " << *pattern);
 		Basic_Term** argument_match;
 		for (auto it : summands) {
 			reset_pattern_vars(pattern_var_adresses);
@@ -741,7 +736,6 @@ bool Sum::operator<(const Basic_Term& other) const
 
 bool Sum::operator==(const Basic_Term& other) const
 {
-	LOG_P(" vergleiche  " << *this << " und " << other);
 	switch (other.get_state()) {
 	case s_sum:
 		break;
@@ -785,37 +779,33 @@ Exponentiation::Exponentiation(Basic_Term* parent_)
 {
 }
 
-Exponentiation::Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op)
+Exponentiation::Exponentiation(std::string_view name_, Basic_Term* parent_, std::size_t op)
 	:Basic_Term(parent_)
 {
-	LOG_C("baue Potenz: " << name_);
-	std::string subterm;
-	subterm = name_.substr(op + 1);
-	this->exponent = build_subterm(subterm, this);
-	name_.erase(op);
+	std::string_view subterm_view;
+	subterm_view = name_.substr(op + 1);
+	this->exponent = build_subterm(subterm_view, this);
+	name_.remove_suffix(name_.length() - op);
 	this->base = build_subterm(name_, this);
 }
 
-Exponentiation::Exponentiation(std::string name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
+Exponentiation::Exponentiation(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
 	:Basic_Term(parent_)
 {
-	LOG_C("baue Potenz: " << name_);
-	std::string subterm;
-	subterm = name_.substr(op + 1);
-	this->exponent = build_pattern_subterm(subterm, this, variables);
-	name_.erase(op);
+	std::string_view subterm_view;
+	subterm_view = name_.substr(op + 1);
+	this->exponent = build_pattern_subterm(subterm_view, this, variables);
+	name_.remove_suffix(name_.length() - op);
 	this->base = build_pattern_subterm(name_, this, variables);
 }
 
 Exponentiation::Exponentiation(const Exponentiation& source, Basic_Term* parent_)
 	:Basic_Term(parent_), base(copy_subterm(source.base, this)), exponent(copy_subterm(source.exponent, this))
 {
-	LOG_C("kopiere Potenz: " << source);
 }
 
 Exponentiation::~Exponentiation()
 {
-	LOG_C("loesche Potenz: " << *this);
 	delete exponent;
 	delete base;
 }
@@ -943,7 +933,6 @@ Basic_Term** Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern
 		return storage_key;
 	}
 	else {
-		LOG_P("nicht matched potenz: " << *this << " =/= " << *pattern);
 		reset_pattern_vars(pattern_var_adresses);
 		Basic_Term** argument_match = base->match_intern(pattern, pattern_var_adresses, &base);
 		if (argument_match != nullptr) {
@@ -978,7 +967,6 @@ bool Exponentiation::operator<(const Basic_Term& other) const
 
 bool Exponentiation::operator==(const Basic_Term& other) const
 {
-	LOG_P(" vergleiche  " << *this << " und " << other);
 	switch (other.get_state()) {
 	case s_exponentiation:
 		break;
@@ -1102,21 +1090,19 @@ Vals_Combined Par_Operator::internal_combine(Vals_Combined argument_) const
 	return Vals_Combined{ false, 0 };
 }
 
-Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_)
+Par_Operator::Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_State op_state_)
 	:Basic_Term(parent_), op_state(op_state_), argument(nullptr)
 {
-	LOG_C("baue Par_Operator: " << name_);
-	name_.pop_back();							//closing parenthesis gets cut of
-	name_.erase(0, strlen(op_name(op_state)));	//funktionname and opening parenthesis get cut of
+	name_.remove_suffix(1);							//closing parenthesis gets cut of
+	name_.remove_prefix(strlen(op_name(op_state)));	//funktionname and opening parenthesis get cut of
 	this->argument = build_subterm(name_, this);
 }
 
-Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State op_state_, std::list<Pattern_Variable*>& variables)
+Par_Operator::Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_State op_state_, std::list<Pattern_Variable*>& variables)
 	:Basic_Term(parent_), op_state(op_state_), argument(nullptr)
 {
-	LOG_C("baue Par_Operator: " << name_);
-	name_.pop_back();							//closing parenthesis gets cut of
-	name_.erase(0, strlen(op_name(op_state)));	//funktionname and opening parenthesis get cut of
+	name_.remove_suffix(1);							//closing parenthesis gets cut of
+	name_.remove_prefix(strlen(op_name(op_state)));	//funktionname and opening parenthesis get cut of
 	this-> argument = build_pattern_subterm(name_, this, variables);
 }
 
@@ -1124,12 +1110,10 @@ Par_Operator::Par_Operator(std::string name_, Basic_Term* parent_, Par_Op_State 
 Par_Operator::Par_Operator(const Par_Operator & source, Basic_Term * parent_)
 	:Basic_Term(parent_), argument(copy_subterm(source.argument, this)), op_state(source.op_state)
 {
-	LOG_C("kopiere Par_Operator: " << source);
 }
 
 Par_Operator::~Par_Operator()
 {
-	LOG_C("loesche Par_Operator: " << *this);
 	delete this->argument;
 }
 
@@ -1197,7 +1181,6 @@ Basic_Term** Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_V
 		return storage_key;
 	}
 	else {
-		LOG_P("nicht matched par_op: " << *this << " =/= " << *pattern);
 		reset_pattern_vars(pattern_var_adresses);
 		Basic_Term** argument_match = argument->match_intern(pattern, pattern_var_adresses, &argument);
 		if (argument_match != nullptr) {
@@ -1227,7 +1210,6 @@ bool Par_Operator::operator<(const Basic_Term& other) const
 
 bool Par_Operator::operator==(const Basic_Term& other) const
 {
-	LOG_P(" vergleiche  " << *this << " und " << other);
 	switch (other.get_state()) {
 	case s_par_operator:
 		break;

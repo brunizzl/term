@@ -1,7 +1,11 @@
+
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <list>
+#include <vector>
+#include <complex>
 
 #include "internal_functions.h"
 #include "structs.h"
@@ -14,10 +18,10 @@ namespace bmath {
 		class Pattern_Variable : public Basic_Term
 		{
 		private:
-			Pattern_Variable(std::string name_, Basic_Term* parent_);
+			Pattern_Variable(std::string_view name_, Basic_Term* parent_);
 
 			//access to constructor:
-			friend Basic_Term* build_pattern_subterm(std::string& subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
+			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
 		public:
 			std::string name;
 			mutable Basic_Term* pattern_value;	//mutable to allow operator== to stay const

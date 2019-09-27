@@ -1,13 +1,11 @@
+
 #pragma once
 
 #include <string>
 #include <list>
 #include <vector>
-#include <set>
 #include <iostream>
-#include <cmath>
 #include <complex>
-#include <assert.h>
 
 #include "structs.h"
 #include "exceptions.h"
@@ -119,7 +117,7 @@ namespace bmath {
 		void cut_rounding_error(int pow_of_10_diff_to_set_0 = 15);
 
 		//adds all variable names in this to list
-		std::set<std::string> get_var_names() const;
+		std::list<std::string> get_var_names() const;
 
 		std::complex<double> evaluate(const std::string& name_, std::complex<double> value_) const;
 		std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const;

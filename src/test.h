@@ -1,7 +1,6 @@
+
 #pragma once
 
-#define _USE_MATH_DEFINES
-#include <math.h>
 #include <array>
 #include <iostream>
 #include <chrono>
@@ -9,8 +8,8 @@
 
 
 template <int N>
-void baue_teststrs(std::array<std::string, N>& teststrs) {
-	for (auto str : teststrs) {
+void baue_teststrs(const std::array<const std::string, N>& teststrs) {
+	for (auto &str : teststrs) {
 		std::cout << '\n';
 		std::cout << "String: \t" << str << '\n';
 		{
@@ -25,12 +24,12 @@ void baue_teststrs(std::array<std::string, N>& teststrs) {
 void replace_constants(bmath::Term& term) {
 	std::string pi("pi");
 	std::string e("e");
-	term.search_and_replace(pi, M_PI);
-	term.search_and_replace(e, M_E);
+	term.search_and_replace(pi, 3.14159265358979323846);
+	term.search_and_replace(e, 2.71828182845904523536);
 }
 
 void test_strings() {
-	std::array<std::string, 12> teststrs = {
+	const std::array<const std::string, 12> teststrs = {
 		"(1*(2^(-2)*3*(4*(a^5))))",
 		"(5+a)/(7-b)*4-(c*d)^(-2)",
 		"(3*x-2*y)/5",
@@ -48,7 +47,7 @@ void test_strings() {
 }
 
 void test_strings_2() {
-	std::array<std::string, 14> teststrs = {
+	const std::array<const std::string, 14> teststrs = {
 		"(ln((2*3*4)))",
 		"(log10((abs(-2))))",
 		"(log10((a^b)))",
@@ -69,7 +68,7 @@ void test_strings_2() {
 
 void test_function(std::string name) {
 	bmath::Term function(name);
-	std::string x_string("x");
+	const std::string x_string("x");
 	replace_constants(function);
 	for (double x = 0; x < 10; x += 0.1) {
 		std::cout << x << '\t' << function.evaluate(x_string, x) << '\n';
@@ -79,8 +78,8 @@ void test_function(std::string name) {
 //vergleicht zwei funktionen auf äquivalenz
 void test_vergleich() {
 	
-	bmath::Term spannungsteiler("z4/(z3+z4)*z2/(z1+z2)");
-	bmath::Term Zaus_durch_Zein("(1/(1/z4+1/(z2+z3))) / (z1+1/(1/z2+1/(z3+z4)))");
+	const bmath::Term spannungsteiler("z4/(z3+z4)*z2/(z1+z2)");
+	const bmath::Term Zaus_durch_Zein("(1/(1/z4+1/(z2+z3))) / (z1+1/(1/z2+1/(z3+z4)))");
 	std::cout << "spannungsteiler:\n" << spannungsteiler.to_tree(5) << std::endl << std::endl;
 	std::cout << "Zaus_durch_Zein:\n" << Zaus_durch_Zein.to_tree(5) << std::endl << std::endl;
 
@@ -116,7 +115,6 @@ void test_rechner() {
 }
 
 void test_timing() {
-	//std::cin.get();
 	std::cout << "starting calculations with term..." << std::endl;
 	bmath::Term t1("3+4a");
 	bmath::Term t2("1-2*b");

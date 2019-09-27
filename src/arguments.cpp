@@ -1,3 +1,4 @@
+
 #include "arguments.h"
 
 using namespace bmath::intern;
@@ -6,15 +7,15 @@ using namespace bmath::intern;
 //Value\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Value::Value(std::string name_, Basic_Term* parent_)
+Value::Value(std::string_view name_, Basic_Term* parent_)
 	:Basic_Term(parent_), value(std::complex<double>(0, 0))
 {
-	LOG_C("baue Wert: " << name_);
-	if (name_ == std::string("i")) {
+	if (name_ == "i") {
 		this->value.imag(1);
 	}
 	else {
-		double factor = std::stod(name_);
+		double factor;
+		std::from_chars(name_.data(), name_.data() + name_.size(), factor);
 		if (name_.find_first_of("i") != std::string::npos) {
 			this->value.imag(factor);
 		}
@@ -27,7 +28,6 @@ Value::Value(std::string name_, Basic_Term* parent_)
 Value::Value(const Value& source, Basic_Term* parent_)
 	:Basic_Term(parent_), value(source.value)
 {
-	LOG_C("kopiere Wert: " << source);
 }
 
 Value::Value(std::complex<double> value_, Basic_Term* parent_)
@@ -38,43 +38,56 @@ Value::Value(std::complex<double> value_, Basic_Term* parent_)
 
 Value::~Value()
 {
-	LOG_C("loesche Wert: " << *this);
 }
 
 void Value::to_str(std::string& str) const
 {
-	double re = this->value.real();
-	double im = this->value.imag();
+	const double re = this->value.real();
+	const double im = this->value.imag();
+	bool pars = false;
+	std::stringstream buffer;
+
 	if (re != 0 && im != 0) {
-		if (state(this->parent) >= this->get_state()) {
-			str.push_back('(');
+		pars = state(this->parent) > this->get_state(); //stronger binding term above -> parentheses
+		buffer << re;
+
+		if (im > -1.00000000001 && im < -0.99999999999) {		//im == -1
+			buffer << '-';
 		}
-		std::stringstream stream_re;
-		stream_re << re;
-		std::stringstream stream_im;
-		stream_im << std::showpos << im;
-		str.append(stream_re.str());
-		str.append(stream_im.str());
-		str.push_back('i');
-		if (state(this->parent) >= this->get_state()) {
-			str.push_back(')');
+		else if (im < 1.00000000001 && im > 0.99999999999) {	//im == 1
+			buffer << '+';
 		}
+		else {
+			buffer << std::showpos << im;
+		}
+		buffer << 'i';
 	}
 	else if (re != 0 && im == 0) {
-		std::stringstream stream_re;
-		stream_re << re;
-		str.append(stream_re.str());
+		pars = re < 0 && this->parent != nullptr; //leading '-' and term above		
+		buffer << re;
 	}
-	else if (re == 0 && im != 0) {
-		if (im != 1) {
-			std::stringstream stream_im;
-			stream_im << im;
-			str.append(stream_im.str());
+	else if (re == 0 && im != 0) {		// yi
+		pars = im < 0 && this->parent != nullptr; //leading '-' and term above		
+		if (im > -1.00000000001 && im < -0.99999999999) {		//im == -1
+			buffer << '-';
 		}
-		str.push_back('i');
+		else if (im > 1.00000000001 || im < 0.99999999999) {	//im != 1
+			buffer << im;
+		}
+		buffer << 'i';
 	}
 	else if (re == 0 && im == 0) {
 		str.push_back('0');
+		return;
+	}
+
+	if (pars) {
+		str.push_back('(');
+		str.append(buffer.str());
+		str.push_back(')');
+	}
+	else {
+		str.append(buffer.str());
 	}
 }
 
@@ -136,7 +149,6 @@ Basic_Term** Value::match_intern(Basic_Term* pattern, std::list<Pattern_Variable
 		return storage_key;
 	}
 	else {
-		LOG_P("nicht matched value: " << *this << " =/= " << *pattern);
 		return nullptr;
 	}
 }
@@ -159,14 +171,12 @@ bool Value::operator<(const Basic_Term& other) const
 
 bool Value::operator==(const Basic_Term& other) const
 {
-	LOG_P(" vergleiche  " << *this << " und " << other);
 	switch (other.get_state()) {
 	case s_value:
 		break;
 	case s_pattern_variable:
 		return other == *this;
 	default:
-		LOG_P("wert ungleich (verschiedener state) " << this->get_state() << " =/= " << other.get_state());
 		return false;
 	}
 	const Value* other_val = static_cast<const Value*>(&other);
@@ -178,21 +188,18 @@ bool Value::operator==(const Basic_Term& other) const
 //Variable\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Variable::Variable(std::string name_, Basic_Term* parent_)
+Variable::Variable(std::string_view name_, Basic_Term* parent_)
 	:Basic_Term(parent_), name(name_)
 {
-	LOG_C("baue Variable: " << name_);
 }
 
 Variable::Variable(const Variable& source, Basic_Term* parent_)
 	: Basic_Term(parent_), name(source.name)
 {
-	LOG_C("kopiere Variable: " << source);
 }
 
 Variable::~Variable()
 {
-	LOG_C("loesche Variable: " << *this);
 }
 
 void Variable::to_str(std::string& str) const
@@ -226,7 +233,7 @@ std::complex<double> Variable::evaluate(const std::list<bmath::Known_Variable>& 
 			return it.value;
 		}
 	}
-	throw XTermCouldNotBeEvaluated("variable " + this->name + " not part of list with matching values");
+	throw XTermCouldNotBeEvaluated(name.data());
 }
 
 void Variable::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
@@ -255,7 +262,6 @@ Basic_Term** Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Varia
 		return storage_key;
 	}
 	else {
-		LOG_P("nicht matched variable: " << *this << " =/= " << *pattern);
 		return nullptr;
 	}
 }
@@ -273,7 +279,6 @@ bool Variable::operator<(const Basic_Term& other) const
 
 bool Variable::operator==(const Basic_Term& other) const
 {
-	LOG_P(" vergleiche  " << *this << " und " << other);
 	switch (other.get_state()) {
 	case s_variable:
 		break;

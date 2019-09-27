@@ -1,17 +1,15 @@
+
 #pragma once
 
 #include <exception>
-#include <string>
 
 namespace bmath {
 
 	class XTermConstructionError : public std::exception
 	{
 	private:
-		// error message 
-		std::string message;
 	public:
-		XTermConstructionError(const std::string& message_);
+		XTermConstructionError(const char* const message);
 
 		//overloaded from std::exception
 		const char* what() const throw();
@@ -20,10 +18,9 @@ namespace bmath {
 	class XTermCouldNotBeEvaluated : public std::exception
 	{
 	private:
-		// name of variable preventing evaluation
-		std::string message;
 	public:
-		XTermCouldNotBeEvaluated(const std::string& message_);
+		//var_name is name of unknown variable, preventing evaluation
+		XTermCouldNotBeEvaluated(const char* const var_name);
 
 		//overloaded from std::exception
 		const char* what() const throw();

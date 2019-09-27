@@ -1,17 +1,18 @@
+
 #include "internal_functions.h"
 
 using namespace bmath::intern;
 
 extern Basic_Term* nullptr_term;
 
-std::size_t bmath::intern::find_closed_par(std::size_t open_par, const std::string& name)
+std::size_t bmath::intern::find_closed_par(std::size_t open_par, const std::string_view name)
 {	//par for parethesis
 	int deeper_open_par = 0;
 	std::size_t nxt_par = open_par;
 	while (true) {
 		nxt_par = name.find_first_of("()", nxt_par + 1);
 		if (nxt_par == std::string::npos) {
-			throw XTermConstructionError("function find_closed_par() expected more closed parentheses in \"" + name + "\".");
+			throw XTermConstructionError("function find_closed_par() expected more closed parentheses in string");
 		}
 		switch (name[nxt_par]) {
 		case '(':
@@ -28,94 +29,90 @@ std::size_t bmath::intern::find_closed_par(std::size_t open_par, const std::stri
 	}
 }
 
-void bmath::intern::find_pars(const std::string & name, std::vector<Pos_Pars>& pars)
+void bmath::intern::find_exposed_parts(std::string_view name, std::vector<std::string_view>& exposed) 
 {
-	std::size_t open_par = name.find_first_of('(');
-	while (open_par != std::string::npos) {
-		std::size_t clsd_par = find_closed_par(open_par, name);
-		if (clsd_par == std::string::npos) {
-			throw XTermConstructionError("expected more closed parentheses in \"" + name + "\".");
-		}
-		else {
-			pars.push_back({ open_par, clsd_par });
-		}
+	std::size_t clsd_par;	//location of next closed parenthesis in name
+	std::size_t open_par;	//location of next open parenthesis in name
+
+	//if name starts with parentheses, these are skipped.
+	if (name.front() == '(') {
+		clsd_par = find_closed_par(0, name);
 		open_par = name.find_first_of('(', clsd_par + 1);
 	}
-	return;
+	else {
+		clsd_par = -1;
+		open_par = name.find_first_of('(');
+	}
+
+	while (open_par != std::string::npos) {
+		exposed.push_back({ name.data() + clsd_par + 1, open_par - clsd_par });	//view starts after clsd_par -> + 1
+		clsd_par = find_closed_par(open_par, name);
+		open_par = name.find_first_of('(', clsd_par + 1);
+	}
+
+	//if string ends with parentheses, these are skipped too.
+	if (name.back() != ')') {
+		exposed.push_back({ name.data() + clsd_par + 1, name.length() - clsd_par - 1 }); //view starts after clsd_par -> + 1, length is one longer than highest index -> -1
+	}
 }
 
-std::size_t bmath::intern::find_last_of_skip_pars(const std::string& name, const char* characters, const std::vector<Pos_Pars>& pars)
-{
-	std::size_t found = name.size() - 1;
-	int skipped_pars = pars.size() - 1;
-	bool found_valid;
-	do {
-		found = name.find_last_of(characters, found - 1);
-		found_valid = true;
-		for (int it = skipped_pars; it >= 0; it--) {
-			if (pars[it].start < found && pars[it].end > found) {
-				skipped_pars = it;
-				found_valid = false;
-				break;
-			}
-		}
-	} while (!found_valid && found != std::string::npos);
-	return found;
-}
-
-std::size_t bmath::intern::rfind_skip_pars(const std::string& name, const char* searchstr, const std::vector<Pos_Pars>& pars)
-{
-	std::size_t found = name.size() - 1;
-	int skipped_pars = pars.size() - 1;
-	bool found_valid;
-	do {
-		found = name.rfind(searchstr, found - 1);
-		if (found == std::string::npos) {
-			return std::string::npos;
-		}
-		found_valid = true;
-		for (int it = skipped_pars; it >= 0; it--) {
-			if (pars[it].start < found && pars[it].end > found) {
-				skipped_pars = it;
-				found_valid = false;
-				break;
-			}
-		}
-	} while (!found_valid);
-	return found;
-}
-
-void bmath::intern::del_pars_after(std::vector<Pos_Pars>& pars, const std::string& name)
-{
-	int new_end = pars.size();
-	for (unsigned int i = 0; i < pars.size(); i++) {
-		if (pars[i].start > name.size() - 1) {
-			new_end = i;
-			break;
+std::size_t bmath::intern::find_last_of_in_views(const std::string_view name, const std::vector<std::string_view>& views, const char* characters) {
+	for (auto view = views.rbegin(); view != views.rend(); ++view) {
+		std::size_t found = view->find_last_of(characters);
+		if (found != std::string::npos) {
+			return found + view->data() - name.data(); // adding distance from view's start to name's start to found
 		}
 	}
-	pars.resize(new_end);
-	return;
+	return std::string::npos;
 }
 
-State bmath::intern::type_subterm(const std::string & name, const std::vector<Pos_Pars>& pars, std::size_t& op, Par_Op_State & par_op_state)
+std::size_t bmath::intern::rfind_in_views(const std::string_view name, const std::vector<std::string_view>& views, const char* searchstr) 
+{
+	for (auto view = views.rbegin(); view != views.rend(); ++view) {
+		std::size_t found = view->rfind(searchstr);
+		if (found != std::string::npos) {
+			return found + view->data() - name.data(); // adding distance from view's start to name's start to found
+		}
+	}
+	return std::string::npos;
+}
+
+void bmath::intern::update_views(const std::string_view name, std::vector<std::string_view>& views) 
+{
+	const char* const name_end = name.data() + name.length();	//pointer to first bit not in string
+	while (!views.empty()) {
+		std::string_view& view = views.back();
+		if (view.data() >= name_end) {			//view starts after end of name -> gets murdered
+			views.pop_back();
+		}
+		else if (view.data() + view.length() > name_end) {			//view ends after end of name -> gets shortend
+			view.remove_suffix(view.length() - (name_end - view.data()));	
+			return;
+		}
+		else {		//view is completely part of name -> all views before that are too
+			return;
+		}
+	}
+}
+
+State bmath::intern::type_subterm(const std::string_view name, const std::vector<std::string_view>& exposed_parts, std::size_t& op, Par_Op_State & par_op_state)
 {
 	//starting search for "basic" operators
-	op = find_last_of_skip_pars(name, "+-", pars);
+	op = find_last_of_in_views(name, exposed_parts, "+-");
 	if (op != std::string::npos) {
 		return s_sum;
 	}
-	op = find_last_of_skip_pars(name, "*/", pars);
+	op = find_last_of_in_views(name, exposed_parts, "*/");
 	if (op != std::string::npos) {
 		return s_product;
 	}
-	op = find_last_of_skip_pars(name, "^", pars);
+	op = find_last_of_in_views(name, exposed_parts, "^");
 	if (op != std::string::npos) {
 		return s_exponentiation;
 	}
 	//searching for parenthesis operators 
 	for (int op_state = 0; op_state < static_cast<int>(op_error); op_state++) {
-		op = rfind_skip_pars(name, Par_Operator::op_name(static_cast<Par_Op_State>(op_state)), pars);
+		op = rfind_in_views(name, exposed_parts, Par_Operator::op_name(static_cast<Par_Op_State>(op_state)));
 		if (op != std::string::npos) {
 			//tests if op marks only substring of longer, fauly parenthesis operator (for example "tan(" beeing substring of "arctan(" (term knows "arctan" as "atan"))
 			if (name.find_last_of("abcdefghjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]_$", op - 1) == op - 1) {
@@ -125,7 +122,7 @@ State bmath::intern::type_subterm(const std::string & name, const std::vector<Po
 			return s_par_operator;
 		}
 	}
-	if (pars.size() != 0) {
+	if (exposed_parts.size() == 0) {
 		return s_undefined;
 	}
 	//staring search for arguments (variable or value)
@@ -140,10 +137,10 @@ State bmath::intern::type_subterm(const std::string & name, const std::vector<Po
 	if (op != std::string::npos) {
 		return s_value;
 	}
-	throw XTermConstructionError("string " + name + " is not of expected format.");
+	throw XTermConstructionError("string is not of expected format");
 }
 
-bool bmath::intern::preprocess_str(std::string& str)
+void bmath::intern::preprocess_str(std::string& str)
 {
 	int par_diff = 0;
 	for (std::size_t i = 0; i < str.length(); i++) {	//deleting whitespace and counting parentheses
@@ -163,13 +160,12 @@ bool bmath::intern::preprocess_str(std::string& str)
 		}
 	}
 	if (par_diff != 0) {
-		throw XTermConstructionError("the parenthesis of string \"" + str + "\" do not obey the syntax rules.");
+		throw XTermConstructionError("the parenthesis of string do not obey the syntax rules");
 	}
 	const char* allowed_chars = "1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()_$";
 	if (str.find_first_not_of(allowed_chars) != std::string::npos) {
-		throw XTermConstructionError("String \"" + str + "\" contains characters other than: " + allowed_chars);
+		throw XTermConstructionError("string contains characters other than: 1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()_$");
 	}
-	return true;
 }
 
 State bmath::intern::state(const Basic_Term* obj)
@@ -182,108 +178,80 @@ State bmath::intern::state(const Basic_Term* obj)
 	}
 }
 
-Basic_Term* bmath::intern::standardize_structure(Basic_Term* obj)
+Basic_Term* bmath::intern::build_subterm(std::string_view subterm_view, Basic_Term* parent_)
 {
-	switch (obj->get_state()) {
-	case s_product: {
-		Product* product = static_cast<Product*>(obj);
-		//this access to front in product.factors already assumes, if product contains a value,
-		// it is the only value in factors and divisors and placed at first position.
-		//aka. it is assumed combine_values() did already run.
-		if (!product->factors.empty() && product->factors.front()->re_smaller_than_0()) {
-			Sum* new_sum = new Sum(product->parent);
-			new_sum->subtractors.push_back(product);
-			product->parent = new_sum;
-			return new_sum;
-		}
-		break;
-	}
-	case s_exponentiation: {
-		Exponentiation* exponentiation = static_cast<Exponentiation*>(obj);
-		if (exponentiation->exponent->re_smaller_than_0()) {
-			Product* new_product = new Product(exponentiation->parent);
-			new_product->divisors.push_back(exponentiation);
-			exponentiation->parent = new_product;
-			return new_product;
-		}
-		break;
-	}
-	}
-	return obj;
-}
+	std::vector<std::string_view> exposed_parts;
+	while (subterm_view.size() > 0) {	// two can (if valid) always be build and dont need further chopping of
 
-Basic_Term* bmath::intern::build_subterm(std::string& subtermstr, Basic_Term* parent_)
-{
-	std::vector<Pos_Pars> pars;
-	while (subtermstr.size() != 0) {
-
-		find_pars(subtermstr, pars);
+		find_exposed_parts(subterm_view, exposed_parts);
 		std::size_t op;
 		Par_Op_State par_op_state;	//only used if parenthesis operator is found
-		State type = type_subterm(subtermstr, pars, op, par_op_state);
+		State type = type_subterm(subterm_view, exposed_parts, op, par_op_state);
 
 		switch (type) {
 		case s_exponentiation:
-			return new Exponentiation(subtermstr, parent_, op);
+			return new Exponentiation(subterm_view, parent_, op);
 		case s_product:
-			return new Product(subtermstr, parent_, op);
+			return new Product(subterm_view, parent_, op);
 		case s_sum:
-			return new Sum(subtermstr, parent_, op);
+			return new Sum(subterm_view, parent_, op);
 		case s_variable:
-			return new Variable(subtermstr, parent_);
+			return new Variable(subterm_view, parent_);
 		case s_value:
-			return new Value(subtermstr, parent_);
+			return new Value(subterm_view, parent_);
 		case s_par_operator:
-			return new Par_Operator(subtermstr, parent_, par_op_state);
-		case s_undefined:
-			//not variable/value -> string contains parentheses, but no operation outside was found. 
-			//if parentheses dont enclose all of the subterm, there is something wrong.
-			if (pars.front().start != 0 || pars.front().end != subtermstr.size() - 1) {
-				throw XTermConstructionError("could not determine operation in string \"" + subtermstr + "\"  (function build_subterm)");
-			}			
+			return new Par_Operator(subterm_view, parent_, par_op_state);
 		}
-		subtermstr.pop_back();
-		subtermstr.erase(0, 1);
-		pars.clear();
+
+		//not variable/value -> string contains parentheses, but no operation outside was found. 
+		//if parentheses dont enclose all of the subterm, there is something wrong.
+		if (exposed_parts.size() != 0 || subterm_view.size() < 2) {
+			throw XTermConstructionError("could not determine operation to split string in function build_subterm()");
+		}
+		subterm_view.remove_prefix(1); //chopping of enclosing parentheses
+		subterm_view.remove_suffix(1);
 	}
-	throw XTermConstructionError("could not find any type to build term (function build_subterm)");
+	throw XTermConstructionError("could not find any type to build term(function build_subterm)");
 }
 
-Basic_Term* bmath::intern::build_pattern_subterm(std::string& subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables)
+Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm_view, Basic_Term* parent_, std::list<Pattern_Variable*>& variables)
 {
-	std::vector<Pos_Pars> pars;
-	while (subtermstr.size() != 0) {
+	std::vector<std::string_view> exposed_parts;
+	while (subterm_view.size() > 0) {
 
-		find_pars(subtermstr, pars);
+		find_exposed_parts(subterm_view, exposed_parts);
 		std::size_t op;
 		Par_Op_State par_op_state;	//only used if parenthesis operator is found
-		State type = type_subterm(subtermstr, pars, op, par_op_state);
+		State type = type_subterm(subterm_view, exposed_parts, op, par_op_state);
 
 		switch (type) {
 		case s_exponentiation:
-			return new Exponentiation(subtermstr, parent_, op, variables);
+			return new Exponentiation(subterm_view, parent_, op, variables);
 		case s_product:
-			return new Product(subtermstr, parent_, op, variables);
+			return new Product(subterm_view, parent_, op, variables);
 		case s_sum:
-			return new Sum(subtermstr, parent_, op, variables);
+			return new Sum(subterm_view, parent_, op, variables);
 		case s_par_operator:
-			return new Par_Operator(subtermstr, parent_, par_op_state, variables);
+			return new Par_Operator(subterm_view, parent_, par_op_state, variables);
 		case s_value:
-			return new Value(subtermstr, parent_);
+			return new Value(subterm_view, parent_);
 		case s_variable:
-			for (auto variable : variables) {
-				if (variable->name == subtermstr) {
+			for (auto& variable : variables) {
+				if (variable->name == subterm_view) {
 					return variable;
 				}
 			}
-			Pattern_Variable* new_variable = new Pattern_Variable(subtermstr, parent_);
+			Pattern_Variable* new_variable = new Pattern_Variable(subterm_view, parent_);
 			variables.push_back(new_variable);
 			return new_variable;
 		}
-		subtermstr.pop_back();
-		subtermstr.erase(0, 1);
-		pars.clear();
-		//LOG_C("shortened name to: " << subtermstr << " in build_subterm");
+		//not variable/value -> string contains parentheses, but no operation outside was found. 
+		//if parentheses dont enclose all of the subterm, there is something wrong.
+		if (exposed_parts.size() != 0 || subterm_view.size() < 2) {
+			throw XTermConstructionError("could not determine operation to split string in function build_pattern_subterm()");
+		}
+		subterm_view.remove_prefix(1); //chopping of enclosing parentheses
+		subterm_view.remove_suffix(1);
 	}
 	throw XTermConstructionError("could not find any type to build term (function build_pattern_subterm)");
 }
@@ -314,7 +282,7 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* pa
 		}
 	}
 	}
-	throw XTermConstructionError("function copy_subterm expected known type to copy: " + type);
+	throw XTermConstructionError("function copy_subterm expected known type to copy");
 }
 
 // used to create lines of tree output
@@ -353,7 +321,7 @@ void bmath::intern::append_last_line(std::vector<std::string>& tree_lines, char 
 void bmath::intern::reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses)
 {
 	for (auto& pattern_var : var_adresses) {
-		static_cast<Pattern_Variable*>(pattern_var)->pattern_value = nullptr;
+		pattern_var->pattern_value = nullptr;
 	}
 }
 

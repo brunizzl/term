@@ -39,32 +39,29 @@ void bmath::intern::Pattern_Variable::to_tree_str(std::vector<std::string>& tree
 
 State Pattern_Variable::get_state() const
 {
-	return s_pattern_variable;
+	return pattern_variable;
 }
 
 Vals_Combined Pattern_Variable::combine_values()
 {
 	std::cout << "Error: pattern_variable used instead of variable!\n";
-	std::cout << "(try running bmath::pattern_initialize() function first.)\n";
 	return Vals_Combined{ false, 0 };
 }
 
 std::complex<double> Pattern_Variable::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
 	std::cout << "Error: pattern_variable used instead of variable!\n";
-	std::cout << "(try running bmath::pattern_initialize() function first.)\n";
 	return 0;
 }
 
 void Pattern_Variable::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
 	std::cout << "Error: pattern_variable used instead of variable!\n";
-	std::cout << "(try running bmath::pattern_initialize() function first.)\n";
 }
 
 void Pattern_Variable::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
 {
-	if (listed_state == s_variable) {
+	if (listed_state == variable) {
 		subterms.push_back(const_cast<Pattern_Variable*>(this));
 	}
 }

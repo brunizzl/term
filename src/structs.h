@@ -11,41 +11,41 @@ namespace bmath {
 		//specifies actual type of Basic_Term 
 		//(types ordered for parentheses to allow > / < / == etc. operators to test whether parentheses are needed)
 		enum State {
-			s_undefined,
-			s_par_operator,		//already has parentheses -> lower order than in reality
-			s_sum,
-			s_value,
-			s_variable,
-			s_pattern_variable,
-			s_product,
-			s_exponentiation,
+			undefined,
+			par_operator,		//already has parentheses -> lower order than in reality
+			sum,
+			value,
+			variable,
+			pattern_variable,
+			product,
+			exponentiation,
 		};
 
 		//used in Par_Operator class to specify whitch operator is actually used 
 		//(comments are corresponding std::complex functions)
 		//states names are sorted by length
 		enum Par_Op_State {
-			op_log10,		//log10()
-			op_asinh,		//asinh()
-			op_acosh,		//acosh()
-			op_atanh,		//atanh()
-			op_asin,		//asin()
-			op_acos,		//acos()
-			op_atan,		//atan()
-			op_sinh,		//sinh()
-			op_cosh,		//cosh()
-			op_tanh,		//tanh()
-			op_sqrt,		//sqrt()
-			op_exp,			//exp()
-			op_sin,			//sin()
-			op_cos,			//cos()
-			op_tan,			//tan()
-			op_abs,			//abs()
-			op_arg,			//arg()
-			op_ln,			//log()
-			op_re,			//real()
-			op_im,			//imag()
-			op_error,		//needs to be last element to enable loops to go trough the states (used as break condition)
+			log10,			//log10()
+			asinh,			//asinh()
+			acosh,			//acosh()
+			atanh,			//atanh()
+			asin,			//asin()
+			acos,			//acos()
+			atan,			//atan()
+			sinh,			//sinh()
+			cosh,			//cosh()
+			tanh,			//tanh()
+			sqrt,			//sqrt()
+			exp,			//exp()
+			sin,			//sin()
+			cos,			//cos()
+			tan,			//tan()
+			abs,			//abs()
+			arg,			//arg()
+			ln,				//log()
+			re,				//real()
+			im,				//imag()
+			error,			//needs to be last element to enable loops to go trough the states (used as break condition)
 		};
 
 		//return of function combine_values()

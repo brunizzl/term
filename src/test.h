@@ -1,39 +1,38 @@
 
 #pragma once
 
-#include <array>
+#include <vector>
 #include <iostream>
 #include <chrono>
 #include "term.h"
 
+void replace_constants(bmath::Term& term) {
+	const std::string pi("pi");
+	const std::string e("e");
+	term.search_and_replace(pi, 3.14159265358979323846);
+	term.search_and_replace(e, 2.71828182845904523536);
+}
 
-template <int N>
-void baue_teststrs(const std::array<const std::string, N>& teststrs) {
-	for (auto &str : teststrs) {
+void baue_teststrs(const std::vector<std::string>& teststrs) {
+	for (auto& str : teststrs) {
 		std::cout << '\n';
 		std::cout << "String: \t" << str << '\n';
 		{
 			bmath::Term test(str);
 			test.combine();
+			test.cut_rounding_error();
 			std::cout << "print:  \t" << test << '\n';
 			std::cout << "tree:" << test.to_tree(16).erase(0, 5) << std::endl;
 		}
 	}
 }
 
-void replace_constants(bmath::Term& term) {
-	std::string pi("pi");
-	std::string e("e");
-	term.search_and_replace(pi, 3.14159265358979323846);
-	term.search_and_replace(e, 2.71828182845904523536);
-}
-
 void test_strings() {
-	const std::array<const std::string, 12> teststrs = {
-		"(1*(2^(-2)*3*(4*(a^5))))",
+	const std::vector<std::string> teststrs = {
+		"(1*(2i^(-2)*3*(4*(a^5))))",
 		"(5+a)/(7-b)*4-(c*d)^(-2)",
 		"(3*x-2*y)/5",
-		"5+pi+7/(5-a+ln[2])^3",
+		"5+pi+7/(5-a+ln(2))^3",
 		"auto^herbert*3+auto^(-32*a)-4",
 		"2.5",
 		"((((((-2.6))))))",
@@ -42,26 +41,11 @@ void test_strings() {
 		"(((-a-b)))",
 		"(log10((2)))",
 		"sin(x+300*cos(pi))^a",
-	};
-	baue_teststrs(teststrs);
-}
-
-void test_strings_2() {
-	const std::array<const std::string, 14> teststrs = {
-		"(ln((2*3*4)))",
-		"(log10((abs(-2))))",
-		"(log10((a^b)))",
-		"(exp((2)))",
-		"(e^sin(2/3*pi))+3",
-		"(cos((2)))",
-		"(tan((2)))",
-		"(asin((2)))",
-		"(acos((2)))",
-		"(atan((2)))",
-		"(sinh((2)))",
-		"(cosh((2)))",
-		"(tanh((2)))",
-		"(atan((2)))",
+		"re(3+4i)*im(2-3i)",
+		"-i+300*a/(a*b)",
+		"a+ln(b^2)+ln(c)+2-b^2-c*a",
+		"3*(sin(a+b+c)^2+cos(a+b+c)^2)+i",
+		"e^(sin(x)*sin(a+b)^2+sin(x)*cos(a+b)^2)+5",
 	};
 	baue_teststrs(teststrs);
 }
@@ -102,6 +86,7 @@ void test_rechner() {
 		std::cin >> name;
 		try {
 			bmath::Term test(name); 
+			std::cout << test.to_tree() << '\n';
 			replace_constants(test);
 			test.combine();
 			test.cut_rounding_error();

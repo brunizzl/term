@@ -8,7 +8,6 @@ int main()
 	try {
 		//test_timing();
 		test_strings();
-		//test_strings_2();
 		//test_function("atan(x)");
 		//test_vergleich();
 		test_rechner();

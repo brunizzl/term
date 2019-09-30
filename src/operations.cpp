@@ -121,14 +121,14 @@ void Product::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dis
 
 State Product::get_state() const
 {
-	return s_product;
+	return product;
 }
 
 void Product::combine_layers(Basic_Term*& storage_key)
 {
 	for (auto it = this->factors.begin(); it != this->factors.end();) {
 		(*it)->combine_layers(*it);
-		if (state(*it) == s_product) {
+		if (state(*it) == product) {
 			Product* redundant = static_cast<Product*>((*it));
 			for (auto it_red : redundant->factors) {
 				it_red->parent = this;
@@ -147,7 +147,7 @@ void Product::combine_layers(Basic_Term*& storage_key)
 	}
 	for (auto it = this->divisors.begin(); it != this->divisors.end();) {
 		(*it)->combine_layers(*it);
-		if (state(*it) == s_product) {
+		if (state(*it) == product) {
 			Product* redundant = static_cast<Product*>((*it));
 			for (auto it_red : redundant->factors) {
 				it_red->parent = this;
@@ -233,7 +233,7 @@ void Product::search_and_replace(const std::string& name_, const Basic_Term* val
 
 void Product::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
 {
-	if (listed_state == s_product) {
+	if (listed_state == product) {
 		subterms.push_back(const_cast<Product*>(this));
 	}
 	for (auto it : this->factors) {
@@ -258,84 +258,20 @@ void Product::sort()
 
 Basic_Term** Product::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
-	if (this->get_state() == pattern->get_state()) {
-		Product* pattern_product = static_cast<Product*>(pattern);
-		if (this->factors.size() >= pattern_product->factors.size() && this->divisors.size() >= pattern_product->divisors.size()) {
-			bool full_match = true;
-			std::list<Basic_Term*> matched_factors;
-			std::list<Basic_Term*> matched_divisors;
-			//it is not possible so search this->factors always from start, 
-			//as for example pattern "a*a" would match with every product, because the same factor would be read as first AND second "a"
-			//therefore we assume sorted lists and only iterate trough this->factors once.
-
-			//however: the first comparison to a pattern_variable will always be a match (as it is definded in operator== there)
-			//this may result in the nessesity to double some patterns and change the order of variables there, for every product to be simplefied.
-			std::list<Basic_Term*>::iterator this_factor = this->factors.begin();
-			for (auto pattern_factor : pattern_product->factors) {
-				bool factor_match;
-				for (; this_factor != this->factors.end(); ++this_factor) {
-					factor_match = (*this_factor) == pattern_factor;
-					if (factor_match) {
-						matched_factors.splice(matched_factors.end(), this->factors, this_factor);
-						break;
-					}
-				}
-				if (!factor_match) {
-					full_match = false;
-					break;
-				}
-			}
-			if (full_match) {	//same for divisors
-				std::list<Basic_Term*>::iterator this_divisor = this->divisors.begin();
-				for (auto pattern_divisor : pattern_product->divisors) {
-					bool divisor_match;
-					for (; this_divisor != this->divisors.end(); ++this_divisor) {
-						divisor_match = (*this_divisor)->match_intern(pattern_divisor, pattern_var_adresses, &(*this_divisor));
-						divisor_match = (*this_divisor) == pattern_divisor;
-						if (divisor_match) {
-							matched_divisors.splice(matched_divisors.end(), this->divisors, this_divisor);
-							break;
-						}
-					}
-					if (!divisor_match) {
-						full_match = false;
-						break;
-					}
-				}
-			}
-			if (full_match) {
-				//pushing matched factors + divisors into their own product
-				if (this->factors.size() > pattern_product->factors.size() || this->divisors.size() > pattern_product->divisors.size()) {
-					Product* matched_product = new Product(this);
-					matched_product->factors.splice(matched_product->factors.end(), matched_factors);
-					matched_product->divisors.splice(matched_product->divisors.end(), matched_divisors);
-					for (auto it : matched_product->factors) {
-						it->parent = matched_product;
-					}
-					for (auto it : matched_product->divisors) {
-						it->parent = matched_product;
-					}
-					this->factors.push_back(matched_product);
-					return &(this->factors.back());
-				}
-				else {
-					this->factors = std::move(matched_factors);
-					this->divisors = std::move(matched_divisors);
-					return storage_key;
-				}
-			}
-		}
+	//MUSS NOCH VERGLEICHEN, OB NUR TEILE VON THIS GLEICH GANZEM PATTERN SIND
+	if (*this == *pattern) {
+		return storage_key;
 	}
 	else {
 		Basic_Term** argument_match;
-		for (auto it : factors) {
+		for (auto &it : this->factors) {	//references are important, because we want to return the position of it.
 			reset_pattern_vars(pattern_var_adresses);
 			argument_match = it->match_intern(pattern, pattern_var_adresses, &it);
 			if (argument_match != nullptr) {
 				return argument_match;
 			}
 		}
-		for (auto it : divisors) {
+		for (auto &it : this->divisors) {
 			reset_pattern_vars(pattern_var_adresses);
 			argument_match = it->match_intern(pattern, pattern_var_adresses, &it);
 			if (argument_match != nullptr) {
@@ -382,9 +318,9 @@ bool Product::operator<(const Basic_Term& other) const
 bool Product::operator==(const Basic_Term& other) const
 {
 	switch (other.get_state()) {
-	case s_product:
+	case product:
 		break;
-	case s_pattern_variable:
+	case pattern_variable:
 		return other == *this;
 	default:
 		return false;
@@ -532,14 +468,14 @@ void Sum::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_ro
 
 State Sum::get_state() const
 {
-	return s_sum;
+	return sum;
 }
 
 void Sum::combine_layers(Basic_Term*& storage_key)
 {
 	for (auto it = this->summands.begin(); it != this->summands.end();) {
 		(*it)->combine_layers(*it);
-		if (state(*it) == s_sum) {
+		if (state(*it) == sum) {
 			Sum* redundant = static_cast<Sum*>((*it));
 			for (auto it_red : redundant->summands) {
 				it_red->parent = this;
@@ -558,7 +494,7 @@ void Sum::combine_layers(Basic_Term*& storage_key)
 	}
 	for (auto it = this->subtractors.begin(); it != this->subtractors.end();) {
 		(*it)->combine_layers(*it);
-		if (state(*it) == s_sum) {
+		if (state(*it) == sum) {
 			Sum* redundant = static_cast<Sum*>((*it));
 			for (auto it_red : redundant->summands) {
 				it_red->parent = this;
@@ -645,7 +581,7 @@ void Sum::search_and_replace(const std::string& name_, const Basic_Term* value_,
 
 void Sum::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
 {
-	if (listed_state == s_sum) {
+	if (listed_state == sum) {
 		subterms.push_back(const_cast<Sum*>(this));
 	}
 	for (auto it : this->summands) {
@@ -677,14 +613,14 @@ Basic_Term** Sum::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>
 	}
 	else {
 		Basic_Term** argument_match;
-		for (auto it : summands) {
+		for (auto &it : this->summands) {	//references are important, because we want to return the position of it.
 			reset_pattern_vars(pattern_var_adresses);
 			argument_match = it->match_intern(pattern, pattern_var_adresses, &it);
 			if (argument_match != nullptr) {
 				return argument_match;
 			}
 		}
-		for (auto it : subtractors) {
+		for (auto &it : this->subtractors) {
 			reset_pattern_vars(pattern_var_adresses);
 			argument_match = it->match_intern(pattern, pattern_var_adresses, &it);
 			if (argument_match != nullptr) {
@@ -737,9 +673,9 @@ bool Sum::operator<(const Basic_Term& other) const
 bool Sum::operator==(const Basic_Term& other) const
 {
 	switch (other.get_state()) {
-	case s_sum:
+	case sum:
 		break;
-	case s_pattern_variable:
+	case pattern_variable:
 		return other == *this;
 	default:
 		return false;
@@ -836,38 +772,38 @@ void bmath::intern::Exponentiation::to_tree_str(std::vector<std::string>& tree_l
 
 State Exponentiation::get_state() const
 {
-	return s_exponentiation;
+	return exponentiation;
 }
 
 void Exponentiation::combine_layers(Basic_Term*& storage_key)
 {
 	this->base->combine_layers(this->base);
 	this->exponent->combine_layers(this->exponent);
-	if (this->exponent->get_state() == s_value) {
+	if (this->exponent->get_state() == value) {
 		Value* val_exp = static_cast<Value*>(this->exponent);
-		if (val_exp->value == 1.0) {
+		if (val_exp->val == 1.0) {
 			storage_key = this->base;
 			this->base->parent = this->parent;
 			this->base = nullptr;
 			delete this;
 			return;
 		}
-		if (val_exp->value == 0.0) {
+		if (val_exp->val == 0.0) {
 			storage_key = new Value(std::complex<double>{ 1.0, 0.0 }, this->parent);
 			delete this;
 			return;
 		}
 	}
-	if (this->base->get_state() == s_value) {
+	if (this->base->get_state() == value) {
 		Value* val_base = static_cast<Value*>(this->base);
-		if (val_base->value == 1.0) {
+		if (val_base->val == 1.0) {
 			storage_key = val_base;
 			val_base->parent = this->parent;
 			this->base = nullptr;
 			delete this;
 			return;
 		}
-		if (val_base->value == 0.0) {
+		if (val_base->val == 0.0) {
 			storage_key = new Value(std::complex<double>{ 0.0, 0.0 }, this->parent);
 			delete this;
 			return;
@@ -884,13 +820,13 @@ Vals_Combined Exponentiation::combine_values()
 		return Vals_Combined{ true, result };
 	}
 	else if (base_.known && !exponent_.known) {
-		if (state(this->base) != s_value) {
+		if (state(this->base) != value) {
 			delete this->base;
 			this->base = new Value(base_.val, this);
 		}
 	}
 	else if (!base_.known && exponent_.known) {
-		if (state(this->exponent) != s_value) {
+		if (state(this->exponent) != value) {
 			delete this->exponent;
 			this->exponent = new Value(exponent_.val, this);
 		}
@@ -914,7 +850,7 @@ void Exponentiation::search_and_replace(const std::string& name_, const Basic_Te
 
 void Exponentiation::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
 {
-	if (listed_state == s_exponentiation) {
+	if (listed_state == exponentiation) {
 		subterms.push_back(const_cast<Exponentiation*>(this));
 	}
 	this->base->list_subterms(subterms, listed_state);
@@ -968,9 +904,9 @@ bool Exponentiation::operator<(const Basic_Term& other) const
 bool Exponentiation::operator==(const Basic_Term& other) const
 {
 	switch (other.get_state()) {
-	case s_exponentiation:
+	case exponentiation:
 		break;
-	case s_pattern_variable:
+	case pattern_variable:
 		return other == *this;
 	default:
 		return false;
@@ -992,52 +928,52 @@ bool Exponentiation::operator==(const Basic_Term& other) const
 const char* Par_Operator::op_name(Par_Op_State op_state)
 {
 	switch (op_state) {
-	case op_log10:
+	case log10:
 		return "log10(";
-	case op_asinh:
+	case asinh:
 		return "asinh(";
-	case op_acosh:
+	case acosh:
 		return "acosh(";
-	case op_atanh:
+	case atanh:
 		return "atanh(";
-	case op_asin:
+	case asin:
 		return "asin(";
-	case op_acos:
+	case acos:
 		return "acos(";
-	case op_atan:
+	case atan:
 		return "atan(";
-	case op_sinh:
+	case sinh:
 		return "sinh(";
-	case op_cosh:
+	case cosh:
 		return "cosh(";
-	case op_tanh:
+	case tanh:
 		return "tanh(";
-	case op_sqrt:
+	case sqrt:
 		return "sqrt(";
-	case op_exp:
+	case exp:
 		return "exp(";
-	case op_sin:
+	case sin:
 		return "sin(";
-	case op_cos:
+	case cos:
 		return "cos(";
-	case op_tan:
+	case tan:
 		return "tan(";
-	case op_abs:
+	case abs:
 		return "abs(";
-	case op_arg:
+	case arg:
 		return "arg(";
-	case op_ln:
+	case ln:
 		return "ln(";
-	case op_re:
+	case re:
 		return "re(";
-	case op_im:
+	case im:
 		return "im(";
 	}
 	return nullptr;
 }
 
 Par_Operator::Par_Operator(Basic_Term* parent_)
-	:Basic_Term(parent_), argument(nullptr), op_state(op_error)
+	:Basic_Term(parent_), argument(nullptr), op_state(error)
 {
 }
 
@@ -1045,45 +981,45 @@ Vals_Combined Par_Operator::internal_combine(Vals_Combined argument_) const
 {
 	if (argument_.known) {
 		switch (this->op_state) {
-		case op_log10:
+		case log10:
 			return Vals_Combined{ true, std::log10(argument_.val) };
-		case op_asin:
+		case asin:
 			return Vals_Combined{ true, std::asin(argument_.val) };
-		case op_acos:
+		case acos:
 			return Vals_Combined{ true, std::acos(argument_.val) };
-		case op_atan:
+		case atan:
 			return Vals_Combined{ true, std::atan(argument_.val) };
-		case op_asinh:
+		case asinh:
 			return Vals_Combined{ true, std::asinh(argument_.val) };
-		case op_acosh:
+		case acosh:
 			return Vals_Combined{ true, std::acosh(argument_.val) };
-		case op_atanh:
+		case atanh:
 			return Vals_Combined{ true, std::atanh(argument_.val) };
-		case op_sinh:
+		case sinh:
 			return Vals_Combined{ true, std::sinh(argument_.val) };
-		case op_cosh:
+		case cosh:
 			return Vals_Combined{ true, std::cosh(argument_.val) };
-		case op_tanh:
+		case tanh:
 			return Vals_Combined{ true, std::tanh(argument_.val) };
-		case op_sqrt:
+		case sqrt:
 			return Vals_Combined{ true, std::sqrt(argument_.val) };
-		case op_exp:
+		case exp:
 			return Vals_Combined{ true, std::exp(argument_.val) };
-		case op_sin:
+		case sin:
 			return Vals_Combined{ true, std::sin(argument_.val) };
-		case op_cos:
+		case cos:
 			return Vals_Combined{ true, std::cos(argument_.val) };
-		case op_tan:
+		case tan:
 			return Vals_Combined{ true, std::tan(argument_.val) };
-		case op_abs:
+		case abs:
 			return Vals_Combined{ true, std::abs(argument_.val) };
-		case op_arg:
+		case arg:
 			return Vals_Combined{ true, std::arg(argument_.val) };
-		case op_ln:
+		case ln:
 			return Vals_Combined{ true, std::log(argument_.val) };
-		case op_re:
+		case re:
 			return Vals_Combined{ true, std::real(argument_.val) };
-		case op_im:
+		case im:
 			return Vals_Combined{ true, std::imag(argument_.val) };
 		}
 	}
@@ -1137,7 +1073,7 @@ void bmath::intern::Par_Operator::to_tree_str(std::vector<std::string>& tree_lin
 
 State Par_Operator::get_state() const
 {
-	return s_par_operator;
+	return par_operator;
 }
 
 void Par_Operator::combine_layers(Basic_Term*& storage_key)
@@ -1164,7 +1100,7 @@ void Par_Operator::search_and_replace(const std::string & name_, const Basic_Ter
 
 void Par_Operator::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
 {
-	if (listed_state == s_par_operator) {
+	if (listed_state == par_operator) {
 		subterms.push_back(const_cast<Par_Operator*>(this));
 	}
 	this->argument->list_subterms(subterms, listed_state);
@@ -1211,9 +1147,9 @@ bool Par_Operator::operator<(const Basic_Term& other) const
 bool Par_Operator::operator==(const Basic_Term& other) const
 {
 	switch (other.get_state()) {
-	case s_par_operator:
+	case par_operator:
 		break;
-	case s_pattern_variable:
+	case pattern_variable:
 		return other == *this;
 	default:
 		return false;

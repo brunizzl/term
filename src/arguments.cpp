@@ -8,30 +8,30 @@ using namespace bmath::intern;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Value::Value(std::string_view name_, Basic_Term* parent_)
-	:Basic_Term(parent_), value(std::complex<double>(0, 0))
+	:Basic_Term(parent_), val(std::complex<double>(0, 0))
 {
 	if (name_ == "i") {
-		this->value.imag(1);
+		this->val.imag(1);
 	}
 	else {
 		double factor;
 		std::from_chars(name_.data(), name_.data() + name_.size(), factor);
 		if (name_.find_first_of("i") != std::string::npos) {
-			this->value.imag(factor);
+			this->val.imag(factor);
 		}
 		else {
-			this->value.real(factor);
+			this->val.real(factor);
 		}
 	}
 }
 
 Value::Value(const Value& source, Basic_Term* parent_)
-	:Basic_Term(parent_), value(source.value)
+	:Basic_Term(parent_), val(source.val)
 {
 }
 
 Value::Value(std::complex<double> value_, Basic_Term* parent_)
-	: Basic_Term(parent_), value(value_)
+	: Basic_Term(parent_), val(value_)
 {
 }
 
@@ -40,11 +40,11 @@ Value::~Value()
 {
 }
 
-void Value::to_str(std::string& str) const
+void Value::to_str(std::string& str) const	//warning: ugliest function ever :(
 {
-	const double re = this->value.real();
-	const double im = this->value.imag();
-	bool pars = false;
+	const double re = this->val.real();
+	const double im = this->val.imag();
+	bool pars = false;	//decides if parentheses are put around number
 	std::stringstream buffer;
 
 	if (re != 0 && im != 0) {
@@ -102,17 +102,17 @@ void Value::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_
 
 State Value::get_state() const
 {
-	return s_value;
+	return value;
 }
 
 Vals_Combined Value::combine_values()
 {
-	return Vals_Combined{ true, this->value };
+	return Vals_Combined{ true, this->val };
 }
 
 std::complex<double> Value::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
-	return this->value;
+	return this->val;
 }
 
 void Value::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
@@ -122,8 +122,8 @@ void Value::search_and_replace(const std::string& name_, const Basic_Term* value
 
 bool Value::re_smaller_than_0()
 {
-	if (this->value.real() < 0) {
-		this->value *= -1.0;
+	if (this->val.real() < 0) {
+		this->val *= -1.0;
 		return true;
 	}
 	else {
@@ -133,7 +133,7 @@ bool Value::re_smaller_than_0()
 
 void Value::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
 {
-	if (listed_state == s_value) {
+	if (listed_state == value) {
 		subterms.push_back(const_cast<Value*>(this));
 	}
 }
@@ -160,11 +160,11 @@ bool Value::operator<(const Basic_Term& other) const
 	}
 	else {
 		const Value* other_val = static_cast<const Value*>(&other);
-		if (this->value.real() != other_val->value.real()) {
-			return this->value.real() < other_val->value.real();
+		if (this->val.real() != other_val->val.real()) {
+			return this->val.real() < other_val->val.real();
 		}
 		else {
-			return this->value.imag() < other_val->value.imag();
+			return this->val.imag() < other_val->val.imag();
 		}
 	}
 }
@@ -172,15 +172,15 @@ bool Value::operator<(const Basic_Term& other) const
 bool Value::operator==(const Basic_Term& other) const
 {
 	switch (other.get_state()) {
-	case s_value:
+	case value:
 		break;
-	case s_pattern_variable:
+	case pattern_variable:
 		return other == *this;
 	default:
 		return false;
 	}
 	const Value* other_val = static_cast<const Value*>(&other);
-	return this->value == other_val->value;
+	return this->val == other_val->val;
 }
 
 
@@ -218,7 +218,7 @@ void Variable::to_tree_str(std::vector<std::string>& tree_lines, unsigned int di
 
 State Variable::get_state() const
 {
-	return s_variable;
+	return variable;
 }
 
 Vals_Combined Variable::combine_values()
@@ -246,7 +246,7 @@ void Variable::search_and_replace(const std::string& name_, const Basic_Term* va
 
 void Variable::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
 {
-	if (listed_state == s_variable) {
+	if (listed_state == variable) {
 		subterms.push_back(const_cast<Variable*>(this));
 	}
 }
@@ -280,9 +280,9 @@ bool Variable::operator<(const Basic_Term& other) const
 bool Variable::operator==(const Basic_Term& other) const
 {
 	switch (other.get_state()) {
-	case s_variable:
+	case variable:
 		break;
-	case s_pattern_variable:
+	case pattern_variable:
 		return other == *this;
 	default:
 		return false;

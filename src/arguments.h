@@ -34,7 +34,7 @@ namespace bmath {
 			friend class bmath::Term;
 		public:
 
-			std::complex<double> value;
+			std::complex<double> val;	//"value" would clash with the State enum -> shortend to val
 
 			~Value();
 

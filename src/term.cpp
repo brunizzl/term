@@ -124,7 +124,7 @@ std::list<std::string> bmath::Term::get_var_names() const
 {
 	std::list<std::string> names;
 	std::list<Basic_Term*> variables;
-	this->term_ptr->list_subterms(variables, s_variable);
+	this->term_ptr->list_subterms(variables, variable);
 	for (auto it : variables) {
 		names.push_back(static_cast<Variable*>(it)->name);
 	}
@@ -180,11 +180,6 @@ void bmath::Term::combine()
 	this->combine_values();
 	this->term_ptr->sort();
 
-	//std::list<recurring_term> recurring_terms;
-	//HIER MUSS DIE liste MIT DOPPELTEN VARIABLEN GEFÜLLT WERDEN UND DIE VARIABLEN DANN VON IHREN FREUNDEN ABGESPALTET WERDEN.
-	//GRAUSAM ABER NOTWENDIG 
-	//UND DANN WERDEN DIE FÜR IMMER VON EINANDER WEGSORTIERT
-
 	for (unsigned int i = 0; i < Pattern::patterns.size(); i++) {
 		if (this->match_and_transform(*Pattern::patterns[i])) {
 			i = -1;	//if match was successfull, pattern search starts again.
@@ -198,21 +193,21 @@ void bmath::Term::combine()
 void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 {
 	std::list<Basic_Term*> values;
-	this->term_ptr->list_subterms(values, s_value);
+	this->term_ptr->list_subterms(values, value);
 	double quadratic_sum = 0;	//real and imaginary part are added seperatly
 	for (auto &it : values) {
-		quadratic_sum += std::abs(static_cast<Value*>(it)->value.real()) * std::abs(static_cast<Value*>(it)->value.real());
-		quadratic_sum += std::abs(static_cast<Value*>(it)->value.imag()) * std::abs(static_cast<Value*>(it)->value.imag());
+		quadratic_sum += std::abs(static_cast<Value*>(it)->val.real()) * std::abs(static_cast<Value*>(it)->val.real());
+		quadratic_sum += std::abs(static_cast<Value*>(it)->val.imag()) * std::abs(static_cast<Value*>(it)->val.imag());
 	}
 	if (quadratic_sum != 0) {
-		const double quadratic_average = sqrt(quadratic_sum / values.size() / 2);	//equal to standard deviation from 0
+		const double quadratic_average = std::sqrt(quadratic_sum / values.size() / 2);	//equal to standard deviation from 0
 		const double limit_to_0 = quadratic_average * std::pow(10, -pow_of_10_diff_to_set_0);
 		for (auto &it : values) {
-			if (std::abs(static_cast<Value*>(it)->value.real()) < limit_to_0) {
-				static_cast<Value*>(it)->value.real(0);
+			if (std::abs(static_cast<Value*>(it)->val.real()) < limit_to_0) {
+				static_cast<Value*>(it)->val.real(0);
 			}
-			if (std::abs(static_cast<Value*>(it)->value.imag()) < limit_to_0) {
-				static_cast<Value*>(it)->value.imag(0);
+			if (std::abs(static_cast<Value*>(it)->val.imag()) < limit_to_0) {
+				static_cast<Value*>(it)->val.imag(0);
 			}
 		}
 	}
@@ -220,8 +215,8 @@ void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 
 bmath::Term& bmath::Term::operator+=(const Term& operand2)
 {
-	if (this->term_ptr->get_state() == s_value && operand2.term_ptr->get_state() == s_value) {
-		static_cast<Value*>(this->term_ptr)->value += static_cast<Value*>(operand2.term_ptr)->value;
+	if (this->term_ptr->get_state() == value && operand2.term_ptr->get_state() == value) {
+		static_cast<Value*>(this->term_ptr)->val += static_cast<Value*>(operand2.term_ptr)->val;
 	}
 	else {
 		Sum* sum = new Sum(nullptr);
@@ -236,8 +231,8 @@ bmath::Term& bmath::Term::operator+=(const Term& operand2)
 
 bmath::Term& bmath::Term::operator-=(const Term& operand2)
 {
-	if (this->term_ptr->get_state() == s_value && operand2.term_ptr->get_state() == s_value) {
-		static_cast<Value*>(this->term_ptr)->value -= static_cast<Value*>(operand2.term_ptr)->value;
+	if (this->term_ptr->get_state() == value && operand2.term_ptr->get_state() == value) {
+		static_cast<Value*>(this->term_ptr)->val -= static_cast<Value*>(operand2.term_ptr)->val;
 	}
 	else {
 		Sum* sum = new Sum(nullptr);
@@ -252,8 +247,8 @@ bmath::Term& bmath::Term::operator-=(const Term& operand2)
 
 bmath::Term& bmath::Term::operator*=(const Term& operand2)
 {
-	if (this->term_ptr->get_state() == s_value && operand2.term_ptr->get_state() == s_value) {
-		static_cast<Value*>(this->term_ptr)->value *= static_cast<Value*>(operand2.term_ptr)->value;
+	if (this->term_ptr->get_state() == value && operand2.term_ptr->get_state() == value) {
+		static_cast<Value*>(this->term_ptr)->val *= static_cast<Value*>(operand2.term_ptr)->val;
 	}
 	else {
 		Product* product = new Product(nullptr);
@@ -268,8 +263,8 @@ bmath::Term& bmath::Term::operator*=(const Term& operand2)
 
 bmath::Term& bmath::Term::operator/=(const Term& operand2)
 {
-	if (this->term_ptr->get_state() == s_value && operand2.term_ptr->get_state() == s_value) {
-		static_cast<Value*>(this->term_ptr)->value /= static_cast<Value*>(operand2.term_ptr)->value;
+	if (this->term_ptr->get_state() == value && operand2.term_ptr->get_state() == value) {
+		static_cast<Value*>(this->term_ptr)->val /= static_cast<Value*>(operand2.term_ptr)->val;
 	}
 	else {
 		Product* product = new Product(nullptr);

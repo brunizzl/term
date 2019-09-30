@@ -100,18 +100,18 @@ State bmath::intern::type_subterm(const std::string_view name, const std::vector
 	//starting search for "basic" operators
 	op = find_last_of_in_views(name, exposed_parts, "+-");
 	if (op != std::string::npos) {
-		return s_sum;
+		return sum;
 	}
 	op = find_last_of_in_views(name, exposed_parts, "*/");
 	if (op != std::string::npos) {
-		return s_product;
+		return product;
 	}
 	op = find_last_of_in_views(name, exposed_parts, "^");
 	if (op != std::string::npos) {
-		return s_exponentiation;
+		return exponentiation;
 	}
 	//searching for parenthesis operators 
-	for (int op_state = 0; op_state < static_cast<int>(op_error); op_state++) {
+	for (int op_state = 0; op_state < static_cast<int>(error); op_state++) {
 		op = rfind_in_views(name, exposed_parts, Par_Operator::op_name(static_cast<Par_Op_State>(op_state)));
 		if (op != std::string::npos) {
 			//tests if op marks only substring of longer, fauly parenthesis operator (for example "tan(" beeing substring of "arctan(" (term knows "arctan" as "atan"))
@@ -119,23 +119,23 @@ State bmath::intern::type_subterm(const std::string_view name, const std::vector
 				continue;
 			}
 			par_op_state = static_cast<Par_Op_State>(op_state);
-			return s_par_operator;
+			return par_operator;
 		}
 	}
 	if (exposed_parts.size() == 0) {
-		return s_undefined;
+		return undefined;
 	}
 	//staring search for arguments (variable or value)
 	op = name.find_last_of("abcdefghjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]_$");
 	if (name.find_last_of("i") != std::string::npos && op == std::string::npos) {
-		return s_value;
+		return value;
 	}
 	if (op != std::string::npos) {
-		return s_variable;
+		return variable;
 	}
 	op = name.find_last_of("0123456789");	//number kann also contain '.', however not as only character
 	if (op != std::string::npos) {
-		return s_value;
+		return value;
 	}
 	throw XTermConstructionError("string is not of expected format");
 }
@@ -174,7 +174,7 @@ State bmath::intern::state(const Basic_Term* obj)
 		return obj->get_state();
 	}
 	else {
-		return s_undefined;
+		return undefined;
 	}
 }
 
@@ -189,17 +189,17 @@ Basic_Term* bmath::intern::build_subterm(std::string_view subterm_view, Basic_Te
 		State type = type_subterm(subterm_view, exposed_parts, op, par_op_state);
 
 		switch (type) {
-		case s_exponentiation:
+		case exponentiation:
 			return new Exponentiation(subterm_view, parent_, op);
-		case s_product:
+		case product:
 			return new Product(subterm_view, parent_, op);
-		case s_sum:
+		case sum:
 			return new Sum(subterm_view, parent_, op);
-		case s_variable:
+		case variable:
 			return new Variable(subterm_view, parent_);
-		case s_value:
+		case value:
 			return new Value(subterm_view, parent_);
-		case s_par_operator:
+		case par_operator:
 			return new Par_Operator(subterm_view, parent_, par_op_state);
 		}
 
@@ -225,17 +225,17 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm_view, 
 		State type = type_subterm(subterm_view, exposed_parts, op, par_op_state);
 
 		switch (type) {
-		case s_exponentiation:
+		case exponentiation:
 			return new Exponentiation(subterm_view, parent_, op, variables);
-		case s_product:
+		case product:
 			return new Product(subterm_view, parent_, op, variables);
-		case s_sum:
+		case sum:
 			return new Sum(subterm_view, parent_, op, variables);
-		case s_par_operator:
+		case par_operator:
 			return new Par_Operator(subterm_view, parent_, par_op_state, variables);
-		case s_value:
+		case value:
 			return new Value(subterm_view, parent_);
-		case s_variable:
+		case variable:
 			for (auto& variable : variables) {
 				if (variable->name == subterm_view) {
 					return variable;
@@ -260,19 +260,19 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* pa
 {
 	State type = state(source);
 	switch (type) {
-	case s_par_operator:
+	case par_operator:
 		return new Par_Operator(*(static_cast<const Par_Operator*>(source)), parent_);
-	case s_value:
+	case value:
 		return new Value(*(static_cast<const Value*>(source)), parent_);
-	case s_variable:
+	case variable:
 		return new Variable(*(static_cast<const Variable*>(source)), parent_);
-	case s_sum:
+	case sum:
 		return new Sum(*(static_cast<const Sum*>(source)), parent_);
-	case s_product:
+	case product:
 		return new Product(*(static_cast<const Product*>(source)), parent_);
-	case s_exponentiation:
+	case exponentiation:
 		return new Exponentiation(*(static_cast<const Exponentiation*>(source)), parent_);
-	case s_pattern_variable: {
+	case pattern_variable: {
 		const Pattern_Variable* pattern_variable = static_cast<const Pattern_Variable*>(source);
 		if (pattern_variable->pattern_value != nullptr) {
 			return copy_subterm(pattern_variable->pattern_value, parent_);
@@ -286,10 +286,10 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* pa
 }
 
 // used to create lines of tree output
-constexpr static signed char LINE_UP_DOWN = -77;		//(179)
-constexpr static signed char LINE_UP_RIGHT = -64;		//(192)
-constexpr static signed char LINE_UP_RIGHT_DOWN = -61;	//(195)
-constexpr static signed char LINE_LEFT_RIGHT = -60;		//(196)
+const static signed char LINE_UP_DOWN = -77;		//(179)
+const static signed char LINE_UP_RIGHT = -64;		//(192)
+const static signed char LINE_UP_RIGHT_DOWN = -61;	//(195)
+const static signed char LINE_LEFT_RIGHT = -60;		//(196)
 
 void bmath::intern::append_last_line(std::vector<std::string>& tree_lines, char operation)
 {

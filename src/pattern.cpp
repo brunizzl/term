@@ -37,7 +37,7 @@ void bmath::intern::Pattern_Variable::to_tree_str(std::vector<std::string>& tree
 	append_last_line(tree_lines, line_prefix);
 }
 
-State Pattern_Variable::get_state() const
+Type Pattern_Variable::get_type() const
 {
 	return pattern_variable;
 }
@@ -59,9 +59,9 @@ void Pattern_Variable::search_and_replace(const std::string& name_, const Basic_
 	std::cout << "Error: pattern_variable used instead of variable!\n";
 }
 
-void Pattern_Variable::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
+void Pattern_Variable::list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const
 {
-	if (listed_state == variable) {
+	if (listed_type == variable) {
 		subterms.push_back(const_cast<Pattern_Variable*>(this));
 	}
 }
@@ -79,8 +79,8 @@ Basic_Term** Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Patte
 
 bool Pattern_Variable::operator<(const Basic_Term& other) const
 {
-	if (this->get_state() != other.get_state()) {
-		return this->get_state() < other.get_state();
+	if (this->get_type() != other.get_type()) {
+		return this->get_type() < other.get_type();
 	}
 	else {
 		const Pattern_Variable* other_var = static_cast<const Pattern_Variable*>(&other);

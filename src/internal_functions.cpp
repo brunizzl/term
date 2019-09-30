@@ -95,7 +95,7 @@ void bmath::intern::update_views(const std::string_view name, std::vector<std::s
 	}
 }
 
-State bmath::intern::type_subterm(const std::string_view name, const std::vector<std::string_view>& exposed_parts, std::size_t& op, Par_Op_State & par_op_state)
+Type bmath::intern::type_subterm(const std::string_view name, const std::vector<std::string_view>& exposed_parts, std::size_t& op, Par_Op_Type & par_op_type)
 {
 	//starting search for "basic" operators
 	op = find_last_of_in_views(name, exposed_parts, "+-");
@@ -111,14 +111,14 @@ State bmath::intern::type_subterm(const std::string_view name, const std::vector
 		return exponentiation;
 	}
 	//searching for parenthesis operators 
-	for (int op_state = 0; op_state < static_cast<int>(error); op_state++) {
-		op = rfind_in_views(name, exposed_parts, Par_Operator::op_name(static_cast<Par_Op_State>(op_state)));
+	for (int op_type = 0; op_type < static_cast<int>(error); op_type++) {
+		op = rfind_in_views(name, exposed_parts, Par_Operator::op_name(static_cast<Par_Op_Type>(op_type)));
 		if (op != std::string::npos) {
 			//tests if op marks only substring of longer, fauly parenthesis operator (for example "tan(" beeing substring of "arctan(" (term knows "arctan" as "atan"))
 			if (name.find_last_of("abcdefghjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]_$", op - 1) == op - 1) {
 				continue;
 			}
-			par_op_state = static_cast<Par_Op_State>(op_state);
+			par_op_type = static_cast<Par_Op_Type>(op_type);
 			return par_operator;
 		}
 	}
@@ -168,10 +168,10 @@ void bmath::intern::preprocess_str(std::string& str)
 	}
 }
 
-State bmath::intern::state(const Basic_Term* obj)
+Type bmath::intern::type(const Basic_Term* obj)
 {
 	if (obj != nullptr) {
-		return obj->get_state();
+		return obj->get_type();
 	}
 	else {
 		return undefined;
@@ -184,9 +184,9 @@ Basic_Term* bmath::intern::build_subterm(std::string_view subterm_view, Basic_Te
 	while (subterm_view.size() > 0) {	// two can (if valid) always be build and dont need further chopping of
 
 		find_exposed_parts(subterm_view, exposed_parts);
-		std::size_t op;
-		Par_Op_State par_op_state;	//only used if parenthesis operator is found
-		State type = type_subterm(subterm_view, exposed_parts, op, par_op_state);
+		std::size_t op = std::string::npos;
+		Par_Op_Type par_op_type = error;	//only used if parenthesis operator is found
+		Type type = type_subterm(subterm_view, exposed_parts, op, par_op_type);
 
 		switch (type) {
 		case exponentiation:
@@ -200,7 +200,7 @@ Basic_Term* bmath::intern::build_subterm(std::string_view subterm_view, Basic_Te
 		case value:
 			return new Value(subterm_view, parent_);
 		case par_operator:
-			return new Par_Operator(subterm_view, parent_, par_op_state);
+			return new Par_Operator(subterm_view, parent_, par_op_type);
 		}
 
 		//not variable/value -> string contains parentheses, but no operation outside was found. 
@@ -220,9 +220,9 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm_view, 
 	while (subterm_view.size() > 0) {
 
 		find_exposed_parts(subterm_view, exposed_parts);
-		std::size_t op;
-		Par_Op_State par_op_state;	//only used if parenthesis operator is found
-		State type = type_subterm(subterm_view, exposed_parts, op, par_op_state);
+		std::size_t op = std::string::npos;
+		Par_Op_Type par_op_type = error;	//only used if parenthesis operator is found
+		Type type = type_subterm(subterm_view, exposed_parts, op, par_op_type);
 
 		switch (type) {
 		case exponentiation:
@@ -232,7 +232,7 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm_view, 
 		case sum:
 			return new Sum(subterm_view, parent_, op, variables);
 		case par_operator:
-			return new Par_Operator(subterm_view, parent_, par_op_state, variables);
+			return new Par_Operator(subterm_view, parent_, par_op_type, variables);
 		case value:
 			return new Value(subterm_view, parent_);
 		case variable:
@@ -258,8 +258,7 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm_view, 
 
 Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* parent_)
 {
-	State type = state(source);
-	switch (type) {
+	switch (type(source)) {
 	case par_operator:
 		return new Par_Operator(*(static_cast<const Par_Operator*>(source)), parent_);
 	case value:

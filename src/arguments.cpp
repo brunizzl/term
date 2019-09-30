@@ -48,7 +48,7 @@ void Value::to_str(std::string& str) const	//warning: ugliest function ever :(
 	std::stringstream buffer;
 
 	if (re != 0 && im != 0) {
-		pars = state(this->parent) > this->get_state(); //stronger binding term above -> parentheses
+		pars = type(this->parent) > this->get_type(); //stronger binding term above -> parentheses
 		buffer << re;
 
 		if (im > -1.00000000001 && im < -0.99999999999) {		//im == -1
@@ -100,7 +100,7 @@ void Value::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_
 	append_last_line(tree_lines, line_prefix);
 }
 
-State Value::get_state() const
+Type Value::get_type() const
 {
 	return value;
 }
@@ -131,9 +131,9 @@ bool Value::re_smaller_than_0()
 	}
 }
 
-void Value::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
+void Value::list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const
 {
-	if (listed_state == value) {
+	if (listed_type == value) {
 		subterms.push_back(const_cast<Value*>(this));
 	}
 }
@@ -155,8 +155,8 @@ Basic_Term** Value::match_intern(Basic_Term* pattern, std::list<Pattern_Variable
 
 bool Value::operator<(const Basic_Term& other) const
 {
-	if (this->get_state() != other.get_state()) {
-		return this->get_state() < other.get_state();
+	if (this->get_type() != other.get_type()) {
+		return this->get_type() < other.get_type();
 	}
 	else {
 		const Value* other_val = static_cast<const Value*>(&other);
@@ -171,7 +171,7 @@ bool Value::operator<(const Basic_Term& other) const
 
 bool Value::operator==(const Basic_Term& other) const
 {
-	switch (other.get_state()) {
+	switch (other.get_type()) {
 	case value:
 		break;
 	case pattern_variable:
@@ -216,7 +216,7 @@ void Variable::to_tree_str(std::vector<std::string>& tree_lines, unsigned int di
 	append_last_line(tree_lines, line_prefix);
 }
 
-State Variable::get_state() const
+Type Variable::get_type() const
 {
 	return variable;
 }
@@ -244,9 +244,9 @@ void Variable::search_and_replace(const std::string& name_, const Basic_Term* va
 	}
 }
 
-void Variable::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
+void Variable::list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const
 {
-	if (listed_state == variable) {
+	if (listed_type == variable) {
 		subterms.push_back(const_cast<Variable*>(this));
 	}
 }
@@ -268,8 +268,8 @@ Basic_Term** Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Varia
 
 bool Variable::operator<(const Basic_Term& other) const
 {
-	if (this->get_state() != other.get_state()) {
-		return this->get_state() < other.get_state();
+	if (this->get_type() != other.get_type()) {
+		return this->get_type() < other.get_type();
 	}
 	else {
 		const Variable* other_var = static_cast<const Variable*>(&other);
@@ -279,7 +279,7 @@ bool Variable::operator<(const Basic_Term& other) const
 
 bool Variable::operator==(const Basic_Term& other) const
 {
-	switch (other.get_state()) {
+	switch (other.get_type()) {
 	case variable:
 		break;
 	case pattern_variable:

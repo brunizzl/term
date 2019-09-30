@@ -42,13 +42,13 @@ namespace bmath {
 
 		//decides type of next subterm (finds the next operation to split string and create subterm from)
 		//(needs modification if new termtype is added)
-		State type_subterm(const std::string_view name, const std::vector<std::string_view>& exposed_parts, std::size_t& op, Par_Op_State& type_par_op);
+		Type type_subterm(const std::string_view name, const std::vector<std::string_view>& exposed_parts, std::size_t& op, Par_Op_Type& type_par_op);
 
 		//deletes spaces and checks parentheses
 		void preprocess_str(std::string& str);
 
-		//returns actual type of obj (sum, product, exponentiation...) but if obj is nullptr returns s_undefined
-		State state(const Basic_Term* obj);
+		//returns actual type of obj (sum, product, exponentiation...) but if obj is nullptr returns "undefined"
+		Type type(const Basic_Term* obj);
 
 		//used in output as tree to visually connect new subterm with rest of tree
 		void append_last_line(std::vector<std::string>& tree_lines, char operation);

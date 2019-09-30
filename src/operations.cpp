@@ -82,7 +82,7 @@ Product::~Product()
 
 void Product::to_str(std::string& str) const
 {
-	if (state(this->parent) >= this->get_state()) {
+	if (type(this->parent) >= this->get_type()) {
 		str.push_back('(');
 	}
 	bool already_printed_smth = false;
@@ -99,7 +99,7 @@ void Product::to_str(std::string& str) const
 		str.push_back('/');
 		it->to_str(str);
 	}
-	if (state(this->parent) >= this->get_state()) {
+	if (type(this->parent) >= this->get_type()) {
 		str.push_back(')');
 	}
 }
@@ -119,7 +119,7 @@ void Product::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dis
 	}
 }
 
-State Product::get_state() const
+Type Product::get_type() const
 {
 	return product;
 }
@@ -128,7 +128,7 @@ void Product::combine_layers(Basic_Term*& storage_key)
 {
 	for (auto it = this->factors.begin(); it != this->factors.end();) {
 		(*it)->combine_layers(*it);
-		if (state(*it) == product) {
+		if (type(*it) == product) {
 			Product* redundant = static_cast<Product*>((*it));
 			for (auto it_red : redundant->factors) {
 				it_red->parent = this;
@@ -147,7 +147,7 @@ void Product::combine_layers(Basic_Term*& storage_key)
 	}
 	for (auto it = this->divisors.begin(); it != this->divisors.end();) {
 		(*it)->combine_layers(*it);
-		if (state(*it) == product) {
+		if (type(*it) == product) {
 			Product* redundant = static_cast<Product*>((*it));
 			for (auto it_red : redundant->factors) {
 				it_red->parent = this;
@@ -163,7 +163,7 @@ void Product::combine_layers(Basic_Term*& storage_key)
 			++it;
 		}
 	}
-	if (this->factors.size() == 1 && this->divisors.size() == 0) {
+	if (this->factors.size() == 1 && this->divisors.size() == 0) {	//this only consists of one factor -> layer is not needed
 		storage_key = *(this->factors.begin());
 		this->factors.clear();
 		delete this;		
@@ -231,16 +231,16 @@ void Product::search_and_replace(const std::string& name_, const Basic_Term* val
 	}
 }
 
-void Product::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
+void Product::list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const
 {
-	if (listed_state == product) {
+	if (listed_type == product) {
 		subterms.push_back(const_cast<Product*>(this));
 	}
 	for (auto it : this->factors) {
-		it->list_subterms(subterms, listed_state);
+		it->list_subterms(subterms, listed_type);
 	}
 	for (auto it : this->divisors) {
-		it->list_subterms(subterms, listed_state);
+		it->list_subterms(subterms, listed_type);
 	}
 }
 
@@ -285,8 +285,8 @@ Basic_Term** Product::match_intern(Basic_Term* pattern, std::list<Pattern_Variab
 
 bool Product::operator<(const Basic_Term& other) const
 {
-	if (this->get_state() != other.get_state()) {
-		return this->get_state() < other.get_state();
+	if (this->get_type() != other.get_type()) {
+		return this->get_type() < other.get_type();
 	}
 	else {
 		const Product* other_product = static_cast<const Product*>(&other);
@@ -317,7 +317,7 @@ bool Product::operator<(const Basic_Term& other) const
 
 bool Product::operator==(const Basic_Term& other) const
 {
-	switch (other.get_state()) {
+	switch (other.get_type()) {
 	case product:
 		break;
 	case pattern_variable:
@@ -432,12 +432,12 @@ Sum::~Sum()
 
 void Sum::to_str(std::string& str) const
 {
-	if (state(this->parent) >= this->get_state()) {
+	if (type(this->parent) >= this->get_type()) {
 		str.push_back('(');
 	}
 	bool need_operator = false;
 	for (auto it : this->summands) {
-		if (std::exchange(need_operator, true)/* && get_state(it) != s_value*/) {
+		if (std::exchange(need_operator, true)) {
 			str.push_back('+');
 		}
 		it->to_str(str);
@@ -446,7 +446,7 @@ void Sum::to_str(std::string& str) const
 		str.push_back('-');
 		it->to_str(str);
 	}
-	if (state(this->parent) >= this->get_state()) {
+	if (type(this->parent) >= this->get_type()) {
 		str.push_back(')');
 	}
 }
@@ -466,7 +466,7 @@ void Sum::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_ro
 	}
 }
 
-State Sum::get_state() const
+Type Sum::get_type() const
 {
 	return sum;
 }
@@ -475,7 +475,7 @@ void Sum::combine_layers(Basic_Term*& storage_key)
 {
 	for (auto it = this->summands.begin(); it != this->summands.end();) {
 		(*it)->combine_layers(*it);
-		if (state(*it) == sum) {
+		if (type(*it) == sum) {
 			Sum* redundant = static_cast<Sum*>((*it));
 			for (auto it_red : redundant->summands) {
 				it_red->parent = this;
@@ -494,7 +494,7 @@ void Sum::combine_layers(Basic_Term*& storage_key)
 	}
 	for (auto it = this->subtractors.begin(); it != this->subtractors.end();) {
 		(*it)->combine_layers(*it);
-		if (state(*it) == sum) {
+		if (type(*it) == sum) {
 			Sum* redundant = static_cast<Sum*>((*it));
 			for (auto it_red : redundant->summands) {
 				it_red->parent = this;
@@ -511,7 +511,7 @@ void Sum::combine_layers(Basic_Term*& storage_key)
 			++it;
 		}
 	}
-	if (this->summands.size() == 1 && this->subtractors.size() == 0) {
+	if (this->summands.size() == 1 && this->subtractors.size() == 0) {	//this only consists of one summand -> layer is not needed
 		storage_key = *(this->summands.begin());
 		this->summands.clear();
 		delete this;
@@ -579,16 +579,16 @@ void Sum::search_and_replace(const std::string& name_, const Basic_Term* value_,
 	}
 }
 
-void Sum::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
+void Sum::list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const
 {
-	if (listed_state == sum) {
+	if (listed_type == sum) {
 		subterms.push_back(const_cast<Sum*>(this));
 	}
 	for (auto it : this->summands) {
-		it->list_subterms(subterms, listed_state);
+		it->list_subterms(subterms, listed_type);
 	}
 	for (auto it : this->subtractors) {
-		it->list_subterms(subterms, listed_state);
+		it->list_subterms(subterms, listed_type);
 	}
 }
 
@@ -634,8 +634,8 @@ Basic_Term** Sum::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>
 
 bool Sum::operator<(const Basic_Term& other) const
 {
-	if (this->get_state() != other.get_state()) {
-		return this->get_state() < other.get_state();
+	if (this->get_type() != other.get_type()) {
+		return this->get_type() < other.get_type();
 	}
 	else {
 		const Sum* other_sum = static_cast<const Sum*>(&other);
@@ -672,7 +672,7 @@ bool Sum::operator<(const Basic_Term& other) const
 
 bool Sum::operator==(const Basic_Term& other) const
 {
-	switch (other.get_state()) {
+	switch (other.get_type()) {
 	case sum:
 		break;
 	case pattern_variable:
@@ -748,13 +748,13 @@ Exponentiation::~Exponentiation()
 
 void Exponentiation::to_str(std::string& str) const
 {
-	if (state(this->parent) > this->get_state()) {
+	if (type(this->parent) > this->get_type()) {
 		str.push_back('(');
 	}
 	this->base->to_str(str);
 	str.push_back('^');
 	this->exponent->to_str(str);
-	if (state(this->parent) > this->get_state()) {
+	if (type(this->parent) > this->get_type()) {
 		str.push_back(')');
 	}
 }
@@ -770,7 +770,7 @@ void bmath::intern::Exponentiation::to_tree_str(std::vector<std::string>& tree_l
 	this->exponent->to_tree_str(tree_lines, dist_root + 1, '^');
 }
 
-State Exponentiation::get_state() const
+Type Exponentiation::get_type() const
 {
 	return exponentiation;
 }
@@ -779,7 +779,7 @@ void Exponentiation::combine_layers(Basic_Term*& storage_key)
 {
 	this->base->combine_layers(this->base);
 	this->exponent->combine_layers(this->exponent);
-	if (this->exponent->get_state() == value) {
+	if (this->exponent->get_type() == value) {
 		Value* val_exp = static_cast<Value*>(this->exponent);
 		if (val_exp->val == 1.0) {
 			storage_key = this->base;
@@ -794,7 +794,7 @@ void Exponentiation::combine_layers(Basic_Term*& storage_key)
 			return;
 		}
 	}
-	if (this->base->get_state() == value) {
+	if (this->base->get_type() == value) {
 		Value* val_base = static_cast<Value*>(this->base);
 		if (val_base->val == 1.0) {
 			storage_key = val_base;
@@ -820,13 +820,13 @@ Vals_Combined Exponentiation::combine_values()
 		return Vals_Combined{ true, result };
 	}
 	else if (base_.known && !exponent_.known) {
-		if (state(this->base) != value) {
+		if (type(this->base) != value) {
 			delete this->base;
 			this->base = new Value(base_.val, this);
 		}
 	}
 	else if (!base_.known && exponent_.known) {
-		if (state(this->exponent) != value) {
+		if (type(this->exponent) != value) {
 			delete this->exponent;
 			this->exponent = new Value(exponent_.val, this);
 		}
@@ -848,13 +848,13 @@ void Exponentiation::search_and_replace(const std::string& name_, const Basic_Te
 	this->exponent->search_and_replace(name_, value_, this->exponent);
 }
 
-void Exponentiation::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
+void Exponentiation::list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const
 {
-	if (listed_state == exponentiation) {
+	if (listed_type == exponentiation) {
 		subterms.push_back(const_cast<Exponentiation*>(this));
 	}
-	this->base->list_subterms(subterms, listed_state);
-	this->exponent->list_subterms(subterms, listed_state);
+	this->base->list_subterms(subterms, listed_type);
+	this->exponent->list_subterms(subterms, listed_type);
 }
 
 void Exponentiation::sort()
@@ -886,8 +886,8 @@ Basic_Term** Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern
 
 bool Exponentiation::operator<(const Basic_Term& other) const
 {
-	if (this->get_state() != other.get_state()) {
-		return this->get_state() < other.get_state();
+	if (this->get_type() != other.get_type()) {
+		return this->get_type() < other.get_type();
 	}
 	else {
 		const Exponentiation* other_exp = static_cast<const Exponentiation*>(&other);
@@ -903,7 +903,7 @@ bool Exponentiation::operator<(const Basic_Term& other) const
 
 bool Exponentiation::operator==(const Basic_Term& other) const
 {
-	switch (other.get_state()) {
+	switch (other.get_type()) {
 	case exponentiation:
 		break;
 	case pattern_variable:
@@ -925,9 +925,9 @@ bool Exponentiation::operator==(const Basic_Term& other) const
 //Parenthesis_Operator\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const char* Par_Operator::op_name(Par_Op_State op_state)
+const char* Par_Operator::op_name(Par_Op_Type op_type)
 {
-	switch (op_state) {
+	switch (op_type) {
 	case log10:
 		return "log10(";
 	case asinh:
@@ -973,14 +973,14 @@ const char* Par_Operator::op_name(Par_Op_State op_state)
 }
 
 Par_Operator::Par_Operator(Basic_Term* parent_)
-	:Basic_Term(parent_), argument(nullptr), op_state(error)
+	:Basic_Term(parent_), argument(nullptr), op_type(error)
 {
 }
 
 Vals_Combined Par_Operator::internal_combine(Vals_Combined argument_) const
 {
 	if (argument_.known) {
-		switch (this->op_state) {
+		switch (this->op_type) {
 		case log10:
 			return Vals_Combined{ true, std::log10(argument_.val) };
 		case asin:
@@ -1026,25 +1026,25 @@ Vals_Combined Par_Operator::internal_combine(Vals_Combined argument_) const
 	return Vals_Combined{ false, 0 };
 }
 
-Par_Operator::Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_State op_state_)
-	:Basic_Term(parent_), op_state(op_state_), argument(nullptr)
+Par_Operator::Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_Type op_type_)
+	:Basic_Term(parent_), op_type(op_type_), argument(nullptr)
 {
 	name_.remove_suffix(1);							//closing parenthesis gets cut of
-	name_.remove_prefix(strlen(op_name(op_state)));	//funktionname and opening parenthesis get cut of
+	name_.remove_prefix(strlen(op_name(op_type)));	//funktionname and opening parenthesis get cut of
 	this->argument = build_subterm(name_, this);
 }
 
-Par_Operator::Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_State op_state_, std::list<Pattern_Variable*>& variables)
-	:Basic_Term(parent_), op_state(op_state_), argument(nullptr)
+Par_Operator::Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_Type op_type_, std::list<Pattern_Variable*>& variables)
+	:Basic_Term(parent_), op_type(op_type_), argument(nullptr)
 {
 	name_.remove_suffix(1);							//closing parenthesis gets cut of
-	name_.remove_prefix(strlen(op_name(op_state)));	//funktionname and opening parenthesis get cut of
+	name_.remove_prefix(strlen(op_name(op_type)));	//funktionname and opening parenthesis get cut of
 	this-> argument = build_pattern_subterm(name_, this, variables);
 }
 
 
 Par_Operator::Par_Operator(const Par_Operator & source, Basic_Term * parent_)
-	:Basic_Term(parent_), argument(copy_subterm(source.argument, this)), op_state(source.op_state)
+	:Basic_Term(parent_), argument(copy_subterm(source.argument, this)), op_type(source.op_type)
 {
 }
 
@@ -1055,7 +1055,7 @@ Par_Operator::~Par_Operator()
 
 void Par_Operator::to_str(std::string & str) const
 {
-	str.append(op_name(this->op_state));
+	str.append(op_name(this->op_type));
 	this->argument->to_str(str);
 	str.push_back(')');
 }
@@ -1063,7 +1063,7 @@ void Par_Operator::to_str(std::string & str) const
 void bmath::intern::Par_Operator::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
 {
 	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
-	new_line.append(op_name(this->op_state));
+	new_line.append(op_name(this->op_type));
 	new_line.pop_back();
 	tree_lines.push_back(std::move(new_line));
 	append_last_line(tree_lines, line_prefix);
@@ -1071,7 +1071,7 @@ void bmath::intern::Par_Operator::to_tree_str(std::vector<std::string>& tree_lin
 	this->argument->to_tree_str(tree_lines, dist_root + 1, '\0');
 }
 
-State Par_Operator::get_state() const
+Type Par_Operator::get_type() const
 {
 	return par_operator;
 }
@@ -1098,12 +1098,12 @@ void Par_Operator::search_and_replace(const std::string & name_, const Basic_Ter
 	
 }
 
-void Par_Operator::list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const
+void Par_Operator::list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const
 {
-	if (listed_state == par_operator) {
+	if (listed_type == par_operator) {
 		subterms.push_back(const_cast<Par_Operator*>(this));
 	}
-	this->argument->list_subterms(subterms, listed_state);
+	this->argument->list_subterms(subterms, listed_type);
 }
 
 void Par_Operator::sort()
@@ -1129,13 +1129,13 @@ Basic_Term** Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_V
 
 bool Par_Operator::operator<(const Basic_Term& other) const
 {
-	if (this->get_state() != other.get_state()) {
-		return this->get_state() < other.get_state();
+	if (this->get_type() != other.get_type()) {
+		return this->get_type() < other.get_type();
 	}
 	else {
 		const Par_Operator* other_par_op = static_cast<const Par_Operator*>(&other);
-		if (this->op_state != other_par_op->op_state) {
-			return this->op_state < other_par_op->op_state;
+		if (this->op_type != other_par_op->op_type) {
+			return this->op_type < other_par_op->op_type;
 		}
 		if (*(this->argument) != *(other_par_op->argument)) {
 			return *(this->argument) < *(other_par_op->argument);
@@ -1146,7 +1146,7 @@ bool Par_Operator::operator<(const Basic_Term& other) const
 
 bool Par_Operator::operator==(const Basic_Term& other) const
 {
-	switch (other.get_state()) {
+	switch (other.get_type()) {
 	case par_operator:
 		break;
 	case pattern_variable:
@@ -1155,7 +1155,7 @@ bool Par_Operator::operator==(const Basic_Term& other) const
 		return false;
 	}
 	const Par_Operator* other_par_op = static_cast<const Par_Operator*>(&other);
-	if (this->op_state != other_par_op->op_state) {
+	if (this->op_type != other_par_op->op_type) {
 		return false;
 	}
 	if (*(this->argument) != *(other_par_op->argument)) {

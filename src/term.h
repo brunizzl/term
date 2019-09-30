@@ -35,7 +35,7 @@ namespace bmath {
 			virtual void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const = 0;
 
 			//returns kinda true type of term (sum, product, value, etc.)
-			virtual State get_state() const = 0;
+			virtual Type get_type() const = 0;
 
 			//if one sum/product holds a pointer to another sum/product, both get combined into one.
 			//IN PLANUNG: WENN NUR NOCH EIN SUMMAND DA, DIE EBENE RAUSNEHMEN
@@ -54,11 +54,11 @@ namespace bmath {
 			virtual void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) = 0;
 
 			//used to bring tree in well defined state bevore combine_variables() can be used
-			//returns false if class != value, returns true and modifies value if re(value) < 0
+			//returns false if class != value, returns true and modifies (multiply by -1) value if re(value) < 0
 			virtual bool re_smaller_than_0();
 
 			//all subterms of requested type get added to the list
-			virtual void list_subterms(std::list<Basic_Term*>& subterms, State listed_state) const = 0;
+			virtual void list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const = 0;
 
 			//needs to be run befor == makes sense to be used
 			virtual void sort() = 0;

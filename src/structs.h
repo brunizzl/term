@@ -10,7 +10,7 @@ namespace bmath {
 
 		//specifies actual type of Basic_Term 
 		//(types ordered for parentheses to allow > / < / == etc. operators to test whether parentheses are needed)
-		enum State {
+		enum Type {
 			undefined,
 			par_operator,		//already has parentheses -> lower order than in reality
 			sum,
@@ -23,8 +23,8 @@ namespace bmath {
 
 		//used in Par_Operator class to specify whitch operator is actually used 
 		//(comments are corresponding std::complex functions)
-		//states names are sorted by length
-		enum Par_Op_State {
+		//types names are sorted by length
+		enum Par_Op_Type {
 			log10,			//log10()
 			asinh,			//asinh()
 			acosh,			//acosh()
@@ -45,7 +45,7 @@ namespace bmath {
 			ln,				//log()
 			re,				//real()
 			im,				//imag()
-			error,			//needs to be last element to enable loops to go trough the states (used as break condition)
+			error,			//needs to be last element to enable loops to go trough the types (used as break condition)
 		};
 
 		//return of function combine_values()

@@ -10,7 +10,8 @@ namespace bmath {
 
 		//specifies actual type of Basic_Term 
 		//(types ordered for parentheses to allow > / < / == etc. operators to test whether parentheses are needed)
-		enum Type {
+		enum Type 
+		{
 			undefined,
 			par_operator,		//already has parentheses -> lower order than in reality
 			sum,
@@ -24,8 +25,9 @@ namespace bmath {
 		//used in Par_Operator class to specify whitch operator is actually used 
 		//(comments are corresponding std::complex functions)
 		//types names are sorted by length
-		enum Par_Op_Type {
-			log10,			//log10()
+		enum Par_Op_Type 
+		{
+			log10 = 0,		//log10()
 			asinh,			//asinh()
 			acosh,			//acosh()
 			atanh,			//atanh()
@@ -48,18 +50,29 @@ namespace bmath {
 			error,			//needs to be last element to enable loops to go trough the types (used as break condition)
 		};
 
+		// used in Struct Vals_Combined to identify what operation parent needs to apply to given value
+		enum Value_State 
+		{
+			unknown,		//due to not specified variables no numeric value could be calculated.
+			normal,			//sum will add, product multiply...
+			inverse,		//only definded for sum and product as parents (sum will subtract, product divide)
+		};
+
 		//return of function combine_values()
 		//if function was able to combine to one single value, this gets returned
-		//otherwise known == false and val is uninitialised.
-		struct Vals_Combined {
-			bool known;
+		//otherwise state == unknown and val is uninitialised.
+		//special case: 
+		struct Vals_Combined 
+		{
+			Value_State state;
 			std::complex<double> val;
 		};
 
 	} //namespace intern
 
 	//every time a variable is assosiated with a value, this struct is used
-	struct Known_Variable {
+	struct Known_Variable 
+	{
 		const std::string name;
 		const std::complex<double> value;
 	};

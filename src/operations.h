@@ -18,7 +18,9 @@ namespace bmath {
 		private:
 			Product(Basic_Term* parent_);
 			Product(std::string_view name_, Basic_Term* parent_, std::size_t op);
+			Product(std::string_view name_, Basic_Term* parent_, std::complex<double> factor);
 			Product(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
+			Product(std::string_view name_, Basic_Term* parent_, std::complex<double> factor, std::list<Pattern_Variable*>& variables);
 			Product(const Product& source, Basic_Term* parent_ = nullptr);
 
 			//access to constructors:
@@ -26,9 +28,10 @@ namespace bmath {
 			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 			friend class bmath::Term;
+			friend class Sum;
 		public:
 			std::list<Basic_Term*> factors;
-			std::list<Basic_Term*> divisors;
+			//std::list<Basic_Term*> divisors;
 
 			~Product();
 
@@ -62,7 +65,7 @@ namespace bmath {
 			friend class bmath::Term;
 		public:
 			std::list<Basic_Term*> summands;
-			std::list<Basic_Term*> subtractors;
+			//std::list<Basic_Term*> subtractors;
 
 			~Sum();
 
@@ -86,13 +89,17 @@ namespace bmath {
 		private:
 			Exponentiation(Basic_Term* parent_);
 			Exponentiation(std::string_view name_, Basic_Term* parent_, std::size_t op);
+			Exponentiation(std::string_view base_, Basic_Term* parent_, std::complex<double> exponent_);
 			Exponentiation(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
+			Exponentiation(std::string_view base_, Basic_Term* parent_, std::complex<double> exponent_, std::list<Pattern_Variable*>& variables);
 			Exponentiation(const Exponentiation& source, Basic_Term* parent_ = nullptr);
 
 			//access to constructors:
 			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_);
 			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
+			friend class bmath::Term;
+			friend class Product;
 		public:
 			Basic_Term* exponent;
 			Basic_Term* base;

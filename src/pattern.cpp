@@ -45,7 +45,7 @@ Type Pattern_Variable::get_type() const
 Vals_Combined Pattern_Variable::combine_values()
 {
 	std::cout << "Error: pattern_variable used instead of variable!\n";
-	return Vals_Combined{ false, 0 };
+	return Vals_Combined{ unknown, 0 };
 }
 
 std::complex<double> Pattern_Variable::evaluate(const std::list<bmath::Known_Variable>& known_variables) const

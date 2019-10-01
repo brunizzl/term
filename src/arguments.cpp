@@ -107,7 +107,7 @@ Type Value::get_type() const
 
 Vals_Combined Value::combine_values()
 {
-	return Vals_Combined{ true, this->val };
+	return Vals_Combined{ normal, this->val };
 }
 
 std::complex<double> Value::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
@@ -223,7 +223,7 @@ Type Variable::get_type() const
 
 Vals_Combined Variable::combine_values()
 {
-	return Vals_Combined{false, 0};
+	return Vals_Combined{ unknown, 0 };
 }
 
 std::complex<double> Variable::evaluate(const std::list<bmath::Known_Variable>& known_variables) const

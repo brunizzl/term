@@ -15,14 +15,16 @@ void replace_constants(bmath::Term& term) {
 
 void baue_teststrs(const std::vector<std::string>& teststrs) {
 	for (auto& str : teststrs) {
-		std::cout << '\n';
-		std::cout << "String: \t" << str << '\n';
+		std::cout << "__________________________________________________________________________________________________________________\n\n";
+		std::cout << "String: \t" << str << "\n\n";
 		{
 			bmath::Term test(str);
-			std::cout << "raw tree:" << test.to_tree(16).erase(0, 9) << std::endl;
+			std::cout << "print:  \t" << test << '\n';
+			std::cout << "raw tree:" << test.to_tree(16).erase(0, 9) << "\n\n";
+			std::cout << "combining...\n";
 			test.combine();
 			test.cut_rounding_error();
-			std::cout << "combined tree:" << test.to_tree(16).erase(0, 14) << std::endl;
+			std::cout << "combined tree:" << test.to_tree(16).erase(0, 14) << "\n\n";
 			std::cout << "print:  \t" << test << '\n';
 		}
 	}

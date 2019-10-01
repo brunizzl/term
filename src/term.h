@@ -44,8 +44,8 @@ namespace bmath {
 			//values are added, multiplied, etc.
 			virtual Vals_Combined combine_values() = 0;
 
-			//returns {true, whatever it adds up to} if only variables with names of known_variables are present
-			//returns {false, undefined} if more variables are present
+			//returns whatever it adds up to if only variables with names of known_variables are present
+			//throws XTermCouldNotBeEvaluated if unknown Variables exist
 			virtual std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const = 0;
 
 			//searches an replaces all variables with name "name_" with values of value "value_" 
@@ -54,7 +54,7 @@ namespace bmath {
 			virtual void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) = 0;
 
 			//used to bring tree in well defined state bevore combine_variables() can be used
-			//returns false if class != value, returns true and modifies (multiply by -1) value if re(value) < 0
+			//returns false if class != value, returns true and modifies value (multiplys by -1) if re(value) < 0
 			virtual bool re_smaller_than_0();
 
 			//all subterms of requested type get added to the list

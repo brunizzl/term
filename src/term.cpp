@@ -146,7 +146,7 @@ bool bmath::Term::match_and_transform(Pattern& pattern)
 void bmath::Term::combine_values()
 {
 	Vals_Combined new_subterm = this->term_ptr->combine_values();
-	if (new_subterm.known) {
+	if (new_subterm.state == normal) {
 		delete this->term_ptr;
 		this->term_ptr = new Value(new_subterm.val, nullptr);
 	}
@@ -238,7 +238,12 @@ bmath::Term& bmath::Term::operator-=(const Term& operand2)
 		Sum* sum = new Sum(nullptr);
 		this->term_ptr->parent = sum;
 		sum->summands.push_back(this->term_ptr);
-		sum->subtractors.push_back(copy_subterm(operand2.term_ptr, sum));
+
+		Product* subtractor = new Product(sum);
+		subtractor->factors.push_back(new Value({ -1, 0 }, subtractor));
+		subtractor->factors.push_back(copy_subterm(operand2.term_ptr, subtractor));
+
+		sum->summands.push_back(subtractor);
 		this->term_ptr = sum;
 		this->combine();
 	}
@@ -270,7 +275,12 @@ bmath::Term& bmath::Term::operator/=(const Term& operand2)
 		Product* product = new Product(nullptr);
 		this->term_ptr->parent = product;
 		product->factors.push_back(this->term_ptr);
-		product->divisors.push_back(copy_subterm(operand2.term_ptr, product));
+
+		Exponentiation* divisor = new Exponentiation(product);
+		divisor->exponent = new Value({ -1, 0 }, divisor);
+		divisor->base = copy_subterm(operand2.term_ptr, divisor);
+
+		product->factors.push_back(divisor);
 		this->term_ptr = product;
 		this->combine();
 	}

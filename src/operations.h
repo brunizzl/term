@@ -31,7 +31,6 @@ namespace bmath {
 			friend class Sum;
 		public:
 			std::list<Basic_Term*> factors;
-			//std::list<Basic_Term*> divisors;
 
 			~Product();
 
@@ -65,7 +64,6 @@ namespace bmath {
 			friend class bmath::Term;
 		public:
 			std::list<Basic_Term*> summands;
-			//std::list<Basic_Term*> subtractors;
 
 			~Sum();
 

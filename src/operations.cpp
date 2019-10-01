@@ -117,9 +117,6 @@ void Product::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dis
 	for (auto factor : this->factors) {
 		factor->to_tree_str(tree_lines, dist_root + 1, '*');
 	}
-	/*for (auto divisor : this->divisors) {
-		divisor->to_tree_str(tree_lines, dist_root + 1, '/');
-	}*/
 }
 
 Type Product::get_type() const
@@ -129,7 +126,7 @@ Type Product::get_type() const
 
 void Product::combine_layers(Basic_Term*& storage_key)
 {
-	for (auto it = this->factors.begin(); it != this->factors.end();) {
+	for (auto &it = this->factors.begin(); it != this->factors.end();) {	//reference is needed in next line
 		(*it)->combine_layers(*it);
 		if (type(*it) == product) {
 			Product* redundant = static_cast<Product*>((*it));
@@ -145,7 +142,9 @@ void Product::combine_layers(Basic_Term*& storage_key)
 		}
 	}
 	if (this->factors.size() == 1) {	//this only consists of one factor -> layer is not needed and this is deleted
-		storage_key = *(this->factors.begin());
+		Basic_Term* const only_factor = *(this->factors.begin());
+		storage_key = only_factor;
+		only_factor->parent = this->parent;
 		this->factors.clear();
 		delete this;		
 	}
@@ -156,32 +155,25 @@ Vals_Combined Product::combine_values()
 	std::complex<double> buffer_factor = 1;
 	bool only_known = true;
 	for (auto it = this->factors.begin(); it != this->factors.end();) {
-		Vals_Combined factor = (*it)->combine_values();
-		switch (factor.state) {
-		case normal:
+		const Vals_Combined factor = (*it)->combine_values();
+		if (factor.known) {
 			buffer_factor *= factor.val;
 			delete (*it);
 			it = this->factors.erase(it);
-			break;
-		case inverse:
-			buffer_factor /= factor.val;
-			delete (*it);
-			it = this->factors.erase(it);
-			break;
-		case unknown:
+		}
+		else {
 			only_known = false;
 			++it;
-			break;
 		}
 	}
 	if (only_known) {
-		return Vals_Combined{ normal, buffer_factor };
+		return Vals_Combined{ true, buffer_factor };
 	}
-	else {
-		if (buffer_factor != std::complex<double>(1, 0)) {	//if product is known completely it will be deleted and replaced with buffer_factor one layer above anyway.
+	else {	//if product is known completely it will be deleted and replaced with buffer_factor one layer above anyway.
+		if (buffer_factor != 1.0) {
 			this->factors.push_front(new Value(buffer_factor, this));
 		}
-		return Vals_Combined{ unknown, 0 };
+		return Vals_Combined{ false, 0 };
 	}
 }
 
@@ -189,7 +181,7 @@ std::complex<double> Product::evaluate(const std::list<bmath::Known_Variable>& k
 {
 	std::complex<double> result(1);
 	for (auto it : this->factors) {
-		std::complex<double> factor_combined = it->evaluate(known_variables);
+		const std::complex<double> factor_combined = it->evaluate(known_variables);
 		result *= factor_combined;
 	}
 	return result;
@@ -197,7 +189,7 @@ std::complex<double> Product::evaluate(const std::list<bmath::Known_Variable>& k
 
 void Product::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
-	for (auto it : this->factors) {
+	for (auto &it : this->factors) {	//reference is needed in next line
 		it->search_and_replace(name_, value_, it);
 	}
 }
@@ -392,9 +384,6 @@ void Sum::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_ro
 	for (auto summand : this->summands) {
 		summand->to_tree_str(tree_lines, dist_root + 1, '+');
 	}
-	/*for (auto subtractor : this->subtractors) {
-		subtractor->to_tree_str(tree_lines, dist_root + 1, '-');
-	}*/
 }
 
 Type Sum::get_type() const
@@ -404,7 +393,7 @@ Type Sum::get_type() const
 
 void Sum::combine_layers(Basic_Term*& storage_key)
 {
-	for (auto it = this->summands.begin(); it != this->summands.end();) {
+	for (auto &it = this->summands.begin(); it != this->summands.end();) {	//reference is needed next line
 		(*it)->combine_layers(*it);
 		if (type(*it) == sum) {
 			Sum* redundant = static_cast<Sum*>((*it));
@@ -420,7 +409,9 @@ void Sum::combine_layers(Basic_Term*& storage_key)
 		}
 	}
 	if (this->summands.size() == 1) {	//this only consists of one summand -> layer is not needed
-		storage_key = *(this->summands.begin());
+		Basic_Term* const only_summand = *(this->summands.begin());
+		storage_key = only_summand;
+		only_summand->parent = this->parent;
 		this->summands.clear();
 		delete this;
 	}
@@ -431,40 +422,33 @@ Vals_Combined Sum::combine_values()
 	std::complex<double> buffer_summand = 0;
 	bool only_known = true;
 	for (auto it = this->summands.begin(); it != this->summands.end();) {
-		Vals_Combined summand = (*it)->combine_values();
-		switch (summand.state) {
-		case normal:
+		const Vals_Combined summand = (*it)->combine_values();
+		if (summand.known) {
 			buffer_summand += summand.val;
 			delete (*it);
 			it = this->summands.erase(it);
-			break;
-		case inverse:						//doesnt improve accuracy of result, but this standardizes the structure compared to product and other functions of sum
-			buffer_summand -= summand.val;
-			delete (*it);
-			it = this->summands.erase(it);
-			break;
-		case unknown:
+		}
+		else {
 			only_known = false;
 			++it;
-			break;
 		}
 	}
 	if (only_known) {
-		return Vals_Combined{ normal, buffer_summand };
+		return Vals_Combined{ true, buffer_summand };
 	}
-	else {
-		if (buffer_summand != std::complex<double>(0, 0)) {	//if sum is known completely it will be deleted and replaced with buffer_summand one layer above anyway.
+	else {	//if sum is known completely it will be deleted and replaced with buffer_summand one layer above anyway.
+		if (buffer_summand != 0.0) {
 			this->summands.push_front(new Value(buffer_summand, this));
 		}
-		return Vals_Combined{ unknown, 0 };
+		return Vals_Combined{ false, 0 };
 	}	
 }
 
 std::complex<double> Sum::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
-	std::complex<double> result(0);
+	std::complex<double> result = 0;
 	for (auto it : this->summands) {
-		std::complex<double> summand_combined = it->evaluate(known_variables);
+		const std::complex<double> summand_combined = it->evaluate(known_variables);
 		result += summand_combined;
 	}
 	return result;
@@ -472,7 +456,7 @@ std::complex<double> Sum::evaluate(const std::list<bmath::Known_Variable>& known
 
 void Sum::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
-	for (auto it : this->summands) {
+	for (auto &it : this->summands) {	//reference is needed in next line
 		it->search_and_replace(name_, value_, it);
 	}
 }
@@ -618,13 +602,13 @@ Exponentiation::~Exponentiation()
 
 void Exponentiation::to_str(std::string& str) const
 {
-	if (type(this->parent) > this->get_type()) {
+	if (type(this->parent) >= this->get_type()) {
 		str.push_back('(');
 	}
 	this->base->to_str(str);
 	str.push_back('^');
 	this->exponent->to_str(str);
-	if (type(this->parent) > this->get_type()) {
+	if (type(this->parent) >= this->get_type()) {
 		str.push_back(')');
 	}
 }
@@ -650,7 +634,7 @@ void Exponentiation::combine_layers(Basic_Term*& storage_key)
 	this->base->combine_layers(this->base);
 	this->exponent->combine_layers(this->exponent);
 	if (this->exponent->get_type() == value) {
-		Value* val_exp = static_cast<Value*>(this->exponent);
+		Value* const val_exp = static_cast<Value*>(this->exponent);
 		if (val_exp->val == 1.0) {
 			storage_key = this->base;
 			this->base->parent = this->parent;
@@ -659,13 +643,13 @@ void Exponentiation::combine_layers(Basic_Term*& storage_key)
 			return;
 		}
 		if (val_exp->val == 0.0) {
-			storage_key = new Value(std::complex<double>{ 1.0, 0.0 }, this->parent);
+			storage_key = new Value({ 1.0, 0.0 }, this->parent);
 			delete this;
 			return;
 		}
 	}
 	if (this->base->get_type() == value) {
-		Value* val_base = static_cast<Value*>(this->base);
+		Value* const val_base = static_cast<Value*>(this->base);
 		if (val_base->val == 1.0) {
 			storage_key = val_base;
 			val_base->parent = this->parent;
@@ -674,7 +658,7 @@ void Exponentiation::combine_layers(Basic_Term*& storage_key)
 			return;
 		}
 		if (val_base->val == 0.0) {
-			storage_key = new Value(std::complex<double>{ 0.0, 0.0 }, this->parent);
+			storage_key = new Value({ 0.0, 0.0 }, this->parent);
 			delete this;
 			return;
 		}
@@ -683,39 +667,33 @@ void Exponentiation::combine_layers(Basic_Term*& storage_key)
 
 Vals_Combined Exponentiation::combine_values()
 {
-	Vals_Combined base_ = this->base->combine_values();
-	Vals_Combined exponent_ = this->exponent->combine_values();
+	const Vals_Combined base_ = this->base->combine_values();
+	const Vals_Combined exponent_ = this->exponent->combine_values();
 
-	if (base_.state == normal && exponent_.state == normal) {
-		if (exponent_.val.real() < 0 && type(this->parent) == product) {	//
-			std::complex<double> result = std::pow(base_.val, -exponent_.val);
-			return Vals_Combined{ inverse, result };
-		}
-		else {
-			std::complex<double> result = std::pow(base_.val, exponent_.val);
-			return Vals_Combined{ normal, result };
-		}
+	if (base_.known && exponent_.known) {
+		const std::complex<double> result = std::pow(base_.val, exponent_.val);
+		return Vals_Combined{ true, result };
 	}
-	else if (base_.state == normal && !(exponent_.state == normal)) {
+	else if (base_.known && !exponent_.known) {
 		if (type(this->base) != value) {
 			delete this->base;
 			this->base = new Value(base_.val, this);
 		}
 	}
-	else if (!(base_.state == normal) && exponent_.state == normal) {
+	else if (!base_.known && exponent_.known) {
 		if (type(this->exponent) != value) {
 			delete this->exponent;
 			this->exponent = new Value(exponent_.val, this);
 		}
 	}
 
-	return Vals_Combined{ unknown, 0 };
+	return Vals_Combined{ false, 0 };
 }
 
 std::complex<double> Exponentiation::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
-	std::complex<double> base_ = this->base->evaluate(known_variables);
-	std::complex<double> exponent_ = this->exponent->evaluate(known_variables);
+	const std::complex<double> base_ = this->base->evaluate(known_variables);
+	const std::complex<double> exponent_ = this->exponent->evaluate(known_variables);
 	return std::pow(base_, exponent_);
 }
 
@@ -856,51 +834,51 @@ Par_Operator::Par_Operator(Basic_Term* parent_)
 
 Vals_Combined Par_Operator::internal_combine(Vals_Combined argument_) const
 {
-	if (argument_.state == normal) {
+	if (argument_.known) {
 		switch (this->op_type) {
 		case log10:
-			return Vals_Combined{ normal, std::log10(argument_.val) };
+			return Vals_Combined{ true, std::log10(argument_.val) };
 		case asin:
-			return Vals_Combined{ normal, std::asin(argument_.val) };
+			return Vals_Combined{ true, std::asin(argument_.val) };
 		case acos:			
-			return Vals_Combined{ normal, std::acos(argument_.val) };
+			return Vals_Combined{ true, std::acos(argument_.val) };
 		case atan:		
-			return Vals_Combined{ normal, std::atan(argument_.val) };
+			return Vals_Combined{ true, std::atan(argument_.val) };
 		case asinh:			
-			return Vals_Combined{ normal, std::asinh(argument_.val) };
+			return Vals_Combined{ true, std::asinh(argument_.val) };
 		case acosh:			
-			return Vals_Combined{ normal, std::acosh(argument_.val) };
+			return Vals_Combined{ true, std::acosh(argument_.val) };
 		case atanh:		
-			return Vals_Combined{ normal, std::atanh(argument_.val) };
+			return Vals_Combined{ true, std::atanh(argument_.val) };
 		case sinh:	
-			return Vals_Combined{ normal, std::sinh(argument_.val) };
+			return Vals_Combined{ true, std::sinh(argument_.val) };
 		case cosh:			
-			return Vals_Combined{ normal, std::cosh(argument_.val) };
+			return Vals_Combined{ true, std::cosh(argument_.val) };
 		case tanh:			
-			return Vals_Combined{ normal, std::tanh(argument_.val) };
+			return Vals_Combined{ true, std::tanh(argument_.val) };
 		case sqrt:			
-			return Vals_Combined{ normal, std::sqrt(argument_.val) };
+			return Vals_Combined{ true, std::sqrt(argument_.val) };
 		case exp:				
-			return Vals_Combined{ normal, std::exp(argument_.val) };
+			return Vals_Combined{ true, std::exp(argument_.val) };
 		case sin:				
-			return Vals_Combined{ normal, std::sin(argument_.val) };
+			return Vals_Combined{ true, std::sin(argument_.val) };
 		case cos:			
-			return Vals_Combined{ normal, std::cos(argument_.val) };
+			return Vals_Combined{ true, std::cos(argument_.val) };
 		case tan:			
-			return Vals_Combined{ normal, std::tan(argument_.val) };
+			return Vals_Combined{ true, std::tan(argument_.val) };
 		case abs:			
-			return Vals_Combined{ normal, std::abs(argument_.val) };
+			return Vals_Combined{ true, std::abs(argument_.val) };
 		case arg:			
-			return Vals_Combined{ normal, std::arg(argument_.val) };
+			return Vals_Combined{ true, std::arg(argument_.val) };
 		case ln:				
-			return Vals_Combined{ normal, std::log(argument_.val) };
+			return Vals_Combined{ true, std::log(argument_.val) };
 		case re:			
-			return Vals_Combined{ normal, std::real(argument_.val) };
+			return Vals_Combined{ true, std::real(argument_.val) };
 		case im:				
-			return Vals_Combined{ normal, std::imag(argument_.val) };
+			return Vals_Combined{ true, std::imag(argument_.val) };
 		}
 	}
-	return Vals_Combined{ unknown, 0 };
+	return Vals_Combined{ false, 0 };
 }
 
 Par_Operator::Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_Type op_type_)
@@ -965,14 +943,13 @@ Vals_Combined Par_Operator::combine_values()
 
 std::complex<double> Par_Operator::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
-	//the return type an parameter of internal_combine is not std::complex but Vals_Combined. However, this contains std::complex as val
-	return this->internal_combine(Vals_Combined{ normal, argument->evaluate(known_variables) }).val;
+	//the return type and parameter of internal_combine is not std::complex but Vals_Combined. However, this contains std::complex as val
+	return this->internal_combine(Vals_Combined{ true, argument->evaluate(known_variables) }).val;
 }
 
 void Par_Operator::search_and_replace(const std::string & name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
-	this->argument->search_and_replace(name_, value_, this->argument);
-	
+	this->argument->search_and_replace(name_, value_, this->argument);	
 }
 
 void Par_Operator::list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const

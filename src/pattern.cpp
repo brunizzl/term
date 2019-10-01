@@ -45,7 +45,7 @@ Type Pattern_Variable::get_type() const
 Vals_Combined Pattern_Variable::combine_values()
 {
 	std::cout << "Error: pattern_variable used instead of variable!\n";
-	return Vals_Combined{ unknown, 0 };
+	return Vals_Combined{ false, 0 };
 }
 
 std::complex<double> Pattern_Variable::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
@@ -151,6 +151,9 @@ const std::vector<Pattern*> Pattern::patterns = {
 	new Pattern("sin(x)^2+cos(x)^2", "1"),
 	new Pattern("a*c+a*b", "a*(c+b)"),
 	new Pattern("ln(a)+ln(b)", "ln(a*b)"),
+	new Pattern("(a^b)^c", "a^(b*c)"),
+	new Pattern("a^b*a", "a^(b+1)"),
+	new Pattern("a^b*a^c", "a^(b+c)"),
 };
 
 

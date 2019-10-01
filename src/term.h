@@ -37,8 +37,10 @@ namespace bmath {
 			//returns kinda true type of term (sum, product, value, etc.)
 			virtual Type get_type() const = 0;
 
-			//if one sum/product holds a pointer to another sum/product, both get combined into one.
-			//IN PLANUNG: WENN NUR NOCH EIN SUMMAND DA, DIE EBENE RAUSNEHMEN
+			//if one sum/product holds a pointer to another sum/product, both get combined into one,
+			//redundant layers are removed (exponentiation with exponent == 1, sum with only one summand...)
+			//storage key refers to the actual memory holding the pointer to this. 
+			//(aka if you wanna remove the current layer, this is where to reconnect the layers above and below you.
 			virtual void combine_layers(Basic_Term*& storage_key);
 
 			//values are added, multiplied, etc.

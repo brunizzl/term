@@ -50,21 +50,13 @@ namespace bmath {
 			error,			//needs to be last element to enable loops to go trough the types (used as break condition)
 		};
 
-		// used in Struct Vals_Combined to identify what operation parent needs to apply to given value
-		enum Value_State 
-		{
-			unknown,		//due to not specified variables no numeric value could be calculated.
-			normal,			//sum will add, product multiply...
-			inverse,		//only definded for sum and product as parents (sum will subtract, product divide)
-		};
-
 		//return of function combine_values()
 		//if function was able to combine to one single value, this gets returned
 		//otherwise state == unknown and val is uninitialised.
 		//special case: 
 		struct Vals_Combined 
 		{
-			Value_State state;
+			bool known;
 			std::complex<double> val;
 		};
 

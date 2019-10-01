@@ -8,7 +8,7 @@ using namespace bmath::intern;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Value::Value(std::string_view name_, Basic_Term* parent_)
-	:Basic_Term(parent_), val(std::complex<double>(0, 0))
+	:Basic_Term(parent_), val({ 0.0, 0.0 })
 {
 	if (name_ == "i") {
 		this->val.imag(1);
@@ -107,7 +107,7 @@ Type Value::get_type() const
 
 Vals_Combined Value::combine_values()
 {
-	return Vals_Combined{ normal, this->val };
+	return Vals_Combined{ true, this->val };
 }
 
 std::complex<double> Value::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
@@ -223,7 +223,7 @@ Type Variable::get_type() const
 
 Vals_Combined Variable::combine_values()
 {
-	return Vals_Combined{ unknown, 0 };
+	return Vals_Combined{ false, 0 };
 }
 
 std::complex<double> Variable::evaluate(const std::list<bmath::Known_Variable>& known_variables) const

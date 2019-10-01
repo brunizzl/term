@@ -146,7 +146,7 @@ bool bmath::Term::match_and_transform(Pattern& pattern)
 void bmath::Term::combine_values()
 {
 	Vals_Combined new_subterm = this->term_ptr->combine_values();
-	if (new_subterm.state == normal) {
+	if (new_subterm.known) {
 		delete this->term_ptr;
 		this->term_ptr = new Value(new_subterm.val, nullptr);
 	}
@@ -165,7 +165,7 @@ std::complex<double> bmath::Term::evaluate(const std::list<Known_Variable>& know
 
 void bmath::Term::search_and_replace(const std::string& name_, std::complex<double> value_)
 {
-	Value value_term(value_, nullptr);
+	const Value value_term(value_, nullptr);
 	this->term_ptr->search_and_replace(name_, &value_term, this->term_ptr);
 }
 
@@ -180,11 +180,14 @@ void bmath::Term::combine()
 	this->combine_values();
 	this->term_ptr->sort();
 
-	for (unsigned int i = 0; i < Pattern::patterns.size(); i++) {
+	for (unsigned int i = 0; i < Pattern::patterns.size();) {
 		if (this->match_and_transform(*Pattern::patterns[i])) {
-			i = -1;	//if match was successfull, pattern search starts again.
 			this->term_ptr->combine_layers(this->term_ptr);
 			this->combine_values();
+			i = 0;	//if match was successfull, pattern search starts again.
+		}
+		else {
+			i++;
 		}
 	}
 	this->term_ptr->combine_layers(this->term_ptr);

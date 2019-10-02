@@ -3,6 +3,7 @@
 
 #include <string>
 #include <array>
+#include <iostream>
 
 #include "structs.h"
 #include "term.h"
@@ -20,10 +21,16 @@ namespace bmath {
 		void find_exposed_parts(std::string_view name, std::vector<std::string_view>& exposed);
 
 		//searches characters in views of name, returns position in name
-		std::size_t find_last_of_in_views(const std::string_view name, const std::vector<std::string_view>& views, const char* characters);
+		std::size_t find_last_of_in_views(const std::string_view name, const std::vector<std::string_view>& views, const char* const characters);
+
+		//searches characters in name while skipping parts containing parentheses
+		std::size_t find_first_of_skip_pars(const std::string_view name, const char* const characters);
 
 		//searches searchstr in views of name, returns position in name (modified rfind of std::string_view)
 		std::size_t rfind_in_views(const std::string_view name, const std::vector<std::string_view>& views, const char* searchstr);
+
+		//searches searchstr in name while skipping parts containing parentheses
+		std::size_t find_skip_pars(const std::string_view name, const char* const searchstr);
 
 		//removes views no longer part of name
 		void update_views(const std::string_view name, std::vector<std::string_view>& views);
@@ -56,11 +63,12 @@ namespace bmath {
 		//resets all pattern_values to nullptr (needs to be run, before next match can be found)
 		void reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
 
+		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		//stack based calculation\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		//says whether name is computable (has no variables) or not
+		bool computable(std::string_view name);
+
 	} //namespace intern
 } //namespace bmath
-
-//allows ostream to output Terms
-std::ostream& operator<<(std::ostream& stream, const bmath::Term& term);
-
-//allows ostream to output Basic_Terms
-std::ostream& operator<<(std::ostream& stream, const bmath::intern::Basic_Term& term);

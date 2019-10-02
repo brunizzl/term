@@ -1,5 +1,6 @@
 
 #include "pattern.h"
+#include "internal_functions.h"
 
 using namespace bmath::intern;
 

@@ -1,5 +1,9 @@
 
 #include "arguments.h"
+#include "internal_functions.h"
+
+#include <sstream>
+#include <charconv>
 
 using namespace bmath::intern;
 
@@ -36,14 +40,9 @@ Value::Value(std::complex<double> value_, Basic_Term* parent_)
 }
 
 
-Value::~Value()
-{
-}
-
-void Value::to_str(std::string& str) const	//warning: ugliest function ever :(
-{
-	const double re = this->val.real();
-	const double im = this->val.imag();
+std::string bmath::intern::Value::val_to_str(bool inverse) const {	//warning: ugliest function ever :(
+	const double re = inverse ? -(this->val.real()) : this->val.real();
+	const double im = inverse ? -(this->val.imag()) : this->val.imag();
 	bool pars = false;	//decides if parentheses are put around number
 	std::stringstream buffer;
 
@@ -63,11 +62,11 @@ void Value::to_str(std::string& str) const	//warning: ugliest function ever :(
 		buffer << 'i';
 	}
 	else if (re != 0 && im == 0) {
-		pars = re < 0 && this->parent != nullptr; //leading '-' and term above		
+		pars = re < 0 && type(this->parent) > value; //leading '-' and term above		
 		buffer << re;
 	}
 	else if (re == 0 && im != 0) {		// yi
-		pars = im < 0 && this->parent != nullptr; //leading '-' and term above		
+		pars = im < 0 && type(this->parent) > value; //leading '-' and term above		
 		if (im > -1.00000000001 && im < -0.99999999999) {		//im == -1
 			buffer << '-';
 		}
@@ -77,18 +76,24 @@ void Value::to_str(std::string& str) const	//warning: ugliest function ever :(
 		buffer << 'i';
 	}
 	else if (re == 0 && im == 0) {
-		str.push_back('0');
-		return;
+		buffer << '0';
 	}
 
 	if (pars) {
-		str.push_back('(');
-		str.append(buffer.str());
-		str.push_back(')');
+		return '(' + buffer.str() + ')';
 	}
 	else {
-		str.append(buffer.str());
+		return buffer.str();
 	}
+}
+
+Value::~Value()
+{
+}
+
+void Value::to_str(std::string& str) const
+{
+	str.append(this->val_to_str(false));
 }
 
 void Value::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
@@ -118,17 +123,6 @@ std::complex<double> Value::evaluate(const std::list<bmath::Known_Variable>& kno
 void Value::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
 	//nothing to be done here
-}
-
-bool Value::re_smaller_than_0()
-{
-	if (this->val.real() < 0) {
-		this->val *= -1.0;
-		return true;
-	}
-	else {
-		return false;
-	}
 }
 
 void Value::list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const

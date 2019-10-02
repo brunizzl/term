@@ -37,7 +37,7 @@ void bmath::intern::find_exposed_parts(std::string_view name, std::vector<std::s
 	//if name starts with parentheses, these are skipped.
 	if (name.front() == '(') {
 		clsd_par = find_closed_par(0, name);
-		open_par = name.find_first_of('(', clsd_par + 1);
+		open_par = name.find_first_of('(', clsd_par + 1);	//no extra check if clsd_par was found, because we can already guarantee to have as many closed as open pars.
 	}
 	else {
 		clsd_par = -1;
@@ -56,7 +56,8 @@ void bmath::intern::find_exposed_parts(std::string_view name, std::vector<std::s
 	}
 }
 
-std::size_t bmath::intern::find_last_of_in_views(const std::string_view name, const std::vector<std::string_view>& views, const char* characters) {
+std::size_t bmath::intern::find_last_of_in_views(const std::string_view name, const std::vector<std::string_view>& views, const char* const characters) 
+{
 	for (auto view = views.rbegin(); view != views.rend(); ++view) {
 		std::size_t found = view->find_last_of(characters);
 		if (found != std::string::npos) {
@@ -64,6 +65,23 @@ std::size_t bmath::intern::find_last_of_in_views(const std::string_view name, co
 		}
 	}
 	return std::string::npos;
+}
+
+std::size_t bmath::intern::find_first_of_skip_pars(const std::string_view name, const char* const characters) 
+{
+	std::size_t clsd_par = 0;
+	std::size_t open_par = name.find_first_of('(');
+	while (open_par != std::string::npos) {
+		std::size_t found = name.find_first_of(characters, clsd_par,open_par - clsd_par);
+		if (found != std::string::npos) {
+			return found;
+		}
+		else {
+			clsd_par = find_closed_par(open_par, name);
+			open_par = name.find_first_of('(', clsd_par + 1);
+		}
+	}
+	return name.find_first_of(characters, clsd_par);
 }
 
 std::size_t bmath::intern::rfind_in_views(const std::string_view name, const std::vector<std::string_view>& views, const char* searchstr) 
@@ -75,6 +93,22 @@ std::size_t bmath::intern::rfind_in_views(const std::string_view name, const std
 		}
 	}
 	return std::string::npos;
+}
+
+std::size_t bmath::intern::find_skip_pars(const std::string_view name, const char* const searchstr) {
+	std::size_t clsd_par = 0;
+	std::size_t open_par = name.find_first_of('(');
+	while (open_par != std::string::npos) {
+		std::size_t found = name.find(searchstr, clsd_par, open_par - clsd_par);
+		if (found != std::string::npos) {
+			return found;
+		}
+		else {
+			clsd_par = find_closed_par(open_par, name);
+			open_par = name.find_first_of('(', clsd_par + 1);
+		}
+	}
+	return name.find(searchstr, clsd_par);
 }
 
 void bmath::intern::update_views(const std::string_view name, std::vector<std::string_view>& views) 
@@ -111,18 +145,18 @@ Type bmath::intern::type_subterm(const std::string_view name, const std::vector<
 		return exponentiation;
 	}
 	//searching for parenthesis operators 
-	for (int op_type = 0; op_type < static_cast<int>(error); op_type++) {
-		op = rfind_in_views(name, exposed_parts, Par_Operator::op_name(static_cast<Par_Op_Type>(op_type)));
+	for (Par_Op_Type op_type : all_par_op_types) {
+		op = rfind_in_views(name, exposed_parts, Par_Operator::op_name(op_type));
 		if (op != std::string::npos) {
 			//tests if op marks only substring of longer, fauly parenthesis operator (for example "tan(" beeing substring of "arctan(" (term knows "arctan" as "atan"))
 			if (name.find_last_of("abcdefghjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]_$", op - 1) == op - 1) {
 				continue;
 			}
-			par_op_type = static_cast<Par_Op_Type>(op_type);
+			par_op_type = op_type;
 			return par_operator;
 		}
 	}
-	if (exposed_parts.size() == 0) {
+	if (exposed_parts.size() == 0) {	
 		return undefined;
 	}
 	//staring search for arguments (variable or value)
@@ -162,7 +196,7 @@ void bmath::intern::preprocess_str(std::string& str)
 	if (par_diff != 0) {
 		throw XTermConstructionError("the parenthesis of string do not obey the syntax rules");
 	}
-	const char* allowed_chars = "1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()_$";
+	const char* const allowed_chars = "1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()_$";
 	if (str.find_first_not_of(allowed_chars) != std::string::npos) {
 		throw XTermConstructionError("string contains characters other than: 1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()_$");
 	}
@@ -185,7 +219,7 @@ Basic_Term* bmath::intern::build_subterm(std::string_view subterm_view, Basic_Te
 
 		find_exposed_parts(subterm_view, exposed_parts);
 		std::size_t op = std::string::npos;
-		Par_Op_Type par_op_type = error;	//only used if parenthesis operator is found
+		Par_Op_Type par_op_type;	//only used if parenthesis operator is found
 		Type type = type_subterm(subterm_view, exposed_parts, op, par_op_type);
 
 		switch (type) {
@@ -221,7 +255,7 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm_view, 
 
 		find_exposed_parts(subterm_view, exposed_parts);
 		std::size_t op = std::string::npos;
-		Par_Op_Type par_op_type = error;	//only used if parenthesis operator is found
+		Par_Op_Type par_op_type;	//only used if parenthesis operator is found
 		Type type = type_subterm(subterm_view, exposed_parts, op, par_op_type);
 
 		switch (type) {
@@ -325,16 +359,36 @@ void bmath::intern::reset_pattern_vars(std::list<Pattern_Variable*>& var_adresse
 }
 
 
-std::ostream& operator<<(std::ostream& stream, const bmath::Term& term)
-{
-	stream << term.to_str();
-	return stream;
-}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//stack based calculation\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-std::ostream& operator<<(std::ostream& stream, const bmath::intern::Basic_Term& term)
-{
-	std::string str;
-	term.to_str(str);
-	stream << str;
-	return stream;
+bool bmath::intern::computable(std::string_view name) {
+	const char* const numeric_symbols = "0123456789.+-*/^()";
+
+	std::size_t letter_pos = name.find_first_not_of(numeric_symbols);
+	while (letter_pos != std::string::npos)	{
+		//testing if letter is only "i", followed by numeric syntax
+		if (name[letter_pos] == 'i' && name.find_first_of(numeric_symbols, letter_pos + 1) == letter_pos + 1) {
+			letter_pos = name.find_first_not_of(numeric_symbols, letter_pos + 2);
+			continue;
+		}
+		//testing if letter is beginning of Par_Operator
+		bool found_op = false;
+		for (Par_Op_Type op_type : all_par_op_types) {
+			const char* const op_name = Par_Operator::op_name(op_type);
+			if (name.compare(letter_pos, strlen(op_name), op_name) == 0) {
+				letter_pos = name.find_first_not_of(numeric_symbols, letter_pos + strlen(op_name));
+				found_op = true;
+				break;
+			}
+		}
+		if (found_op) {
+			continue;
+		}
+		else {
+			return false;
+		}
+	}
+	return true;
 }

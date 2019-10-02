@@ -7,7 +7,6 @@
 #include <vector>
 #include <complex>
 
-#include "internal_functions.h"
 #include "structs.h"
 #include "term.h"
 

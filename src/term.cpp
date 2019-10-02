@@ -1,5 +1,6 @@
 
 #include "term.h"
+#include "internal_functions.h"
 
 using namespace bmath::intern;
 
@@ -22,18 +23,16 @@ Basic_Term::~Basic_Term()
 	//cleaning up the tree is done in derived classes
 }
 
+bool bmath::intern::Basic_Term::inverse_str() const {
+	return false;	//usually to_str just returns its normal state, not an inversed one.
+}
+
 void Basic_Term::combine_layers(Basic_Term*& storage_key)
 {
 	//the base class does not know of the tree structures, the derived classes provide.
 	//therefore, no tree can be combined.
 	//the classes Value and Variable dont need an override to this function.
 	//every derived class not beeing leaf needs an overriding function.
-}
-
-bool Basic_Term::re_smaller_than_0()
-{
-	//only value needs overloading
-	return false;
 }
 
 bool Basic_Term::operator!=(const Basic_Term& other) const
@@ -313,3 +312,20 @@ bmath::Term bmath::Term::operator/(const Term& operand2) const
 	bmath::Term operand1(*this);
 	return operand1 /= operand2;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//ostream overloads\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+std::ostream& operator<<(std::ostream& stream, const bmath::Term& term) {
+	stream << term.to_str();
+	return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const bmath::intern::Basic_Term& term) {
+	std::string str;
+	term.to_str(str);
+	stream << str;
+	return stream;
+}
+

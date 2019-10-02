@@ -4,7 +4,6 @@
 #include <string>
 #include <list>
 #include <vector>
-#include <iostream>
 #include <complex>
 
 #include "structs.h"
@@ -28,6 +27,10 @@ namespace bmath {
 
 			//appends this to str
 			virtual void to_str(std::string& str) const = 0;
+
+			//is needed in to_str to allow product to print "/" and sum to print "-"
+			//only product and exponentiation implement this function other than basic_term.
+			virtual bool inverse_str() const;
 
 			//called in function to_tree() of bmath::term
 			// tree_lines holds output line by line, dist_root stores distance from this vertex to root, 
@@ -55,14 +58,10 @@ namespace bmath {
 			//this function is meant for permanent changes. else use evaluate()
 			virtual void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) = 0;
 
-			//used to bring tree in well defined state bevore combine_variables() can be used
-			//returns false if class != value, returns true and modifies value (multiplys by -1) if re(value) < 0
-			virtual bool re_smaller_than_0();
-
 			//all subterms of requested type get added to the list
 			virtual void list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const = 0;
 
-			//needs to be run befor == makes sense to be used
+			//needs to be run before == makes sense to be used
 			virtual void sort() = 0;
 
 			//returns subterm matching pattern or nullptr (basically operator==, but with pattern matching) 
@@ -140,7 +139,12 @@ namespace bmath {
 
 }//namespace bmath
 
-#include "internal_functions.h"
+//allows ostream to output Terms
+std::ostream& operator<<(std::ostream& stream, const bmath::Term& term);
+
+//allows ostream to output Basic_Terms
+std::ostream& operator<<(std::ostream& stream, const bmath::intern::Basic_Term& term);
+
 #include "arguments.h"
 #include "operations.h"
 #include "pattern.h"

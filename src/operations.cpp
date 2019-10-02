@@ -1,5 +1,8 @@
 
 #include "operations.h"
+#include "internal_functions.h"
+
+//#include <sstream>
 
 using namespace bmath::intern;
 
@@ -75,7 +78,6 @@ Product::Product(const Product& source, Basic_Term* parent_)
 	}
 }
 
-
 Product::~Product()
 {
 	for (auto it : this->factors) {
@@ -83,28 +85,59 @@ Product::~Product()
 	}
 }
 
+
+std::optional<double> bmath::intern::Product::factor_value() const {
+	if (type(this->factors.front()) == value) {
+		const Value* const value = static_cast<Value*>(this->factors.front());
+		if (value->val.imag() == 0.0) {
+			return value->val.real();
+		}
+	}
+	return {};
+}
+
 void Product::to_str(std::string& str) const
 {
-	if (type(this->parent) >= this->get_type()) {
+	const std::optional<double> fctr_val = factor_value();
+	const bool negative_fctr = fctr_val && *fctr_val < 0.0;
+	const bool pars = type(this->parent) > this->get_type();
+	if (pars) {
 		str.push_back('(');
 	}
-	bool already_printed_smth = false;
+	bool need_operator = false;
+	bool first = true;	//both bools have nearly opposite meaning but none is redundant.
 	for (auto it : this->factors) {
-		if (std::exchange(already_printed_smth, true)) {
-			str.push_back('*');
+		if (std::exchange(first, false) && fctr_val) {	//it is first factor and of type value
+			if (std::abs(*fctr_val) != 1.0) {
+				const Value* const val = static_cast<Value*>(it);
+				str.append(val->val_to_str(negative_fctr));
+				need_operator = true;
+			}
 		}
-		it->to_str(str);
+		else {
+			if (it->inverse_str()) {
+				if (!std::exchange(need_operator, true)) {	//first factor -> needs '1' before '/'
+					str.push_back('1');
+				}
+				str.push_back('/');
+			}
+			else if (std::exchange(need_operator, true)) {
+				str.push_back('*');
+			}
+			it->to_str(str);
+		}
 	}
-	if (!already_printed_smth) {
-		str.push_back('1');
-	}
-	/*for (auto it : this->divisors) {
-		str.push_back('/');
-		it->to_str(str);
-	}*/
-	if (type(this->parent) >= this->get_type()) {
+	if (pars) {
 		str.push_back(')');
 	}
+}
+
+bool bmath::intern::Product::inverse_str() const {
+	const std::optional<double> fctr_val = this->factor_value();
+	if (fctr_val) {
+		return *fctr_val < 0 && type(this->parent) == sum;
+	}
+	return false;
 }
 
 void Product::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
@@ -355,21 +388,22 @@ Sum::~Sum()
 
 void Sum::to_str(std::string& str) const
 {
-	if (type(this->parent) >= this->get_type()) {
+	const bool pars = type(this->parent) > this->get_type();
+	if (pars) {
 		str.push_back('(');
 	}
 	bool need_operator = false;
 	for (auto it : this->summands) {
-		if (std::exchange(need_operator, true)) {
+		if (it->inverse_str()) {
+			str.push_back('-');
+			need_operator = true;
+		}
+		else if (std::exchange(need_operator, true)) {
 			str.push_back('+');
 		}
 		it->to_str(str);
 	}
-	/*for (auto it : this->subtractors) {
-		str.push_back('-');
-		it->to_str(str);
-	}*/
-	if (type(this->parent) >= this->get_type()) {
+	if (pars) {
 		str.push_back(')');
 	}
 }
@@ -600,17 +634,48 @@ Exponentiation::~Exponentiation()
 	delete base;
 }
 
+std::optional<double> bmath::intern::Exponentiation::exponent_value() const {
+	if (type(this->exponent) == value) {
+		const Value* const value = static_cast<Value*>(this->exponent);
+		if (value->val.imag() == 0.0) {
+			return value->val.real();
+		}
+	}
+	return {};
+}
+
 void Exponentiation::to_str(std::string& str) const
 {
-	if (type(this->parent) >= this->get_type()) {
+	const std::optional<double> exp_val = this->exponent_value();
+	const bool negative_exp = exp_val && *exp_val < 0.0;
+	const bool pars = type(this->parent) >= this->get_type();
+	if (pars) {
 		str.push_back('(');
 	}
+	if (negative_exp && type(this->parent) != product) {
+		str.append("1/");
+	}
 	this->base->to_str(str);
-	str.push_back('^');
-	this->exponent->to_str(str);
-	if (type(this->parent) >= this->get_type()) {
+	if (exp_val && std::abs(*exp_val) != 1.0) {
+		str.push_back('^');
+		const Value* const val = static_cast<Value*>(this->exponent);
+		str.append(val->val_to_str(negative_exp));
+	}
+	else if (!exp_val) {
+		str.push_back('^');
+		this->exponent->to_str(str);
+	}	
+	if (pars) {
 		str.push_back(')');
 	}
+}
+
+bool bmath::intern::Exponentiation::inverse_str() const {
+	const std::optional<double> exp_val = this->exponent_value();
+	if (exp_val) {
+		return *exp_val < 0.0 && type(this->parent) == product;
+	}
+	return false;
 }
 
 void bmath::intern::Exponentiation::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
@@ -828,7 +893,7 @@ const char* Par_Operator::op_name(Par_Op_Type op_type)
 }
 
 Par_Operator::Par_Operator(Basic_Term* parent_)
-	:Basic_Term(parent_), argument(nullptr), op_type(error)
+	:Basic_Term(parent_), argument(nullptr), op_type(log10)
 {
 }
 

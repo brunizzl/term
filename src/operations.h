@@ -6,6 +6,7 @@
 #include <list>
 #include <vector>
 #include <complex>
+#include <optional>
 
 #include "structs.h"
 #include "term.h"
@@ -29,12 +30,17 @@ namespace bmath {
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 			friend class bmath::Term;
 			friend class Sum;
+
+			//returns real part of value of exponent if exponent is value and has no imaginary part.
+			std::optional<double> factor_value() const;
+
 		public:
 			std::list<Basic_Term*> factors;
 
 			~Product();
 
 			void to_str(std::string& str) const override;
+			bool inverse_str() const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			Type get_type() const override;
 			void combine_layers(Basic_Term*& storage_key) override;
@@ -98,6 +104,10 @@ namespace bmath {
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 			friend class bmath::Term;
 			friend class Product;
+
+			//returns real part of value of exponent if exponent is value and has no imaginary part.
+			std::optional<double> exponent_value() const;	
+
 		public:
 			Basic_Term* exponent;
 			Basic_Term* base;
@@ -105,6 +115,7 @@ namespace bmath {
 			~Exponentiation();
 
 			void to_str(std::string& str) const override;
+			bool inverse_str() const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			Type get_type() const override;
 			void combine_layers(Basic_Term*& storage_key) override;

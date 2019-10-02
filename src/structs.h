@@ -27,7 +27,7 @@ namespace bmath {
 		//types names are sorted by length
 		enum Par_Op_Type 
 		{
-			log10 = 0,		//log10()
+			log10,			//log10()
 			asinh,			//asinh()
 			acosh,			//acosh()
 			atanh,			//atanh()
@@ -47,8 +47,12 @@ namespace bmath {
 			ln,				//log()
 			re,				//real()
 			im,				//imag()
-			error,			//needs to be last element to enable loops to go trough the types (used as break condition)
 		};
+
+		//array with instance of every Par_Op_Type to ierate over them
+		static const Par_Op_Type all_par_op_types[] = { log10, asinh, acosh, atanh, asin, acos, atan, sinh, cosh, tanh, sqrt, 
+														exp, sin, cos, tan, abs, arg, ln, re, im };
+
 
 		//return of function combine_values()
 		//if function was able to combine to one single value, this gets returned

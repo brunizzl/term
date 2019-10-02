@@ -16,41 +16,38 @@ void replace_constants(bmath::Term& term) {
 void baue_teststrs(const std::vector<std::string>& teststrs) {
 	for (auto& str : teststrs) {
 		std::cout << "__________________________________________________________________________________________________________________\n\n";
-		std::cout << "String: \t" << str << "\n\n";
+		std::cout << "String: \t" << str << '\n';
+		std::cout << '\n';
 		{
 			bmath::Term test(str);
 			std::cout << "raw print:  \t" << test << '\n';
-			std::cout << "raw tree:" << test.to_tree(16).erase(0, 9) << "\n\n";
+			std::cout << "raw tree:" << test.to_tree(16).erase(0, 9) << '\n';
+			std::cout << '\n';
 			test.combine();
 			test.cut_rounding_error();
-			std::cout << "combined print:  \t" << test << "\n";
-			std::cout << "combined tree:" << test.to_tree(16).erase(0, 14) << "\n\n";
+			std::cout << "combined print:\t" << test << '\n';
+			std::cout << "combined tree:" << test.to_tree(16).erase(0, 14) << '\n';
+			std::cout << '\n';
 		}
 	}
 }
 
 void test_strings() {
 	const std::vector<std::string> teststrs = {
+		"(1*(2i^(-2)*3*(4*(a^5))))",
+		"-i+300*a/(a*b)",
 		"1-2*3",
 		"(10/5)^3",
-		"(1*(2i^(-2)*3*(4*(a^5))))",
-		"(5+a)/(7-b)*4-(c*d)^(-2)",
 		"(3*x-2*y)/5",
 		"5+pi+7/(5-a+ln(2))^3",
 		"auto^herbert*3+auto^(-32*a)-4",
-		"2.5",
-		"((((((-2.6))))))",
 		"6/7/8*a/4",
 		"-4*q/s^2",
-		"(((-a-b)))",
-		"(log10((2)))",
-		"sin(x+300*cos(pi))^a",
 		"re(3+4i)*im(2-3i)",
-		"-i+300*a/(a*b)",
 		"a+ln(b^2)+ln(c)+2-b^2-c*a",
 		"3*(sin(a+b+c)^2+cos(a+b+c)^2)+i",
-		"e^(sin(x)*sin(a+b)^2+sin(x)*cos(a+b)^2)+5",
 		"(3^(x^2))^(x)",
+		"sin(-a*b)",
 	};
 	baue_teststrs(teststrs);
 }

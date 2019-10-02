@@ -1,6 +1,8 @@
 
 #include "internal_functions.h"
 
+#include <charconv>
+
 using namespace bmath::intern;
 
 std::size_t bmath::intern::find_open_par(std::size_t clsd_par, const std::string_view name) 
@@ -60,7 +62,7 @@ Type bmath::intern::type_subterm(const std::string_view name, std::size_t& op, P
 	}
 	//searching for parenthesis operators 
 	for (Par_Op_Type op_type : all_par_op_types) {
-		const char* const op_name = Par_Operator::op_name(op_type);
+		const char* const op_name = par_op_name(op_type);
 		if (name.compare(0, strlen(op_name), op_name) == 0) {
 			par_op_type = op_type;
 			return par_operator;
@@ -266,25 +268,78 @@ void bmath::intern::reset_pattern_vars(std::list<Pattern_Variable*>& var_adresse
 	}
 }
 
+const char* const bmath::intern::par_op_name(Par_Op_Type op_type)
+{
+	switch (op_type) {
+	case log10:	return "log10(";
+	case asinh:	return "asinh(";
+	case acosh:	return "acosh(";
+	case atanh:	return "atanh(";
+	case asin:	return "asin(";
+	case acos:	return "acos(";
+	case atan:	return "atan(";
+	case sinh:	return "sinh(";
+	case cosh:	return "cosh(";
+	case tanh:	return "tanh(";
+	case sqrt:	return "sqrt(";
+	case exp:	return "exp(";
+	case sin:	return "sin(";
+	case cos:	return "cos(";
+	case tan:	return "tan(";
+	case abs:	return "abs(";
+	case arg:	return "arg(";
+	case ln:	return "ln(";
+	case re:	return "re(";
+	case im:	return "im(";
+	}
+}
+
+std::complex<double> bmath::intern::evaluate_par_op(std::complex<double> argument, Par_Op_Type op_type)
+{
+	switch (op_type) {
+	case log10:	return std::log10(argument);
+	case asinh:	return std::asinh(argument);
+	case acosh:	return std::acosh(argument);
+	case atanh:	return std::atanh(argument);
+	case asin:	return std::asin(argument);
+	case acos:	return std::acos(argument);
+	case atan:	return std::atan(argument);
+	case sinh:	return std::sinh(argument);
+	case cosh:	return std::cosh(argument);
+	case tanh:	return std::tanh(argument);
+	case sqrt:	return std::sqrt(argument);
+	case exp:	return std::exp(argument);
+	case sin:	return std::sin(argument);
+	case cos:	return std::cos(argument);
+	case tan:	return std::tan(argument);
+	case abs:	return std::abs(argument);
+	case arg:	return std::arg(argument);
+	case ln:	return std::log(argument);
+	case re:	return std::real(argument);
+	case im:	return std::imag(argument);
+	}
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //stack based calculation\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool bmath::intern::computable(std::string_view name) {
+bool bmath::intern::is_computable(std::string_view name) 
+{
 	const char* const numeric_symbols = "0123456789.+-*/^()";
-
 	std::size_t letter_pos = name.find_first_not_of(numeric_symbols);
 	while (letter_pos != std::string::npos)	{
-		//testing if letter is only "i", followed by numeric syntax
-		if (name[letter_pos] == 'i' && name.find_first_of(numeric_symbols, letter_pos + 1) == letter_pos + 1) {
-			letter_pos = name.find_first_not_of(numeric_symbols, letter_pos + 2);
-			continue;
+		if (name[letter_pos] == 'i') { //testing if letter is only "i", followed by numeric syntax
+			if (name.length() == letter_pos + 1 || name.find_first_of(numeric_symbols, letter_pos + 1) == letter_pos + 1) {
+				letter_pos = name.find_first_not_of(numeric_symbols, letter_pos + 2);
+				continue;
+			}			
 		}
 		//testing if letter is beginning of Par_Operator
 		bool found_op = false;
 		for (Par_Op_Type op_type : all_par_op_types) {
-			const char* const op_name = Par_Operator::op_name(op_type);
+			const char* const op_name = par_op_name(op_type);
 			if (name.compare(letter_pos, strlen(op_name), op_name) == 0) {
 				letter_pos = name.find_first_not_of(numeric_symbols, letter_pos + strlen(op_name));
 				found_op = true;
@@ -299,4 +354,112 @@ bool bmath::intern::computable(std::string_view name) {
 		}
 	}
 	return true;
+}
+
+namespace bmath::intern {
+
+	inline std::complex<double> compute_sum(std::string_view name, std::size_t op)
+	{
+		const std::string_view first = name.substr(0, op);
+		name.remove_prefix(op + 1);
+		return compute(first) + compute(name);
+	}
+
+	inline std::complex<double> compute_sub(std::string_view name, std::size_t op)
+	{
+		if (op != 0) {
+			const std::string_view first = name.substr(0, op);
+			name.remove_prefix(op + 1);
+			return compute(first) - compute(name);
+		}
+		else {
+			name.remove_prefix(1);
+			return -compute(name);
+		}
+	}
+
+	inline std::complex<double> compute_mul(std::string_view name, std::size_t op)
+	{
+		const std::string_view first = name.substr(0, op);
+		name.remove_prefix(op + 1);
+		return compute(first) * compute(name);
+	}
+
+	inline std::complex<double> compute_div(std::string_view name, std::size_t op)
+	{
+		const std::string_view first = name.substr(0, op);
+		name.remove_prefix(op + 1);
+		return compute(first) / compute(name);
+	}
+
+	inline std::complex<double> compute_pow(std::string_view name, std::size_t op)
+	{
+		const std::string_view first = name.substr(0, op);
+		name.remove_prefix(op + 1);
+		return std::pow(compute(first), compute(name));
+	}
+
+	inline std::complex<double> compute_par_op(std::string_view name, std::size_t op, Par_Op_Type op_type)
+	{
+		name.remove_suffix(1);								//closing parenthesis gets cut of
+		name.remove_prefix(strlen(par_op_name(op_type)));	//funktionname and opening parenthesis get cut of
+		return evaluate_par_op(compute(name), op_type);
+	}
+
+	inline std::complex<double> compute_val(std::string_view name)
+	{
+		if (name == "i") {
+			return { 0, 1 };
+		}
+		else {
+			double factor;
+			std::from_chars(name.data(), name.data() + name.size(), factor);
+			if (name.find_first_of('i') != std::string::npos) {
+				return { 0, factor };
+			}
+			else {
+				return { factor, 0 };
+			}
+		}
+	}
+}
+
+std::complex<double> bmath::intern::compute(std::string_view name)
+{
+	while (name.length()) {
+		std::size_t op;
+		op = find_last_of_skip_pars(name, "+");
+		if (op != std::string::npos) {
+			return compute_sum(name, op);
+		}
+		op = find_last_of_skip_pars(name, "-");
+		if (op != std::string::npos) {
+			return compute_sub(name, op);
+		}
+		op = find_last_of_skip_pars(name, "*");
+		if (op != std::string::npos) {
+			return compute_mul(name, op);
+		}
+		op = find_last_of_skip_pars(name, "/");
+		if (op != std::string::npos) {
+			return compute_div(name, op);
+		}
+		op = find_last_of_skip_pars(name, "^");
+		if (op != std::string::npos) {
+			return compute_pow(name, op);
+		}
+		//searching for parenthesis operators 
+		for (Par_Op_Type op_type : all_par_op_types) {
+			const char* const op_name = par_op_name(op_type);
+			if (name.compare(0, strlen(op_name), op_name) == 0) {
+				return compute_par_op(name, op, op_type);
+			}
+		}
+		if (name[0] != '(' && name[name.length() - 1] != ')') {
+			return compute_val(name);
+		}
+		name.remove_prefix(1);
+		name.remove_suffix(1);
+	}
+	throw XTermConstructionError("function compute() run out of characters to find calculations");
 }

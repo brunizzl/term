@@ -46,12 +46,22 @@ namespace bmath {
 		//resets all pattern_values to nullptr (needs to be run, before next match can be found)
 		void reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
 
+		//returns c string of operator as written in input/output
+		const char* const par_op_name(Par_Op_Type op_type);
+
+		//returns operation(argument), operation depends on op_type
+		std::complex<double> evaluate_par_op(std::complex<double> argument, Par_Op_Type op_type);
+
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//stack based calculation\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		//says whether name is computable (has no variables) or not
-		bool computable(std::string_view name);
+		bool is_computable(std::string_view name);
 
-	} //namespace intern
+		//equivalent to type_subterm plus build_subterm bzw. build_pattern_subterm, but computing value of-, not buildding next subterm
+		//expects name to not have any variables (aka to habe attrbute is_computable) and returns evaluation of name
+		std::complex<double> compute(std::string_view name);
+
+	} //namespace intern3+121212
 } //namespace bmath

@@ -829,80 +829,24 @@ bool Exponentiation::operator==(const Basic_Term& other) const
 //Parenthesis_Operator\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const char* Par_Operator::op_name(Par_Op_Type op_type)
-{
-	switch (op_type) {
-	case log10:	return "log10(";
-	case asinh:	return "asinh(";
-	case acosh:	return "acosh(";
-	case atanh:	return "atanh(";
-	case asin:	return "asin(";
-	case acos:	return "acos(";
-	case atan:	return "atan(";
-	case sinh:	return "sinh(";
-	case cosh:	return "cosh(";
-	case tanh:	return "tanh(";
-	case sqrt:	return "sqrt(";
-	case exp:	return "exp(";
-	case sin:	return "sin(";
-	case cos:	return "cos(";
-	case tan:	return "tan(";
-	case abs:	return "abs(";
-	case arg:	return "arg(";
-	case ln:	return "ln(";
-	case re:	return "re(";
-	case im:	return "im(";
-	}
-	return nullptr;
-}
-
 Par_Operator::Par_Operator(Basic_Term* parent_)
 	:Basic_Term(parent_), argument(nullptr), op_type(log10)
 {
-}
-
-Vals_Combined Par_Operator::internal_combine(Vals_Combined argument_) const
-{
-	if (argument_.known) {
-		switch (this->op_type) {
-		case log10:	return Vals_Combined{ true, std::log10(argument_.val) };
-		case asin:	return Vals_Combined{ true, std::asin(argument_.val) };
-		case acos:	return Vals_Combined{ true, std::acos(argument_.val) };
-		case atan:	return Vals_Combined{ true, std::atan(argument_.val) };
-		case asinh:	return Vals_Combined{ true, std::asinh(argument_.val) };
-		case acosh:	return Vals_Combined{ true, std::acosh(argument_.val) };
-		case atanh:	return Vals_Combined{ true, std::atanh(argument_.val) };
-		case sinh:	return Vals_Combined{ true, std::sinh(argument_.val) };
-		case cosh:	return Vals_Combined{ true, std::cosh(argument_.val) };
-		case tanh:	return Vals_Combined{ true, std::tanh(argument_.val) };
-		case sqrt:	return Vals_Combined{ true, std::sqrt(argument_.val) };
-		case exp:	return Vals_Combined{ true, std::exp(argument_.val) };
-		case sin:	return Vals_Combined{ true, std::sin(argument_.val) };
-		case cos:	return Vals_Combined{ true, std::cos(argument_.val) };
-		case tan:	return Vals_Combined{ true, std::tan(argument_.val) };
-		case abs:	return Vals_Combined{ true, std::abs(argument_.val) };
-		case arg:	return Vals_Combined{ true, std::arg(argument_.val) };
-		case ln:	return Vals_Combined{ true, std::log(argument_.val) };
-		case re:	return Vals_Combined{ true, std::real(argument_.val) };
-		case im:	return Vals_Combined{ true, std::imag(argument_.val) };
-		}
-	}
-	return Vals_Combined{ false, 0 };
 }
 
 Par_Operator::Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_Type op_type_)
 	:Basic_Term(parent_), op_type(op_type_), argument(nullptr)
 {
 	name_.remove_suffix(1);							//closing parenthesis gets cut of
-	name_.remove_prefix(strlen(op_name(op_type)));	//funktionname and opening parenthesis get cut of
+	name_.remove_prefix(strlen(par_op_name(op_type)));	//funktionname and opening parenthesis get cut of
 	this->argument = build_subterm(name_, this);
 }
 
 Par_Operator::Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_Type op_type_, std::list<Pattern_Variable*>& variables)
 	:Basic_Term(parent_), op_type(op_type_), argument(nullptr)
 {
-	name_.remove_suffix(1);							//closing parenthesis gets cut of
-	name_.remove_prefix(strlen(op_name(op_type)));	//funktionname and opening parenthesis get cut of
+	name_.remove_suffix(1);								//closing parenthesis gets cut of
+	name_.remove_prefix(strlen(par_op_name(op_type)));	//funktionname and opening parenthesis get cut of
 	this-> argument = build_pattern_subterm(name_, this, variables);
 }
 
@@ -919,7 +863,7 @@ Par_Operator::~Par_Operator()
 
 void Par_Operator::to_str(std::string & str) const
 {
-	str.append(op_name(this->op_type));
+	str.append(par_op_name(this->op_type));
 	this->argument->to_str(str);
 	str.push_back(')');
 }
@@ -927,7 +871,7 @@ void Par_Operator::to_str(std::string & str) const
 void bmath::intern::Par_Operator::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
 {
 	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
-	new_line.append(op_name(this->op_type));
+	new_line.append(par_op_name(this->op_type));
 	new_line.pop_back();
 	tree_lines.push_back(std::move(new_line));
 	append_last_line(tree_lines, line_prefix);
@@ -947,13 +891,14 @@ void Par_Operator::combine_layers(Basic_Term*& storage_key)
 
 Vals_Combined Par_Operator::combine_values()
 {
-	return this->internal_combine(argument->combine_values());
+	const Vals_Combined arg_comb = argument->combine_values();
+	return { arg_comb.known, evaluate_par_op(arg_comb.val, this->op_type) };
 }
 
 std::complex<double> Par_Operator::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
-	//the return type and parameter of internal_combine is not std::complex but Vals_Combined. However, this contains std::complex as val
-	return this->internal_combine(Vals_Combined{ true, argument->evaluate(known_variables) }).val;
+	
+	return evaluate_par_op(argument->evaluate(known_variables), this->op_type);
 }
 
 void Par_Operator::search_and_replace(const std::string & name_, const Basic_Term* value_, Basic_Term*& storage_key)

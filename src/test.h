@@ -38,7 +38,7 @@ void berechne_teststrs(const std::vector<std::string>& teststrs)
 {
 	for (auto& str : teststrs) {
 		std::string_view str_v{ str };
-		std::cout << (bmath::intern::computable(str_v) ? "true" : "false") << '\t' << str_v << '\n';
+		std::cout << (bmath::intern::is_computable(str_v) ? "true" : "false") << '\t' << str_v << '\n';
 	}
 }
 

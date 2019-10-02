@@ -20,7 +20,7 @@ Value::Value(std::string_view name_, Basic_Term* parent_)
 	else {
 		double factor;
 		std::from_chars(name_.data(), name_.data() + name_.size(), factor);
-		if (name_.find_first_of("i") != std::string::npos) {
+		if (name_.find_first_of('i') != std::string::npos) {
 			this->val.imag(factor);
 		}
 		else {

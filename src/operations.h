@@ -136,8 +136,6 @@ namespace bmath {
 			Par_Op_Type op_type;
 			Basic_Term* argument;
 
-			Vals_Combined internal_combine(Vals_Combined argument_) const;
-
 			Par_Operator(Basic_Term* parent_);
 			Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_Type op_type_);
 			Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_Type op_type_, std::list<Pattern_Variable*>& variables);
@@ -149,9 +147,6 @@ namespace bmath {
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 		public:
 			~Par_Operator();
-
-			//returns c string of operator as written in input/output
-			static const char* op_name(Par_Op_Type op_type);
 
 			void to_str(std::string& str) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;

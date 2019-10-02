@@ -19,13 +19,12 @@ void baue_teststrs(const std::vector<std::string>& teststrs) {
 		std::cout << "String: \t" << str << "\n\n";
 		{
 			bmath::Term test(str);
-			std::cout << "print:  \t" << test << '\n';
+			std::cout << "raw print:  \t" << test << '\n';
 			std::cout << "raw tree:" << test.to_tree(16).erase(0, 9) << "\n\n";
-			std::cout << "combining...\n";
 			test.combine();
 			test.cut_rounding_error();
+			std::cout << "combined print:  \t" << test << "\n";
 			std::cout << "combined tree:" << test.to_tree(16).erase(0, 14) << "\n\n";
-			std::cout << "print:  \t" << test << '\n';
 		}
 	}
 }

@@ -149,11 +149,15 @@ std::string Pattern::print()
 //rules to simplify terms (left string -> right string)
 const std::vector<Pattern*> Pattern::patterns = {
 	new Pattern("sin(x)^2+cos(x)^2", "1"),
-	new Pattern("a*c+a*b", "a*(c+b)"),
 	new Pattern("ln(a)+ln(b)", "ln(a*b)"),
 	new Pattern("(a^b)^c", "a^(b*c)"),
-	new Pattern("a^b*a", "a^(b+1)"),
+
+	new Pattern("a*b+a*c", "a*(b+c)"),
+	new Pattern("a*b+a", "a*(b+1)"),
+	new Pattern("a+a", "a*2"),
 	new Pattern("a^b*a^c", "a^(b+c)"),
+	new Pattern("a^b*a", "a^(b+1)"),
+	new Pattern("a*a", "a^2"),
 };
 
 

@@ -18,11 +18,8 @@ Product::Product(Basic_Term* parent_)
 Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op)
 	:Basic_Term(parent_)
 {
-	std::vector<std::string_view> exposed_parts;
-	find_exposed_parts(name_, exposed_parts);
-
 	while (op != std::string::npos) {
-		const std::string_view subterm_view = name_.substr(op + 1);
+		const std::string_view subterm_view = name_.substr(op + 1);	//we don't want the operator itself to be part of the substr
 		switch (name_[op]) {
 		case '*':
 			this->factors.push_front(build_subterm(subterm_view, this));
@@ -32,8 +29,7 @@ Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op)
 			break;
 		}
 		name_.remove_suffix(name_.length() - op);
-		update_views(name_, exposed_parts);
-		op = find_last_of_in_views(name_, exposed_parts, "*/");
+		op = find_last_of_skip_pars(name_, "*/");
 	}
 	this->factors.push_front(build_subterm(name_, this));
 }
@@ -46,24 +42,20 @@ bmath::intern::Product::Product(std::string_view name_, Basic_Term* parent_, std
 Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
 	:Basic_Term(parent_)
 {
-	std::vector<std::string_view> exposed_parts;
-	find_exposed_parts(name_, exposed_parts);
-
 	while (op != std::string::npos) {
-		const std::string_view subterm_view = name_.substr(op + 1);
+		const std::string_view subterm_view = name_.substr(op + 1);	//we don't want the operator itself to be part of the substr
 		switch (name_[op]) {
 		case '*':
 			this->factors.push_front(build_pattern_subterm(subterm_view, this, variables));
 			break;
 		case '/':
-			this->factors.push_front(new Exponentiation(subterm_view, this, { -1, 0 }, variables));
+			this->factors.push_back(new Exponentiation(subterm_view, this, { -1, 0 }, variables));
 			break;
 		}
 		name_.remove_suffix(name_.length() - op);
-		update_views(name_, exposed_parts);
-		op = find_last_of_in_views(name_, exposed_parts, "*/");
+		op = find_last_of_skip_pars(name_, "*/");
 	}
-	this->factors.push_front(build_pattern_subterm(name_, this, variables));
+	this->factors.push_back(build_pattern_subterm(name_, this, variables));
 }
 
 bmath::intern::Product::Product(std::string_view name_, Basic_Term* parent_, std::complex<double> factor, std::list<Pattern_Variable*>& variables) 
@@ -324,11 +316,8 @@ Sum::Sum(Basic_Term* parent_)
 Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op)
 	:Basic_Term(parent_)
 {
-	std::vector<std::string_view> exposed_parts;
-	find_exposed_parts(name_, exposed_parts);
-
 	while (op != std::string::npos) {
-		const std::string_view subterm_view = name_.substr(op + 1);
+		const std::string_view subterm_view = name_.substr(op + 1);	//we don't want the operator itself to be part of the substr
 		switch (name_[op]) {
 		case '+':
 			this->summands.push_front(build_subterm(subterm_view, this));
@@ -338,8 +327,7 @@ Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op)
 			break;
 		}
 		name_.remove_suffix(name_.length() - op);
-		update_views(name_, exposed_parts);
-		op = find_last_of_in_views(name_, exposed_parts, "+-");
+		op = find_last_of_skip_pars(name_, "+-");
 	}
 	if (name_.size() != 0) {
 		this->summands.push_front(build_subterm(name_, this));
@@ -349,11 +337,8 @@ Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op)
 Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
 	:Basic_Term(parent_)
 {
-	std::vector<std::string_view> exposed_parts;
-	find_exposed_parts(name_, exposed_parts);
-
 	while (op != std::string::npos) {
-		const std::string_view subterm_view = name_.substr(op + 1);
+		const std::string_view subterm_view = name_.substr(op + 1);	//we don't want the operator itself to be part of the substr
 		switch (name_[op]) {
 		case '+':
 			this->summands.push_front(build_pattern_subterm(subterm_view, this, variables));
@@ -363,11 +348,10 @@ Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<
 			break;
 		}
 		name_.remove_suffix(name_.length() - op);
-		update_views(name_, exposed_parts);
-		op = find_last_of_in_views(name_, exposed_parts, "+-");
+		op = find_last_of_skip_pars(name_, "+-");
 	}
 	if (name_.size() != 0) {
-		this->summands.push_front(build_pattern_subterm(name_, this, variables));
+		this->summands.push_back(build_pattern_subterm(name_, this, variables));
 	}
 }
 
@@ -848,46 +832,26 @@ bool Exponentiation::operator==(const Basic_Term& other) const
 const char* Par_Operator::op_name(Par_Op_Type op_type)
 {
 	switch (op_type) {
-	case log10:
-		return "log10(";
-	case asinh:
-		return "asinh(";
-	case acosh:
-		return "acosh(";
-	case atanh:
-		return "atanh(";
-	case asin:
-		return "asin(";
-	case acos:
-		return "acos(";
-	case atan:
-		return "atan(";
-	case sinh:
-		return "sinh(";
-	case cosh:
-		return "cosh(";
-	case tanh:
-		return "tanh(";
-	case sqrt:
-		return "sqrt(";
-	case exp:
-		return "exp(";
-	case sin:
-		return "sin(";
-	case cos:
-		return "cos(";
-	case tan:
-		return "tan(";
-	case abs:
-		return "abs(";
-	case arg:
-		return "arg(";
-	case ln:
-		return "ln(";
-	case re:
-		return "re(";
-	case im:
-		return "im(";
+	case log10:	return "log10(";
+	case asinh:	return "asinh(";
+	case acosh:	return "acosh(";
+	case atanh:	return "atanh(";
+	case asin:	return "asin(";
+	case acos:	return "acos(";
+	case atan:	return "atan(";
+	case sinh:	return "sinh(";
+	case cosh:	return "cosh(";
+	case tanh:	return "tanh(";
+	case sqrt:	return "sqrt(";
+	case exp:	return "exp(";
+	case sin:	return "sin(";
+	case cos:	return "cos(";
+	case tan:	return "tan(";
+	case abs:	return "abs(";
+	case arg:	return "arg(";
+	case ln:	return "ln(";
+	case re:	return "re(";
+	case im:	return "im(";
 	}
 	return nullptr;
 }
@@ -901,46 +865,26 @@ Vals_Combined Par_Operator::internal_combine(Vals_Combined argument_) const
 {
 	if (argument_.known) {
 		switch (this->op_type) {
-		case log10:
-			return Vals_Combined{ true, std::log10(argument_.val) };
-		case asin:
-			return Vals_Combined{ true, std::asin(argument_.val) };
-		case acos:			
-			return Vals_Combined{ true, std::acos(argument_.val) };
-		case atan:		
-			return Vals_Combined{ true, std::atan(argument_.val) };
-		case asinh:			
-			return Vals_Combined{ true, std::asinh(argument_.val) };
-		case acosh:			
-			return Vals_Combined{ true, std::acosh(argument_.val) };
-		case atanh:		
-			return Vals_Combined{ true, std::atanh(argument_.val) };
-		case sinh:	
-			return Vals_Combined{ true, std::sinh(argument_.val) };
-		case cosh:			
-			return Vals_Combined{ true, std::cosh(argument_.val) };
-		case tanh:			
-			return Vals_Combined{ true, std::tanh(argument_.val) };
-		case sqrt:			
-			return Vals_Combined{ true, std::sqrt(argument_.val) };
-		case exp:				
-			return Vals_Combined{ true, std::exp(argument_.val) };
-		case sin:				
-			return Vals_Combined{ true, std::sin(argument_.val) };
-		case cos:			
-			return Vals_Combined{ true, std::cos(argument_.val) };
-		case tan:			
-			return Vals_Combined{ true, std::tan(argument_.val) };
-		case abs:			
-			return Vals_Combined{ true, std::abs(argument_.val) };
-		case arg:			
-			return Vals_Combined{ true, std::arg(argument_.val) };
-		case ln:				
-			return Vals_Combined{ true, std::log(argument_.val) };
-		case re:			
-			return Vals_Combined{ true, std::real(argument_.val) };
-		case im:				
-			return Vals_Combined{ true, std::imag(argument_.val) };
+		case log10:	return Vals_Combined{ true, std::log10(argument_.val) };
+		case asin:	return Vals_Combined{ true, std::asin(argument_.val) };
+		case acos:	return Vals_Combined{ true, std::acos(argument_.val) };
+		case atan:	return Vals_Combined{ true, std::atan(argument_.val) };
+		case asinh:	return Vals_Combined{ true, std::asinh(argument_.val) };
+		case acosh:	return Vals_Combined{ true, std::acosh(argument_.val) };
+		case atanh:	return Vals_Combined{ true, std::atanh(argument_.val) };
+		case sinh:	return Vals_Combined{ true, std::sinh(argument_.val) };
+		case cosh:	return Vals_Combined{ true, std::cosh(argument_.val) };
+		case tanh:	return Vals_Combined{ true, std::tanh(argument_.val) };
+		case sqrt:	return Vals_Combined{ true, std::sqrt(argument_.val) };
+		case exp:	return Vals_Combined{ true, std::exp(argument_.val) };
+		case sin:	return Vals_Combined{ true, std::sin(argument_.val) };
+		case cos:	return Vals_Combined{ true, std::cos(argument_.val) };
+		case tan:	return Vals_Combined{ true, std::tan(argument_.val) };
+		case abs:	return Vals_Combined{ true, std::abs(argument_.val) };
+		case arg:	return Vals_Combined{ true, std::arg(argument_.val) };
+		case ln:	return Vals_Combined{ true, std::log(argument_.val) };
+		case re:	return Vals_Combined{ true, std::real(argument_.val) };
+		case im:	return Vals_Combined{ true, std::imag(argument_.val) };
 		}
 	}
 	return Vals_Combined{ false, 0 };

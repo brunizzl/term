@@ -12,28 +12,11 @@
 namespace bmath {
 	namespace intern {
 
-		//finds matching closed parethesis to the open_par in name 
-		std::size_t find_closed_par(std::size_t open_par, const std::string_view name);
-
-		//puts the parts of name not enclosed in parentheses in exposed (including the bordering open (not closed) parentheses)
-		//example: name "(2+a)*4/sin(x)" would push the view "*4/sin(" in exposed. 
-		//the open parenthesis is needed to detect par_operator (as sin) in exposed parts 
-		void find_exposed_parts(std::string_view name, std::vector<std::string_view>& exposed);
-
-		//searches characters in views of name, returns position in name
-		std::size_t find_last_of_in_views(const std::string_view name, const std::vector<std::string_view>& views, const char* const characters);
+		//finds matching open parethesis to the clsd_par in name 
+		std::size_t find_open_par(std::size_t clsd_par, const std::string_view name);
 
 		//searches characters in name while skipping parts containing parentheses
-		std::size_t find_first_of_skip_pars(const std::string_view name, const char* const characters);
-
-		//searches searchstr in views of name, returns position in name (modified rfind of std::string_view)
-		std::size_t rfind_in_views(const std::string_view name, const std::vector<std::string_view>& views, const char* searchstr);
-
-		//searches searchstr in name while skipping parts containing parentheses
-		std::size_t find_skip_pars(const std::string_view name, const char* const searchstr);
-
-		//removes views no longer part of name
-		void update_views(const std::string_view name, std::vector<std::string_view>& views);
+		std::size_t find_last_of_skip_pars(const std::string_view name, const char* const characters);
 
 		//returns pointer to newly build term of right type (u now have ownership of object)
 		Basic_Term* build_subterm(std::string_view subterm_view, Basic_Term* parent_);
@@ -49,7 +32,7 @@ namespace bmath {
 
 		//decides type of next subterm (finds the next operation to split string and create subterm from)
 		//(needs modification if new termtype is added)
-		Type type_subterm(const std::string_view name, const std::vector<std::string_view>& exposed_parts, std::size_t& op, Par_Op_Type& type_par_op);
+		Type type_subterm(const std::string_view name, std::size_t& op, Par_Op_Type& type_par_op);
 
 		//deletes spaces and checks parentheses
 		void preprocess_str(std::string& str);

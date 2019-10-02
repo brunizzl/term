@@ -6,33 +6,44 @@
 #include <chrono>
 #include "term.h"
 
-void replace_constants(bmath::Term& term) {
+#include "internal_functions.h"
+
+void replace_constants(bmath::Term& term) 
+{
 	const std::string pi("pi");
 	const std::string e("e");
 	term.search_and_replace(pi, 3.14159265358979323846);
 	term.search_and_replace(e, 2.71828182845904523536);
 }
 
-void baue_teststrs(const std::vector<std::string>& teststrs) {
+void baue_teststrs(const std::vector<std::string>& teststrs) 
+{
 	for (auto& str : teststrs) {
-		std::cout << "__________________________________________________________________________________________________________________\n\n";
 		std::cout << "String: \t" << str << '\n';
 		std::cout << '\n';
-		{
-			bmath::Term test(str);
-			std::cout << "raw print:  \t" << test << '\n';
-			std::cout << "raw tree:" << test.to_tree(16).erase(0, 9) << '\n';
-			std::cout << '\n';
-			test.combine();
-			test.cut_rounding_error();
-			std::cout << "combined print:\t" << test << '\n';
-			std::cout << "combined tree:" << test.to_tree(16).erase(0, 14) << '\n';
-			std::cout << '\n';
-		}
+		bmath::Term test(str);
+		std::cout << "raw print:  \t" << test << '\n';
+		std::cout << "raw tree:" << test.to_tree(16).erase(0, 9) << '\n';
+		std::cout << '\n';
+		test.combine();
+		test.cut_rounding_error();
+		std::cout << "combined print:\t" << test << '\n';
+		std::cout << "combined tree:" << test.to_tree(16).erase(0, 14) << '\n';
+		std::cout << '\n';
+		std::cout << "__________________________________________________________________________________________________________________\n\n";
 	}
 }
 
-void test_strings() {
+void berechne_teststrs(const std::vector<std::string>& teststrs)
+{
+	for (auto& str : teststrs) {
+		std::string_view str_v{ str };
+		std::cout << (bmath::intern::computable(str_v) ? "true" : "false") << '\t' << str_v << '\n';
+	}
+}
+
+void test_strings() 
+{
 	const std::vector<std::string> teststrs = {
 		"(1*(2i^(-2)*3*(4*(a^5))))",
 		"-i+300*a/(a*b)",
@@ -48,11 +59,14 @@ void test_strings() {
 		"3*(sin(a+b+c)^2+cos(a+b+c)^2)+i",
 		"(3^(x^2))^(x)",
 		"sin(-a*b)",
+		"atanh(3+sqrt(-2i))+1*5-12*cos(2i-3)",
 	};
-	baue_teststrs(teststrs);
+	//baue_teststrs(teststrs);
+	berechne_teststrs(teststrs);
 }
 
-void test_function(std::string name) {
+void test_function(std::string name) 
+{
 	bmath::Term function(name);
 	const std::string x_string("x");
 	replace_constants(function);
@@ -62,7 +76,8 @@ void test_function(std::string name) {
 }
 
 //vergleicht zwei funktionen auf äquivalenz
-void test_vergleich() {
+void test_vergleich() 
+{
 	
 	const bmath::Term spannungsteiler("z4/(z3+z4)*z2/(z1+z2)");
 	const bmath::Term Zaus_durch_Zein("(1/(1/z4+1/(z2+z3))) / (z1+1/(1/z2+1/(z3+z4)))");
@@ -82,7 +97,8 @@ void test_vergleich() {
 	}	
 }
 
-void test_rechner() {
+void test_rechner() 
+{
 	while (true) {
 		std::string name;
 		std::cin >> name;
@@ -101,7 +117,8 @@ void test_rechner() {
 	}
 }
 
-void test_timing() {
+void test_timing() 
+{
 	std::cout << "starting calculations with term..." << std::endl;
 	bmath::Term t1("3+4a");
 	bmath::Term t2("1-2*b");

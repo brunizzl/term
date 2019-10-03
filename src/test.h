@@ -66,7 +66,7 @@ void test_strings()
 		"sin(-a*b)",
 		"atanh(3+sqrt(-2i))+1*5-12*cos(2i-3)",
 	};
-	baue_teststrs(teststrs);
+	baue_teststrs(teststrs); 
 	//berechne_teststrs(teststrs);
 }
 

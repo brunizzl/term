@@ -128,6 +128,9 @@ Type bmath::intern::type(const Basic_Term* obj)
 
 Basic_Term* bmath::intern::build_subterm(std::string_view subterm_view, Basic_Term* parent_)
 {
+	if (is_computable(subterm_view)) {
+		return new Value(compute(subterm_view), parent_);
+	}
 	while (subterm_view.size() > 0) {	// two can (if valid) always be build and dont need further chopping of
 
 		std::size_t op = std::string::npos;
@@ -162,6 +165,9 @@ Basic_Term* bmath::intern::build_subterm(std::string_view subterm_view, Basic_Te
 
 Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm_view, Basic_Term* parent_, std::list<Pattern_Variable*>& variables)
 {
+	if (is_computable(subterm_view)) {
+		return new Value(compute(subterm_view), parent_);
+	}
 	while (subterm_view.size() > 0) {
 
 		std::size_t op = std::string::npos;
@@ -292,6 +298,7 @@ const char* const bmath::intern::par_op_name(Par_Op_Type op_type)
 	case re:	return "re(";
 	case im:	return "im(";
 	}
+	return nullptr;
 }
 
 std::complex<double> bmath::intern::evaluate_par_op(std::complex<double> argument, Par_Op_Type op_type)
@@ -318,6 +325,7 @@ std::complex<double> bmath::intern::evaluate_par_op(std::complex<double> argumen
 	case re:	return std::real(argument);
 	case im:	return std::imag(argument);
 	}
+	return 0.0;
 }
 
 
@@ -367,7 +375,7 @@ namespace bmath::intern {
 
 	inline std::complex<double> compute_sub(std::string_view name, std::size_t op)
 	{
-		if (op != 0) {
+		if (op != 0) {	//testing for leading '-'
 			const std::string_view first = name.substr(0, op);
 			name.remove_prefix(op + 1);
 			return compute(first) - compute(name);

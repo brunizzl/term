@@ -138,13 +138,20 @@ Pattern::Pattern(const char* original_, const char* changed_)
 	changed.build(changed_, this->var_adresses);
 }
 
-std::string Pattern::print()
+std::string Pattern::print() const
 {
 	std::string str;
 	this->original.term_ptr->to_str(str);
 	str.append(" -> ");
 	this->changed.term_ptr->to_str(str);
 	return str;
+}
+
+void bmath::intern::Pattern::print_all()
+{
+	for (auto& pattern : patterns) {
+		std::cout << pattern->print() << '\n';
+	}
 }
 
 //rules to simplify terms (left string -> right string)

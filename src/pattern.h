@@ -6,6 +6,7 @@
 #include <list>
 #include <vector>
 #include <complex>
+#include <iostream>
 
 #include "structs.h"
 #include "term.h"
@@ -72,7 +73,8 @@ namespace bmath {
 			Pattern_Term original;	//pattern to be compared to term opject
 			Pattern_Term changed;	//pattern to replace match in term object
 
-			std::string print();
+			std::string print() const;
+			static void print_all();
 
 			//only instances of pattern
 			static const std::vector<Pattern*> patterns;

@@ -38,7 +38,12 @@ void berechne_teststrs(const std::vector<std::string>& teststrs)
 {
 	for (auto& str : teststrs) {
 		std::string_view str_v{ str };
-		std::cout << (bmath::intern::is_computable(str_v) ? "true" : "false") << '\t' << str_v << '\n';
+		bool berechenbar = bmath::intern::is_computable(str_v);
+		std::cout << (berechenbar ? "true" : "false") << '\t' << str_v << '\n';
+		if (berechenbar) {
+			bmath::Term term(str);
+			std::cout << '\t' << term.to_tree(5) << '\n';
+		}
 	}
 }
 
@@ -61,8 +66,8 @@ void test_strings()
 		"sin(-a*b)",
 		"atanh(3+sqrt(-2i))+1*5-12*cos(2i-3)",
 	};
-	//baue_teststrs(teststrs);
-	berechne_teststrs(teststrs);
+	baue_teststrs(teststrs);
+	//berechne_teststrs(teststrs);
 }
 
 void test_function(std::string name) 
@@ -104,7 +109,7 @@ void test_rechner()
 		std::cin >> name;
 		try {
 			bmath::Term test(name); 
-			std::cout << test.to_tree() << '\n';
+			std::cout << "baum:" << test.to_tree(7).erase(0, 5) << '\n';
 			replace_constants(test);
 			test.combine();
 			test.cut_rounding_error();

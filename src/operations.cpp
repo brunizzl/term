@@ -18,20 +18,43 @@ Product::Product(Basic_Term* parent_)
 Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op)
 	:Basic_Term(parent_)
 {
+	std::complex<double> known_factor = 1.0;
 	while (op != std::string::npos) {
 		const std::string_view subterm_view = name_.substr(op + 1);	//we don't want the operator itself to be part of the substr
-		switch (name_[op]) {
-		case '*':
-			this->factors.push_front(build_subterm(subterm_view, this));
-			break;
-		case '/':
-			this->factors.push_front(new Exponentiation(subterm_view, this, { -1, 0 }));
-			break;
+		if (is_computable(subterm_view)) {	//directly computing factor without any memory allocation
+			switch (name_[op]) {
+			case '*':
+				known_factor *= compute(subterm_view);
+				break;
+			case '/':
+				known_factor /= compute(subterm_view);
+				break;
+			}
 		}
+		else {	//factor contains variables -> put him into the factors list
+			switch (name_[op]) {
+			case '*':
+				this->factors.push_front(build_subterm(subterm_view, this));
+				break;
+			case '/':
+				this->factors.push_front(new Exponentiation(subterm_view, this, { -1, 0 }));
+				break;
+			}
+		}		
 		name_.remove_suffix(name_.length() - op);
 		op = find_last_of_skip_pars(name_, "*/");
 	}
-	this->factors.push_front(build_subterm(name_, this));
+	//last part of name without any '*' or '/' in front
+	if (!is_computable(name_)) {
+		this->factors.push_front(build_subterm(name_, this));
+	}
+	else {
+		known_factor *= compute(name_);
+	}
+	//pushing the known factor into factors
+	if (known_factor != 1.0) {
+		this->factors.push_front(new Value(known_factor, this));
+	}
 }
 
 bmath::intern::Product::Product(std::string_view name_, Basic_Term* parent_, std::complex<double> factor) 
@@ -42,20 +65,43 @@ bmath::intern::Product::Product(std::string_view name_, Basic_Term* parent_, std
 Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
 	:Basic_Term(parent_)
 {
+	std::complex<double> known_factor = 1.0;
 	while (op != std::string::npos) {
 		const std::string_view subterm_view = name_.substr(op + 1);	//we don't want the operator itself to be part of the substr
-		switch (name_[op]) {
-		case '*':
-			this->factors.push_front(build_pattern_subterm(subterm_view, this, variables));
-			break;
-		case '/':
-			this->factors.push_back(new Exponentiation(subterm_view, this, { -1, 0 }, variables));
-			break;
+		if (is_computable(subterm_view)) {	//directly computing factor without any memory allocation
+			switch (name_[op]) {
+			case '*':
+				known_factor *= compute(subterm_view);
+				break;
+			case '/':
+				known_factor /= compute(subterm_view);
+				break;
+			}
 		}
+		else {	//factor contains variables -> put him into the factors list
+			switch (name_[op]) {
+			case '*':
+				this->factors.push_front(build_pattern_subterm(subterm_view, this, variables));
+				break;
+			case '/':
+				this->factors.push_back(new Exponentiation(subterm_view, this, { -1, 0 }, variables));
+				break;
+			}
+		}		
 		name_.remove_suffix(name_.length() - op);
 		op = find_last_of_skip_pars(name_, "*/");
 	}
-	this->factors.push_back(build_pattern_subterm(name_, this, variables));
+	//last part of name without any '*' or '/' in front
+	if (!is_computable(name_)) {
+		this->factors.push_front(build_pattern_subterm(name_, this, variables));
+	}
+	else {
+		known_factor *= compute(name_);
+	}
+	//pushing the known factor into factors
+	if (known_factor != 1.0) {
+		this->factors.push_front(new Value(known_factor, this));
+	}
 }
 
 bmath::intern::Product::Product(std::string_view name_, Basic_Term* parent_, std::complex<double> factor, std::list<Pattern_Variable*>& variables) 
@@ -316,42 +362,84 @@ Sum::Sum(Basic_Term* parent_)
 Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op)
 	:Basic_Term(parent_)
 {
+	std::complex<double> known_summand = 0.0;
 	while (op != std::string::npos) {
 		const std::string_view subterm_view = name_.substr(op + 1);	//we don't want the operator itself to be part of the substr
-		switch (name_[op]) {
-		case '+':
-			this->summands.push_front(build_subterm(subterm_view, this));
-			break;
-		case '-':
-			this->summands.push_front(new Product(subterm_view, this, { -1, 0 }));
-			break;
+		if (is_computable(subterm_view)) {	//directly computing factor without any memory allocation
+			switch (name_[op]) {	//directly computing summand without any memory allocation
+			case '+':
+				known_summand += compute(subterm_view);
+				break;
+			case '-':
+				known_summand -= compute(subterm_view);
+				break;
+			}
 		}
+		else {	//summand contains variables -> put him into the summands list
+			switch (name_[op]) {
+			case '+':
+				this->summands.push_front(build_subterm(subterm_view, this));
+				break;
+			case '-':
+				this->summands.push_front(new Product(subterm_view, this, { -1, 0 }));
+				break;
+			}
+		}		
 		name_.remove_suffix(name_.length() - op);
 		op = find_last_of_skip_pars(name_, "+-");
 	}
-	if (name_.size() != 0) {
+	//last part of name without any '+' or '-' in front
+	if (name_.size() != 0 && !is_computable(name_)) {
 		this->summands.push_front(build_subterm(name_, this));
+	}
+	else if (name_.size() != 0) {
+		known_summand += compute(name_);
+	}
+	//pushing the known summand into summands
+	if (known_summand != 0.0) {
+		this->summands.push_front(new Value(known_summand, this));
 	}
 }
 
 Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
 	:Basic_Term(parent_)
 {
+	std::complex<double> known_summand = 0.0;
 	while (op != std::string::npos) {
 		const std::string_view subterm_view = name_.substr(op + 1);	//we don't want the operator itself to be part of the substr
-		switch (name_[op]) {
-		case '+':
-			this->summands.push_front(build_pattern_subterm(subterm_view, this, variables));
-			break;
-		case '-':
-			this->summands.push_front(new Product(subterm_view, this, { -1, 0 }, variables));
-			break;
+		if (is_computable(subterm_view)) {	//directly computing factor without any memory allocation
+			switch (name_[op]) {	//directly computing summand without any memory allocation
+			case '+':
+				known_summand += compute(subterm_view);
+				break;
+			case '-':
+				known_summand -= compute(subterm_view);
+				break;
+			}
+		}
+		else {	//summand contains variables -> put him into the summands list
+			switch (name_[op]) {
+			case '+':
+				this->summands.push_front(build_pattern_subterm(subterm_view, this, variables));
+				break;
+			case '-':
+				this->summands.push_front(new Product(subterm_view, this, { -1, 0 }, variables));
+				break;
+			}
 		}
 		name_.remove_suffix(name_.length() - op);
 		op = find_last_of_skip_pars(name_, "+-");
 	}
-	if (name_.size() != 0) {
-		this->summands.push_back(build_pattern_subterm(name_, this, variables));
+	//last part of name without any '+' or '-' in front
+	if (name_.size() != 0 && !is_computable(name_)) {
+		this->summands.push_front(build_pattern_subterm(name_, this, variables));
+	}
+	else if (name_.size() != 0) {
+		known_summand += compute(name_);
+	}
+	//pushing the known summand into summands
+	if (known_summand != 0.0) {
+		this->summands.push_front(new Value(known_summand, this));
 	}
 }
 
@@ -837,7 +925,7 @@ Par_Operator::Par_Operator(Basic_Term* parent_)
 Par_Operator::Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_Type op_type_)
 	:Basic_Term(parent_), op_type(op_type_), argument(nullptr)
 {
-	name_.remove_suffix(1);							//closing parenthesis gets cut of
+	name_.remove_suffix(1);								//closing parenthesis gets cut of
 	name_.remove_prefix(strlen(par_op_name(op_type)));	//funktionname and opening parenthesis get cut of
 	this->argument = build_subterm(name_, this);
 }

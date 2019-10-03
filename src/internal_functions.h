@@ -59,7 +59,7 @@ namespace bmath {
 		//says whether name is computable (has no variables) or not
 		bool is_computable(std::string_view name);
 
-		//equivalent to type_subterm plus build_subterm bzw. build_pattern_subterm, but computing value of-, not buildding next subterm
+		//equivalent to type_subterm plus build_subterm bzw. build_pattern_subterm, but computing value directly, not building next subterm
 		//expects name to not have any variables (aka to habe attrbute is_computable) and returns evaluation of name
 		std::complex<double> compute(std::string_view name);
 

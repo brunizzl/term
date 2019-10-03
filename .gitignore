@@ -41,3 +41,4 @@ Release/
 *.vcxproj
 *.filters
 *.user
+main.cpp

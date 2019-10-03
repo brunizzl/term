@@ -12,6 +12,7 @@ int main()
 		//test_function("atan(x)");
 		//test_vergleich();
 		test_rechner();
+		//hi
 	}
 	catch (bmath::XTermConstructionError err) {
 		std::cout << err.what() << std::endl;

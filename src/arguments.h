@@ -13,29 +13,23 @@
 namespace bmath {
 	namespace intern {
 
-		class Value : public Basic_Term
+		class Value : public Basic_Term, public std::complex<double>
 		{
 		private:
 
-			Value(std::string_view name_, Basic_Term* parent_);
 			Value(const Value& source, Basic_Term* parent_ = nullptr);
 			Value(std::complex<double> value_, Basic_Term* parent_);
 
 			//access to constructors:
-			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_);
-			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
+			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_, Value_Manipulator value_storage);
+			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator);
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 			friend class Product;
 			friend class Sum;
 			friend class Exponentiation;
 			friend class bmath::Term;
 
-			std::string val_to_str(bool inverse) const;	//returns val as string, with the option to return the negative
-
 		public:
-
-			std::complex<double> val;	//"value" would clash with the Type enum -> shortend to val
-
 			~Value();
 
 			void to_str(std::string& str) const override;
@@ -44,7 +38,7 @@ namespace bmath {
 			Vals_Combined combine_values() override;
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
-			void list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const override;
+			void list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const override;
 			void sort() override; 
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;
@@ -59,8 +53,8 @@ namespace bmath {
 			Variable(const Variable& source, Basic_Term* parent_ = nullptr);
 
 			//access to constructors:
-			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_);
-			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
+			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_, Value_Manipulator value_storage);
+			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator);
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 		public:
 			std::string name;
@@ -73,7 +67,7 @@ namespace bmath {
 			Vals_Combined combine_values() override;
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
-			void list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const override;
+			void list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const override;
 			void sort() override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;

@@ -1,7 +1,10 @@
 
 #include <iostream>
-#include "test.h"
 #include "term.h"
+//#include "internal_functions.h"
+//#include "arguments.h"
+//#include "operations.h"
+#include "test.h"
 
 int main()
 {

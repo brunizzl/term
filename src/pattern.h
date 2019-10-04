@@ -21,7 +21,7 @@ namespace bmath {
 			Pattern_Variable(std::string_view name_, Basic_Term* parent_);
 
 			//access to constructor:
-			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
+			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator);
 		public:
 			std::string name;
 			mutable Basic_Term* pattern_value;	//mutable to allow operator== to stay const
@@ -34,7 +34,7 @@ namespace bmath {
 			Vals_Combined combine_values() override;
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
-			void list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const override;
+			void list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const override;
 			void sort() override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;

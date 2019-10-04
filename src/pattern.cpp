@@ -60,10 +60,10 @@ void Pattern_Variable::search_and_replace(const std::string& name_, const Basic_
 	std::cout << "Error: pattern_variable used instead of variable!\n";
 }
 
-void Pattern_Variable::list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const
+void Pattern_Variable::list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const
 {
 	if (listed_type == Type::variable) {
-		subterms.push_back(const_cast<Pattern_Variable*>(this));
+		subterms.push_back(this);
 	}
 }
 
@@ -118,7 +118,7 @@ void Pattern::Pattern_Term::build(std::string name, std::list<Pattern_Variable*>
 		return;
 	}
 	preprocess_str(name);
-	this->term_ptr = build_pattern_subterm({ name.data(), name.length() }, nullptr, var_adresses);
+	this->term_ptr = build_pattern_subterm({ name.data(), name.length() }, nullptr, var_adresses, { nullptr, nullptr });
 	this->term_ptr->combine_layers(this->term_ptr);
 	this->term_ptr->sort();
 }

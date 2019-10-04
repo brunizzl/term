@@ -12,60 +12,78 @@
 namespace bmath {
 	namespace intern {
 
+		//deletes spaces and checks parentheses (does not check rules for positioning of operators, aka "+-2" would slip here.)
+		void preprocess_str(std::string& str);
+
 		//finds matching open parethesis to the clsd_par in name 
 		std::size_t find_open_par(std::size_t clsd_par, const std::string_view name);
 
 		//searches characters in name while skipping parts containing parentheses
 		std::size_t find_last_of_skip_pars(const std::string_view name, const char* const characters);
+		//overload for single character to search
+		std::size_t find_last_of_skip_pars(const std::string_view name, const char character);
 
+		//(needs modification if new termtype is added)
+		//decides type of next subterm (finds the next operation to split string and create subterm from)
+		//can not determine Type::value, as this is assumed to be found by function is_computable()
+		Type type_subterm(const std::string_view name, std::size_t& op, Par_Op_Type& type_par_op);
+
+		//(needs modification if new termtype is added)
 		//returns pointer to newly build term of right type (u now have ownership of object)
-		Basic_Term* build_subterm(std::string_view subterm_view, Basic_Term* parent_);
+		//if manipulator is != { nullptr, nullptr } and the new subterm is of type value, the return value of build_subterm() will -
+		//be nullptr and the value will instead be combined with manipulator.key using function manipulator.func
+		//manipulator.func takes *manipulator.key as first argument and the new computed value as second.
+		Basic_Term* build_subterm(std::string_view subterm_view, Basic_Term* parent_, Value_Manipulator manipulator = { nullptr, nullptr });
 
+		//(needs modification if new termtype is added)
 		//behaves like build_subterm, exept when a variable is build, it checks in variables if this exists already.
 		//if so: it will just return the adress of the existing variable. (and variables will become pattern_variables)
-		//(needs modification if new termtype is added)
-		Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
+		//the behavior regarding manipulator is the same as in build_subterm()
+		Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator = { nullptr, nullptr });
 
 		//returns pointer to newly build term of right type (u now have ownership of object)
 		//(needs modification if new termtype is added)
 		Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 
-		//decides type of next subterm (finds the next operation to split string and create subterm from)
-		//(needs modification if new termtype is added)
-		Type type_subterm(const std::string_view name, std::size_t& op, Par_Op_Type& type_par_op);
-
-		//deletes spaces and checks parentheses
-		void preprocess_str(std::string& str);
-
-		//returns actual type of obj (sum, product, exponentiation...) but if obj is nullptr returns "undefined"
-		Type type(const Basic_Term* obj);
-
-		//used in output as tree to visually connect new subterm with rest of tree
+		//used in output as tree to visually connect last subterm with rest of tree
 		void append_last_line(std::vector<std::string>& tree_lines, char operation);
 
 		//resets all pattern_values to nullptr (needs to be run, before next match can be found)
 		void reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
 
 		// returns, whether the difference of first and second are within the allowed difference
+		//(helper function for to_string())
 		bool about_equal(const double first, const double second, const double allowed_difference = 0.00000000000001);
 
+		//adds the imaginary part of a complex number (im) to buffer
+		//(helper function for to_string())
+		void add_im_to_stream(std::stringstream& buffer, const double im, bool showpos);
+
+		//translates val to a string
+		//parent_type is needed, to determine, wheather to put parenteses around the string
+		//if inverse == true, -val will be printed
+		std::string to_string(std::complex<double> val, Type parent_type, bool inverse = false);
+
+		//returns actual type of obj (sum, product, exponentiation...) but if obj is nullptr returns "undefined"
+		Type type(const Basic_Term* obj);
+
 		//returns c string of operator as written in input/output
-		const char* const par_op_name(Par_Op_Type op_type);
+		constexpr std::string_view name_of(Par_Op_Type op_type);
 
 		//returns operation(argument), operation depends on op_type
-		std::complex<double> evaluate_par_op(std::complex<double> argument, Par_Op_Type op_type);
+		constexpr std::complex<double> value_of(std::complex<double> argument, Par_Op_Type op_type);
 
 		//returns c string of constant as written in input/output
-		const char* const name_of(Math_Constant constant);
+		constexpr std::string_view name_of(Math_Constant constant);
 
 		//returns value of constant
-		std::complex<double> value_of(Math_Constant constant);
+		constexpr std::complex<double> value_of(Math_Constant constant);
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//stack based calculation\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		//says whether name is computable (has no variables) or not
+		//determines if name is computable (has no variables, but could contain occurences of Math_Constant) or not
 		bool is_computable(std::string_view name);
 
 		//equivalent to type_subterm plus build_subterm bzw. build_pattern_subterm, but computing value directly, not building next subterm

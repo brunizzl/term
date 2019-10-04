@@ -28,10 +28,6 @@ namespace bmath {
 			//appends this to str
 			virtual void to_str(std::string& str) const = 0;
 
-			//is needed in to_str to allow product to print "/" and sum to print "-"
-			//only product and exponentiation implement this function other than basic_term.
-			virtual bool expect_inverse_str() const;
-
 			//called in function to_tree() of bmath::term
 			// tree_lines holds output line by line, dist_root stores distance from this vertex to root, 
 			// line prefix is meant to be set in front of content of this
@@ -58,8 +54,8 @@ namespace bmath {
 			//this function is meant for permanent changes. else use evaluate()
 			virtual void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) = 0;
 
-			//all subterms of requested type get added to the list
-			virtual void list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const = 0;
+			//all subterms of requested type get added to the list (not const, to allow term to add itself
+			virtual void list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const = 0;
 
 			//needs to be run before == makes sense to be used
 			virtual void sort() = 0;
@@ -145,6 +141,3 @@ std::ostream& operator<<(std::ostream& stream, const bmath::Term& term);
 //allows ostream to output Basic_Terms
 std::ostream& operator<<(std::ostream& stream, const bmath::intern::Basic_Term& term);
 
-#include "arguments.h"
-#include "operations.h"
-#include "pattern.h"

@@ -1,6 +1,8 @@
 
 #include "term.h"
 #include "internal_functions.h"
+#include "arguments.h"
+#include "operations.h"
 
 using namespace bmath::intern;
 
@@ -21,10 +23,6 @@ Basic_Term::Basic_Term(const Basic_Term& source)
 Basic_Term::~Basic_Term()
 {
 	//cleaning up the tree is done in derived classes
-}
-
-bool Basic_Term::expect_inverse_str() const {
-	return false;	//usually to_str just returns its normal state, not an inversed one.
 }
 
 void Basic_Term::combine_layers(Basic_Term*& storage_key)
@@ -122,10 +120,10 @@ std::string bmath::Term::to_tree(std::size_t offset) const
 std::list<std::string> bmath::Term::get_var_names() const
 {
 	std::list<std::string> names;
-	std::list<Basic_Term*> variables;
+	std::list<const Basic_Term*> variables;
 	this->term_ptr->list_subterms(variables, Type::variable);
-	for (auto it : variables) {
-		names.push_back(static_cast<Variable*>(it)->name);
+	for (const auto it : variables) {
+		names.push_back(static_cast<const Variable*>(it)->name);
 	}
 	return names;
 }
@@ -196,22 +194,22 @@ void bmath::Term::combine()
 
 void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 {
-	std::list<Basic_Term*> values;
+	std::list<const Basic_Term*> values;
 	this->term_ptr->list_subterms(values, Type::value);
 	double quadratic_sum = 0;	//real and imaginary part are added seperatly
 	for (auto &it : values) {
-		quadratic_sum += std::abs(static_cast<Value*>(it)->val.real()) * std::abs(static_cast<Value*>(it)->val.real());
-		quadratic_sum += std::abs(static_cast<Value*>(it)->val.imag()) * std::abs(static_cast<Value*>(it)->val.imag());
+		quadratic_sum += std::abs(static_cast<const Value*>(it)->real()) * std::abs(static_cast<const Value*>(it)->real());
+		quadratic_sum += std::abs(static_cast<const Value*>(it)->imag()) * std::abs(static_cast<const Value*>(it)->imag());
 	}
 	if (quadratic_sum != 0) {
 		const double quadratic_average = std::sqrt(quadratic_sum / values.size() / 2);	//equal to standard deviation from 0
 		const double limit_to_0 = quadratic_average * std::pow(10, -pow_of_10_diff_to_set_0);
 		for (auto &it : values) {
-			if (std::abs(static_cast<Value*>(it)->val.real()) < limit_to_0) {
-				static_cast<Value*>(it)->val.real(0);
+			if (std::abs(static_cast<const Value*>(it)->real()) < limit_to_0) {
+				const_cast<Value*>(static_cast<const Value*>(it))->real(0);
 			}
-			if (std::abs(static_cast<Value*>(it)->val.imag()) < limit_to_0) {
-				static_cast<Value*>(it)->val.imag(0);
+			if (std::abs(static_cast<const Value*>(it)->imag()) < limit_to_0) {
+				const_cast<Value*>(static_cast<const Value*>(it))->imag(0);
 			}
 		}
 	}
@@ -220,7 +218,7 @@ void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 bmath::Term& bmath::Term::operator+=(const Term& operand2)
 {
 	if (this->term_ptr->get_type() == Type::value && operand2.term_ptr->get_type() == Type::value) {
-		static_cast<Value*>(this->term_ptr)->val += static_cast<Value*>(operand2.term_ptr)->val;
+		*static_cast<Value*>(this->term_ptr) += *static_cast<Value*>(operand2.term_ptr);
 	}
 	else {
 		Sum* sum = new Sum(nullptr);
@@ -236,7 +234,7 @@ bmath::Term& bmath::Term::operator+=(const Term& operand2)
 bmath::Term& bmath::Term::operator-=(const Term& operand2)
 {
 	if (this->term_ptr->get_type() == Type::value && operand2.term_ptr->get_type() == Type::value) {
-		static_cast<Value*>(this->term_ptr)->val -= static_cast<Value*>(operand2.term_ptr)->val;
+		*static_cast<Value*>(this->term_ptr) -= *static_cast<Value*>(operand2.term_ptr);
 	}
 	else {
 		Sum* sum = new Sum(nullptr);
@@ -244,7 +242,7 @@ bmath::Term& bmath::Term::operator-=(const Term& operand2)
 		sum->summands.push_back(this->term_ptr);
 
 		Product* subtractor = new Product(sum);
-		subtractor->factors.push_back(new Value({ -1, 0 }, subtractor));
+		subtractor->factors.push_back(new Value(std::complex<double>{ -1, 0 }, subtractor));
 		subtractor->factors.push_back(copy_subterm(operand2.term_ptr, subtractor));
 
 		sum->summands.push_back(subtractor);
@@ -257,7 +255,7 @@ bmath::Term& bmath::Term::operator-=(const Term& operand2)
 bmath::Term& bmath::Term::operator*=(const Term& operand2)
 {
 	if (this->term_ptr->get_type() == Type::value && operand2.term_ptr->get_type() == Type::value) {
-		static_cast<Value*>(this->term_ptr)->val *= static_cast<Value*>(operand2.term_ptr)->val;
+		*static_cast<Value*>(this->term_ptr) *= *static_cast<Value*>(operand2.term_ptr);
 	}
 	else {
 		Product* product = new Product(nullptr);
@@ -273,7 +271,7 @@ bmath::Term& bmath::Term::operator*=(const Term& operand2)
 bmath::Term& bmath::Term::operator/=(const Term& operand2)
 {
 	if (this->term_ptr->get_type() == Type::value && operand2.term_ptr->get_type() == Type::value) {
-		static_cast<Value*>(this->term_ptr)->val /= static_cast<Value*>(operand2.term_ptr)->val;
+		*static_cast<Value*>(this->term_ptr) /= *static_cast<Value*>(operand2.term_ptr);
 	}
 	else {
 		Product* product = new Product(nullptr);
@@ -281,7 +279,7 @@ bmath::Term& bmath::Term::operator/=(const Term& operand2)
 		product->factors.push_back(this->term_ptr);
 
 		Exponentiation* divisor = new Exponentiation(product);
-		divisor->exponent = new Value({ -1, 0 }, divisor);
+		divisor->exponent = new Value(std::complex<double>{ -1, 0 }, divisor);
 		divisor->base = copy_subterm(operand2.term_ptr, divisor);
 
 		product->factors.push_back(divisor);

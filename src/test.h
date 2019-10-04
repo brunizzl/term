@@ -8,14 +8,6 @@
 
 #include "internal_functions.h"
 
-void replace_constants(bmath::Term& term) 
-{
-	const std::string pi("pi");
-	const std::string e("e");
-	term.search_and_replace(pi, 3.14159265358979323846);
-	term.search_and_replace(e, 2.71828182845904523536);
-}
-
 void baue_teststrs(const std::vector<std::string>& teststrs) 
 {
 	for (auto& str : teststrs) {
@@ -50,12 +42,12 @@ void berechne_teststrs(const std::vector<std::string>& teststrs)
 void test_strings() 
 {
 	const std::vector<std::string> teststrs = {
-		"(1*(2i^(-2)*3*(4*(a^5))))",
+		"(1*[2i^(-2)*3*(4*(a^5))])",
 		"-i+300*a/(a*b)",
 		"1-2*3",
 		"(10/5)^3",
 		"(3*x-2*y)/5",
-		"5+pi+7/(5-a+ln(2))^3",
+		"5+pi+7/(5-a+ln[2])^3",
 		"auto^herbert*3+auto^(-32*a)-4",
 		"6/7/8*a/4",
 		"-4*q/s^2",
@@ -74,7 +66,6 @@ void test_function(std::string name)
 {
 	bmath::Term function(name);
 	const std::string x_string("x");
-	replace_constants(function);
 	for (double x = 0; x < 10; x += 0.1) {
 		std::cout << x << '\t' << function.evaluate(x_string, x) << '\n';
 	}
@@ -110,7 +101,6 @@ void test_rechner()
 		try {
 			bmath::Term test(name); 
 			std::cout << "baum:" << test.to_tree(7).erase(0, 5) << '\n';
-			replace_constants(test);
 			test.combine();
 			test.cut_rounding_error();
 			std::cout << "-> " << test << "\n\n";

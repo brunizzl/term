@@ -72,11 +72,19 @@ namespace bmath {
 		//return of function combine_values()
 		//if function was able to combine to one single value, this gets returned
 		//otherwise state == unknown and val is uninitialised.
-		//special case: 
 		struct Vals_Combined 
 		{
 			bool known;
 			std::complex<double> val;
+		};
+
+		//planned use is to manipulate *key using func with second beeing a local in callers environment.
+		//used in build_subterm and build_pattern_subterm to not allocate new memory, -
+		//if there is an option to directly modify an existing value instead of returning a new one.
+		struct Value_Manipulator
+		{
+			std::complex<double>* key;
+			void(*func)(std::complex<double>* first, std::complex<double> second);
 		};
 
 	} //namespace intern

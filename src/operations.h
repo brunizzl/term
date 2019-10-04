@@ -8,6 +8,7 @@
 #include <complex>
 #include <optional>
 
+#include "arguments.h"
 #include "structs.h"
 #include "term.h"
 
@@ -19,35 +20,33 @@ namespace bmath {
 		private:
 			Product(Basic_Term* parent_);
 			Product(std::string_view name_, Basic_Term* parent_, std::size_t op);
-			Product(std::string_view name_, Basic_Term* parent_, std::complex<double> factor);
+			Product(Basic_Term* name_, Basic_Term* parent_, std::complex<double> factor);
 			Product(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
-			Product(std::string_view name_, Basic_Term* parent_, std::complex<double> factor, std::list<Pattern_Variable*>& variables);
 			Product(const Product& source, Basic_Term* parent_ = nullptr);
 
 			//access to constructors:
-			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_);
-			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
+			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_, Value_Manipulator value_storage);
+			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator);
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 			friend class bmath::Term;
 			friend class Sum;
 
-			//returns real part of value of exponent if exponent is value and has no imaginary part.
-			std::optional<double> factor_value() const;
-
 		public:
-			std::list<Basic_Term*> factors;
+			//all product methods treat this list as if does not contain any values. 
+			//so better run combine_values() if you replaced a Variable by a Value or have done something similar.
+			std::list<Basic_Term*> factors;	
+			Value value_factor;
 
 			~Product();
 
 			void to_str(std::string& str) const override;
-			bool expect_inverse_str() const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			Type get_type() const override;
 			void combine_layers(Basic_Term*& storage_key) override;
 			Vals_Combined combine_values() override;
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
-			void list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const override;
+			void list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const override;
 			void sort() override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;	//NOCH NICHT GANZ IMPLEMENTIERT!
 			bool operator<(const Basic_Term& other) const override;
@@ -64,12 +63,16 @@ namespace bmath {
 			Sum(const Sum& source, Basic_Term* parent_ = nullptr);
 
 			//access to constructors:
-			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_);
-			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
+			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_, Value_Manipulator value_storage);
+			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator);
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 			friend class bmath::Term;
+
 		public:
+			//all sum methods treat this list as if does not contain any values. 
+			//so better run combine_values() if you replaced a Variable by a Value or have done something similar.
 			std::list<Basic_Term*> summands;
+			Value value_summand;
 
 			~Sum();
 
@@ -80,7 +83,7 @@ namespace bmath {
 			Vals_Combined combine_values() override;
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
-			void list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const override;
+			void list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const override;
 			void sort() override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;	//NOCH NICHT GANZ IMPLEMENTIERT!
 			bool operator<(const Basic_Term& other) const override;
@@ -93,20 +96,16 @@ namespace bmath {
 		private:
 			Exponentiation(Basic_Term* parent_);
 			Exponentiation(std::string_view name_, Basic_Term* parent_, std::size_t op);
-			Exponentiation(std::string_view base_, Basic_Term* parent_, std::complex<double> exponent_);
+			Exponentiation(Basic_Term* base_, Basic_Term* parent_, std::complex<double> exponent_);
 			Exponentiation(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
-			Exponentiation(std::string_view base_, Basic_Term* parent_, std::complex<double> exponent_, std::list<Pattern_Variable*>& variables);
 			Exponentiation(const Exponentiation& source, Basic_Term* parent_ = nullptr);
 
 			//access to constructors:
-			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_);
-			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
+			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_, Value_Manipulator value_storage);
+			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator);
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 			friend class bmath::Term;
 			friend class Product;
-
-			//returns real part of value of exponent if exponent is value and has no imaginary part.
-			std::optional<double> exponent_value() const;	
 
 		public:
 			Basic_Term* exponent;
@@ -115,14 +114,13 @@ namespace bmath {
 			~Exponentiation();
 
 			void to_str(std::string& str) const override;
-			bool expect_inverse_str() const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			Type get_type() const override;
 			void combine_layers(Basic_Term*& storage_key) override;
 			Vals_Combined combine_values() override;
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
-			void list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const override;
+			void list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const override;
 			void sort() override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;
@@ -142,8 +140,8 @@ namespace bmath {
 			Par_Operator(const Par_Operator& source, Basic_Term* parent_ = nullptr);
 
 			//access to constructors:
-			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_);
-			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables);
+			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_, Value_Manipulator value_storage);
+			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator);
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 		public:
 			~Par_Operator();
@@ -155,7 +153,7 @@ namespace bmath {
 			Vals_Combined combine_values() override;
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
-			void list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const override;
+			void list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const override;
 			void sort() override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;

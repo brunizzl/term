@@ -40,7 +40,7 @@ Value::Value(std::complex<double> value_, Basic_Term* parent_)
 }
 
 
-std::string bmath::intern::Value::val_to_str(bool inverse) const {	//warning: ugliest function ever :(
+std::string Value::val_to_str(bool inverse) const {	//warning: ugliest function ever :(
 	const double re = inverse ? -(this->val.real()) : this->val.real();
 	const double im = inverse ? -(this->val.imag()) : this->val.imag();
 	bool pars = false;	//decides if parentheses are put around number
@@ -48,12 +48,13 @@ std::string bmath::intern::Value::val_to_str(bool inverse) const {	//warning: ug
 
 	if (re != 0 && im != 0) {
 		pars = type(this->parent) > this->get_type(); //stronger binding term above -> parentheses
+
 		buffer << re;
 
-		if (im > -1.00000000001 && im < -0.99999999999) {		//im == -1
+		if (about_equal(im, -1.0)) {
 			buffer << '-';
 		}
-		else if (im < 1.00000000001 && im > 0.99999999999) {	//im == 1
+		else if (about_equal(im, 1.0)) {
 			buffer << '+';
 		}
 		else {
@@ -61,21 +62,21 @@ std::string bmath::intern::Value::val_to_str(bool inverse) const {	//warning: ug
 		}
 		buffer << 'i';
 	}
-	else if (re != 0 && im == 0) {
-		pars = re < 0 && type(this->parent) > value; //leading '-' and term above		
+	else if	(re != 0 && im == 0) {
+		pars = re < 0 && type(this->parent) > Type::value; //leading '-' and term above		
 		buffer << re;
 	}
-	else if (re == 0 && im != 0) {		// yi
-		pars = im < 0 && type(this->parent) > value; //leading '-' and term above		
-		if (im > -1.00000000001 && im < -0.99999999999) {		//im == -1
+	else if (re == 0 && im != 0) {
+		pars = im < 0 && type(this->parent) > Type::value; //leading '-' and term above		
+		if (about_equal(im, -1.0)) {
 			buffer << '-';
 		}
-		else if (im > 1.00000000001 || im < 0.99999999999) {	//im != 1
+		else if (!about_equal(im, 1.0)) {
 			buffer << im;
 		}
 		buffer << 'i';
 	}
-	else if (re == 0 && im == 0) {
+	else {
 		buffer << '0';
 	}
 
@@ -107,12 +108,12 @@ void Value::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_
 
 Type Value::get_type() const
 {
-	return value;
+	return Type::value;
 }
 
 Vals_Combined Value::combine_values()
 {
-	return Vals_Combined{ true, this->val };
+	return { true, this->val };
 }
 
 std::complex<double> Value::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
@@ -127,7 +128,7 @@ void Value::search_and_replace(const std::string& name_, const Basic_Term* value
 
 void Value::list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const
 {
-	if (listed_type == value) {
+	if (listed_type == Type::value) {
 		subterms.push_back(const_cast<Value*>(this));
 	}
 }
@@ -166,9 +167,9 @@ bool Value::operator<(const Basic_Term& other) const
 bool Value::operator==(const Basic_Term& other) const
 {
 	switch (other.get_type()) {
-	case value:
+	case Type::value:
 		break;
-	case pattern_variable:
+	case Type::pattern_variable:
 		return other == *this;
 	default:
 		return false;
@@ -212,12 +213,12 @@ void Variable::to_tree_str(std::vector<std::string>& tree_lines, unsigned int di
 
 Type Variable::get_type() const
 {
-	return variable;
+	return Type::variable;
 }
 
 Vals_Combined Variable::combine_values()
 {
-	return Vals_Combined{ false, 0 };
+	return { false, 0 };
 }
 
 std::complex<double> Variable::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
@@ -240,7 +241,7 @@ void Variable::search_and_replace(const std::string& name_, const Basic_Term* va
 
 void Variable::list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const
 {
-	if (listed_type == variable) {
+	if (listed_type == Type::variable) {
 		subterms.push_back(const_cast<Variable*>(this));
 	}
 }
@@ -274,9 +275,9 @@ bool Variable::operator<(const Basic_Term& other) const
 bool Variable::operator==(const Basic_Term& other) const
 {
 	switch (other.get_type()) {
-	case variable:
+	case Type::variable:
 		break;
-	case pattern_variable:
+	case Type::pattern_variable:
 		return other == *this;
 	default:
 		return false;

@@ -30,7 +30,7 @@ namespace bmath {
 
 			//is needed in to_str to allow product to print "/" and sum to print "-"
 			//only product and exponentiation implement this function other than basic_term.
-			virtual bool inverse_str() const;
+			virtual bool expect_inverse_str() const;
 
 			//called in function to_tree() of bmath::term
 			// tree_lines holds output line by line, dist_root stores distance from this vertex to root, 

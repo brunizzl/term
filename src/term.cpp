@@ -23,7 +23,7 @@ Basic_Term::~Basic_Term()
 	//cleaning up the tree is done in derived classes
 }
 
-bool bmath::intern::Basic_Term::inverse_str() const {
+bool Basic_Term::expect_inverse_str() const {
 	return false;	//usually to_str just returns its normal state, not an inversed one.
 }
 
@@ -123,7 +123,7 @@ std::list<std::string> bmath::Term::get_var_names() const
 {
 	std::list<std::string> names;
 	std::list<Basic_Term*> variables;
-	this->term_ptr->list_subterms(variables, variable);
+	this->term_ptr->list_subterms(variables, Type::variable);
 	for (auto it : variables) {
 		names.push_back(static_cast<Variable*>(it)->name);
 	}
@@ -144,10 +144,12 @@ bool bmath::Term::match_and_transform(Pattern& pattern)
 
 void bmath::Term::combine_values()
 {
-	Vals_Combined new_subterm = this->term_ptr->combine_values();
-	if (new_subterm.known) {
-		delete this->term_ptr;
-		this->term_ptr = new Value(new_subterm.val, nullptr);
+	if (type(this->term_ptr) != Type::value) {
+		auto [is_val, val] = this->term_ptr->combine_values();
+		if (is_val) {
+			delete this->term_ptr;
+			this->term_ptr = new Value(val, nullptr);
+		}
 	}
 }
 
@@ -195,7 +197,7 @@ void bmath::Term::combine()
 void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 {
 	std::list<Basic_Term*> values;
-	this->term_ptr->list_subterms(values, value);
+	this->term_ptr->list_subterms(values, Type::value);
 	double quadratic_sum = 0;	//real and imaginary part are added seperatly
 	for (auto &it : values) {
 		quadratic_sum += std::abs(static_cast<Value*>(it)->val.real()) * std::abs(static_cast<Value*>(it)->val.real());
@@ -217,7 +219,7 @@ void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 
 bmath::Term& bmath::Term::operator+=(const Term& operand2)
 {
-	if (this->term_ptr->get_type() == value && operand2.term_ptr->get_type() == value) {
+	if (this->term_ptr->get_type() == Type::value && operand2.term_ptr->get_type() == Type::value) {
 		static_cast<Value*>(this->term_ptr)->val += static_cast<Value*>(operand2.term_ptr)->val;
 	}
 	else {
@@ -233,7 +235,7 @@ bmath::Term& bmath::Term::operator+=(const Term& operand2)
 
 bmath::Term& bmath::Term::operator-=(const Term& operand2)
 {
-	if (this->term_ptr->get_type() == value && operand2.term_ptr->get_type() == value) {
+	if (this->term_ptr->get_type() == Type::value && operand2.term_ptr->get_type() == Type::value) {
 		static_cast<Value*>(this->term_ptr)->val -= static_cast<Value*>(operand2.term_ptr)->val;
 	}
 	else {
@@ -254,7 +256,7 @@ bmath::Term& bmath::Term::operator-=(const Term& operand2)
 
 bmath::Term& bmath::Term::operator*=(const Term& operand2)
 {
-	if (this->term_ptr->get_type() == value && operand2.term_ptr->get_type() == value) {
+	if (this->term_ptr->get_type() == Type::value && operand2.term_ptr->get_type() == Type::value) {
 		static_cast<Value*>(this->term_ptr)->val *= static_cast<Value*>(operand2.term_ptr)->val;
 	}
 	else {
@@ -270,7 +272,7 @@ bmath::Term& bmath::Term::operator*=(const Term& operand2)
 
 bmath::Term& bmath::Term::operator/=(const Term& operand2)
 {
-	if (this->term_ptr->get_type() == value && operand2.term_ptr->get_type() == value) {
+	if (this->term_ptr->get_type() == Type::value && operand2.term_ptr->get_type() == Type::value) {
 		static_cast<Value*>(this->term_ptr)->val /= static_cast<Value*>(operand2.term_ptr)->val;
 	}
 	else {

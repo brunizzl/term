@@ -29,7 +29,7 @@ void Pattern_Variable::to_str(std::string& str) const
 	str.push_back('}');
 }
 
-void bmath::intern::Pattern_Variable::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
+void Pattern_Variable::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
 {
 	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
 	this->to_str(new_line);
@@ -40,13 +40,13 @@ void bmath::intern::Pattern_Variable::to_tree_str(std::vector<std::string>& tree
 
 Type Pattern_Variable::get_type() const
 {
-	return pattern_variable;
+	return Type::pattern_variable;
 }
 
 Vals_Combined Pattern_Variable::combine_values()
 {
 	std::cout << "Error: pattern_variable used instead of variable!\n";
-	return Vals_Combined{ false, 0 };
+	return { false, 0 };
 }
 
 std::complex<double> Pattern_Variable::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
@@ -62,7 +62,7 @@ void Pattern_Variable::search_and_replace(const std::string& name_, const Basic_
 
 void Pattern_Variable::list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const
 {
-	if (listed_type == variable) {
+	if (listed_type == Type::variable) {
 		subterms.push_back(const_cast<Pattern_Variable*>(this));
 	}
 }
@@ -119,6 +119,8 @@ void Pattern::Pattern_Term::build(std::string name, std::list<Pattern_Variable*>
 	}
 	preprocess_str(name);
 	this->term_ptr = build_pattern_subterm({ name.data(), name.length() }, nullptr, var_adresses);
+	this->term_ptr->combine_layers(this->term_ptr);
+	this->term_ptr->sort();
 }
 
 Pattern::Pattern_Term::~Pattern_Term()
@@ -131,11 +133,11 @@ Basic_Term* Pattern::Pattern_Term::copy(Basic_Term* parent_)
 	return copy_subterm(this->term_ptr, parent_);
 }
 
-Pattern::Pattern(const char* original_, const char* changed_)
+Pattern::Pattern(const char * const original_, const char * const changed_)
 	:var_adresses(), original(), changed()
 {
-	original.build(original_, this->var_adresses);
-	changed.build(changed_, this->var_adresses);
+	original.build({ original_ }, this->var_adresses);
+	changed.build({ changed_ }, this->var_adresses);
 }
 
 std::string Pattern::print() const
@@ -147,7 +149,7 @@ std::string Pattern::print() const
 	return str;
 }
 
-void bmath::intern::Pattern::print_all()
+void Pattern::print_all()
 {
 	for (auto& pattern : patterns) {
 		std::cout << pattern->print() << '\n';

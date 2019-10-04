@@ -46,11 +46,20 @@ namespace bmath {
 		//resets all pattern_values to nullptr (needs to be run, before next match can be found)
 		void reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
 
+		// returns, whether the difference of first and second are within the allowed difference
+		bool about_equal(const double first, const double second, const double allowed_difference = 0.00000000000001);
+
 		//returns c string of operator as written in input/output
 		const char* const par_op_name(Par_Op_Type op_type);
 
 		//returns operation(argument), operation depends on op_type
 		std::complex<double> evaluate_par_op(std::complex<double> argument, Par_Op_Type op_type);
+
+		//returns c string of constant as written in input/output
+		const char* const name_of(Math_Constant constant);
+
+		//returns value of constant
+		std::complex<double> value_of(Math_Constant constant);
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//stack based calculation\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\

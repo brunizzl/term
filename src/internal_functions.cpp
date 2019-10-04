@@ -50,38 +50,38 @@ Type bmath::intern::type_subterm(const std::string_view name, std::size_t& op, P
 	//starting search for "basic" operators
 	op = find_last_of_skip_pars(name, "+-");
 	if (op != std::string::npos) {
-		return sum;
+		return Type::sum;
 	}
 	op = find_last_of_skip_pars(name, "*/");
 	if (op != std::string::npos) {
-		return product;
+		return Type::product;
 	}
 	op = find_last_of_skip_pars(name, "^");
 	if (op != std::string::npos) {
-		return exponentiation;
+		return Type::exponentiation;
 	}
 	//searching for parenthesis operators 
 	for (Par_Op_Type op_type : all_par_op_types) {
 		const char* const op_name = par_op_name(op_type);
 		if (name.compare(0, strlen(op_name), op_name) == 0) {
 			par_op_type = op_type;
-			return par_operator;
+			return Type::par_operator;
 		}
 	}
-	if (name[0] == '(' && name[name.length() - 1] == ')') {	
-		return undefined;
+	if (name.front() == '(' && name.back() == ')') {	
+		return Type::undefined;
 	}
 	//staring search for arguments (variable or value)
 	op = name.find_last_of("abcdefghjklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ[]_$");	//search does not search for 'i'
 	if (name.find_last_of("i") != std::string::npos && op == std::string::npos) {
-		return value;
+		return Type::value;
 	}
 	if (op != std::string::npos) {
-		return variable;
+		return Type::variable;
 	}
 	op = name.find_last_of("0123456789");	//number kann also contain '.', however not as only character
 	if (op != std::string::npos) {
-		return value;
+		return Type::value;
 	}
 	throw XTermConstructionError("string is not of expected format");
 }
@@ -122,7 +122,7 @@ Type bmath::intern::type(const Basic_Term* obj)
 		return obj->get_type();
 	}
 	else {
-		return undefined;
+		return Type::undefined;
 	}
 }
 
@@ -138,23 +138,23 @@ Basic_Term* bmath::intern::build_subterm(std::string_view subterm_view, Basic_Te
 		Type type = type_subterm(subterm_view, op, par_op_type);
 
 		switch (type) {
-		case exponentiation:
+		case Type::exponentiation:
 			return new Exponentiation(subterm_view, parent_, op);
-		case product:
+		case Type::product:
 			return new Product(subterm_view, parent_, op);
-		case sum:
+		case Type::sum:
 			return new Sum(subterm_view, parent_, op);
-		case variable:
+		case Type::variable:
 			return new Variable(subterm_view, parent_);
-		case value:
+		case Type::value:
 			return new Value(subterm_view, parent_);
-		case par_operator:
+		case Type::par_operator:
 			return new Par_Operator(subterm_view, parent_, par_op_type);
 		}
 
 		//not variable/value -> string contains parentheses, but no operation outside was found. 
 		//if parentheses dont enclose all of the subterm, there is something wrong.
-		if (subterm_view[0] != '(' || subterm_view[subterm_view.length() - 1] != ')' || subterm_view.size() < 2) {
+		if (subterm_view.front() != '(' || subterm_view.back() != ')' || subterm_view.size() < 2) {
 			throw XTermConstructionError("could not determine operation to split string in function build_subterm()");
 		}
 		subterm_view.remove_prefix(1); //chopping of enclosing parentheses
@@ -175,17 +175,17 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm_view, 
 		Type type = type_subterm(subterm_view, op, par_op_type);
 
 		switch (type) {
-		case exponentiation:
+		case Type::exponentiation:
 			return new Exponentiation(subterm_view, parent_, op, variables);
-		case product:
+		case Type::product:
 			return new Product(subterm_view, parent_, op, variables);
-		case sum:
+		case Type::sum:
 			return new Sum(subterm_view, parent_, op, variables);
-		case par_operator:
+		case Type::par_operator:
 			return new Par_Operator(subterm_view, parent_, par_op_type, variables);
-		case value:
+		case Type::value:
 			return new Value(subterm_view, parent_);
-		case variable:
+		case Type::variable:
 			for (auto& variable : variables) {
 				if (variable->name == subterm_view) {
 					return variable;
@@ -197,7 +197,7 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm_view, 
 		}
 		//not variable/value -> string contains parentheses, but no operation outside was found. 
 		//if parentheses dont enclose all of the subterm, there is something wrong.
-		if (subterm_view[0] != '(' || subterm_view[subterm_view.length() - 1] != ')' || subterm_view.size() < 2) {
+		if (subterm_view.front() != '(' || subterm_view.back() != ')' || subterm_view.size() < 2) {
 			throw XTermConstructionError("could not determine operation to split string in function build_pattern_subterm()");
 		}
 		subterm_view.remove_prefix(1); //chopping of enclosing parentheses
@@ -209,19 +209,19 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm_view, 
 Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* parent_)
 {
 	switch (type(source)) {
-	case par_operator:
+	case Type::par_operator:
 		return new Par_Operator(*(static_cast<const Par_Operator*>(source)), parent_);
-	case value:
+	case Type::value:
 		return new Value(*(static_cast<const Value*>(source)), parent_);
-	case variable:
+	case Type::variable:
 		return new Variable(*(static_cast<const Variable*>(source)), parent_);
-	case sum:
+	case Type::sum:
 		return new Sum(*(static_cast<const Sum*>(source)), parent_);
-	case product:
+	case Type::product:
 		return new Product(*(static_cast<const Product*>(source)), parent_);
-	case exponentiation:
+	case Type::exponentiation:
 		return new Exponentiation(*(static_cast<const Exponentiation*>(source)), parent_);
-	case pattern_variable: {
+	case Type::pattern_variable: {
 		const Pattern_Variable* pattern_variable = static_cast<const Pattern_Variable*>(source);
 		if (pattern_variable->pattern_value != nullptr) {
 			return copy_subterm(pattern_variable->pattern_value, parent_);
@@ -235,10 +235,10 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* pa
 }
 
 // used to create lines of tree output
-const static signed char LINE_UP_DOWN = -77;		//(179)
-const static signed char LINE_UP_RIGHT = -64;		//(192)
-const static signed char LINE_UP_RIGHT_DOWN = -61;	//(195)
-const static signed char LINE_LEFT_RIGHT = -60;		//(196)
+constexpr static signed char LINE_UP_DOWN = -77;		//(179)
+constexpr static signed char LINE_UP_RIGHT = -64;		//(192)
+constexpr static signed char LINE_UP_RIGHT_DOWN = -61;	//(195)
+constexpr static signed char LINE_LEFT_RIGHT = -60;		//(196)
 
 void bmath::intern::append_last_line(std::vector<std::string>& tree_lines, char operation)
 {
@@ -274,29 +274,34 @@ void bmath::intern::reset_pattern_vars(std::list<Pattern_Variable*>& var_adresse
 	}
 }
 
+bool bmath::intern::about_equal(const double first, const double second, const double allowed_difference)
+{
+	return std::abs(first - second) <= allowed_difference;
+}
+
 const char* const bmath::intern::par_op_name(Par_Op_Type op_type)
 {
 	switch (op_type) {
-	case log10:	return "log10(";
-	case asinh:	return "asinh(";
-	case acosh:	return "acosh(";
-	case atanh:	return "atanh(";
-	case asin:	return "asin(";
-	case acos:	return "acos(";
-	case atan:	return "atan(";
-	case sinh:	return "sinh(";
-	case cosh:	return "cosh(";
-	case tanh:	return "tanh(";
-	case sqrt:	return "sqrt(";
-	case exp:	return "exp(";
-	case sin:	return "sin(";
-	case cos:	return "cos(";
-	case tan:	return "tan(";
-	case abs:	return "abs(";
-	case arg:	return "arg(";
-	case ln:	return "ln(";
-	case re:	return "re(";
-	case im:	return "im(";
+	case Par_Op_Type::log10:	return "log10(";
+	case Par_Op_Type::asinh:	return "asinh(";
+	case Par_Op_Type::acosh:	return "acosh(";
+	case Par_Op_Type::atanh:	return "atanh(";
+	case Par_Op_Type::asin:		return "asin(";
+	case Par_Op_Type::acos:		return "acos(";
+	case Par_Op_Type::atan:		return "atan(";
+	case Par_Op_Type::sinh:		return "sinh(";
+	case Par_Op_Type::cosh:		return "cosh(";
+	case Par_Op_Type::tanh:		return "tanh(";
+	case Par_Op_Type::sqrt:		return "sqrt(";
+	case Par_Op_Type::exp:		return "exp(";
+	case Par_Op_Type::sin:		return "sin(";
+	case Par_Op_Type::cos:		return "cos(";
+	case Par_Op_Type::tan:		return "tan(";
+	case Par_Op_Type::abs:		return "abs(";
+	case Par_Op_Type::arg:		return "arg(";
+	case Par_Op_Type::ln:		return "ln(";
+	case Par_Op_Type::re:		return "re(";
+	case Par_Op_Type::im:		return "im(";
 	}
 	return nullptr;
 }
@@ -304,26 +309,46 @@ const char* const bmath::intern::par_op_name(Par_Op_Type op_type)
 std::complex<double> bmath::intern::evaluate_par_op(std::complex<double> argument, Par_Op_Type op_type)
 {
 	switch (op_type) {
-	case log10:	return std::log10(argument);
-	case asinh:	return std::asinh(argument);
-	case acosh:	return std::acosh(argument);
-	case atanh:	return std::atanh(argument);
-	case asin:	return std::asin(argument);
-	case acos:	return std::acos(argument);
-	case atan:	return std::atan(argument);
-	case sinh:	return std::sinh(argument);
-	case cosh:	return std::cosh(argument);
-	case tanh:	return std::tanh(argument);
-	case sqrt:	return std::sqrt(argument);
-	case exp:	return std::exp(argument);
-	case sin:	return std::sin(argument);
-	case cos:	return std::cos(argument);
-	case tan:	return std::tan(argument);
-	case abs:	return std::abs(argument);
-	case arg:	return std::arg(argument);
-	case ln:	return std::log(argument);
-	case re:	return std::real(argument);
-	case im:	return std::imag(argument);
+	case Par_Op_Type::log10:	return std::log10(argument);
+	case Par_Op_Type::asinh:	return std::asinh(argument);
+	case Par_Op_Type::acosh:	return std::acosh(argument);
+	case Par_Op_Type::atanh:	return std::atanh(argument);
+	case Par_Op_Type::asin:		return std::asin(argument);
+	case Par_Op_Type::acos:		return std::acos(argument);
+	case Par_Op_Type::atan:		return std::atan(argument);
+	case Par_Op_Type::sinh:		return std::sinh(argument);
+	case Par_Op_Type::cosh:		return std::cosh(argument);
+	case Par_Op_Type::tanh:		return std::tanh(argument);
+	case Par_Op_Type::sqrt:		return std::sqrt(argument);
+	case Par_Op_Type::exp:		return std::exp(argument);
+	case Par_Op_Type::sin:		return std::sin(argument);
+	case Par_Op_Type::cos:		return std::cos(argument);
+	case Par_Op_Type::tan:		return std::tan(argument);
+	case Par_Op_Type::abs:		return std::abs(argument);
+	case Par_Op_Type::arg:		return std::arg(argument);
+	case Par_Op_Type::ln:		return std::log(argument);
+	case Par_Op_Type::re:		return std::real(argument);
+	case Par_Op_Type::im:		return std::imag(argument);
+	}
+	return 0.0;
+}
+
+const char* const bmath::intern::name_of(Math_Constant constant)
+{
+	switch (constant) {
+	case Math_Constant::i:	return "i";
+	case Math_Constant::e:	return "e";
+	case Math_Constant::pi:	return "pi";
+	}
+	return nullptr;
+}
+
+std::complex<double> bmath::intern::value_of(Math_Constant constant)
+{
+	switch (constant) {
+	case Math_Constant::i:	return { 0, 1 };
+	case Math_Constant::e:	return { 2.718281828459045, 0 };
+	case Math_Constant::pi:	return { 3.141592653589793, 0 };
 	}
 	return 0.0;
 }
@@ -338,28 +363,29 @@ bool bmath::intern::is_computable(std::string_view name)
 	const char* const numeric_symbols = "0123456789.+-*/^()";
 	std::size_t letter_pos = name.find_first_not_of(numeric_symbols);
 	while (letter_pos != std::string::npos)	{
-		if (name[letter_pos] == 'i') { //testing if letter is only "i", followed by numeric syntax
-			if (name.length() == letter_pos + 1 || name.find_first_of(numeric_symbols, letter_pos + 1) == letter_pos + 1) {
-				letter_pos = name.find_first_not_of(numeric_symbols, letter_pos + 2);
-				continue;
-			}			
+
+		//testing if letter is part of (or full) Math_Constant
+		for (Math_Constant constant : all_math_constants) {
+			const char* const const_name = name_of(constant);
+			if (name.compare(letter_pos, strlen(const_name), const_name) == 0) {
+				const std::size_t next_pos = name.find_first_not_of(numeric_symbols, letter_pos + strlen(const_name));
+				if (next_pos != letter_pos + strlen(const_name)) {	//if next non numeric symbol is not the next symbol -> identified letter as Math_Constant
+					letter_pos = next_pos;
+					goto test_next;	//forgive me father, for i have sinned.
+				}
+			}
 		}
 		//testing if letter is beginning of Par_Operator
-		bool found_op = false;
 		for (Par_Op_Type op_type : all_par_op_types) {
 			const char* const op_name = par_op_name(op_type);
 			if (name.compare(letter_pos, strlen(op_name), op_name) == 0) {
+				//we dont need another check if the next letter is not the next char, because all op_name strings end with '('.
 				letter_pos = name.find_first_not_of(numeric_symbols, letter_pos + strlen(op_name));
-				found_op = true;
-				break;
+				goto test_next;
 			}
 		}
-		if (found_op) {
-			continue;
-		}
-		else {
-			return false;
-		}
+		return false;
+		test_next:;	//this letter was found to not be part of an variable -> next letter will be tested in next while iteration
 	}
 	return true;
 }
@@ -416,19 +442,19 @@ namespace bmath::intern {
 
 	inline std::complex<double> compute_val(std::string_view name)
 	{
-		if (name == "i") {
-			return { 0, 1 };
-		}
-		else {
-			double factor;
-			std::from_chars(name.data(), name.data() + name.size(), factor);
-			if (name.find_first_of('i') != std::string::npos) {
-				return { 0, factor };
+		double factor = 1;	//if name only consists of the constant, from chars will not touch factor -> initialized to 1 to not change result if constant is found.
+		const auto [value_end, error] = std::from_chars(name.data(), name.data() + name.size(), factor);	//value_end points to first char not read as part of number.
+
+		const char* const name_end = name.data() + name.length();
+		if (value_end != name_end) {
+			const std::string_view rest(value_end, name_end - value_end);
+			for (Math_Constant constant : all_math_constants) {
+				if (rest == name_of(constant)) {
+					return factor * value_of(constant);
+				}
 			}
-			else {
-				return { factor, 0 };
-			}
 		}
+		return { factor, 0 };
 	}
 }
 
@@ -463,7 +489,7 @@ std::complex<double> bmath::intern::compute(std::string_view name)
 				return compute_par_op(name, op, op_type);
 			}
 		}
-		if (name[0] != '(' && name[name.length() - 1] != ')') {
+		if (name.front() != '(' && name.back() != ')') {
 			return compute_val(name);
 		}
 		name.remove_prefix(1);

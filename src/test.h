@@ -66,7 +66,7 @@ void test_strings()
 		"sin(-a*b)",
 		"atanh(3+sqrt(-2i))+1*5-12*cos(2i-3)",
 	};
-	baue_teststrs(teststrs); 
+	baue_teststrs(teststrs);
 	//berechne_teststrs(teststrs);
 }
 
@@ -113,7 +113,7 @@ void test_rechner()
 			replace_constants(test);
 			test.combine();
 			test.cut_rounding_error();
-			std::cout << "-> " << test << '\n';
+			std::cout << "-> " << test << "\n\n";
 		}
 		catch (bmath::XTermConstructionError& err) {
 			std::cout << "faulty construction string: " << err.what() << std::endl;

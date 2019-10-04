@@ -21,43 +21,22 @@ Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op)
 	std::complex<double> known_factor = 1.0;
 	while (op != std::string::npos) {
 		const std::string_view subterm_view = name_.substr(op + 1);	//we don't want the operator itself to be part of the substr
-		if (is_computable(subterm_view)) {	//directly computing factor without any memory allocation
-			switch (name_[op]) {
-			case '*':
-				known_factor *= compute(subterm_view);
-				break;
-			case '/':
-				known_factor /= compute(subterm_view);
-				break;
-			}
+		switch (name_[op]) {
+		case '*':
+			this->factors.push_front(build_subterm(subterm_view, this));
+			break;
+		case '/':
+			this->factors.push_front(new Exponentiation(subterm_view, this, { -1, 0 }));
+			break;
 		}
-		else {	//factor contains variables -> put him into the factors list
-			switch (name_[op]) {
-			case '*':
-				this->factors.push_front(build_subterm(subterm_view, this));
-				break;
-			case '/':
-				this->factors.push_front(new Exponentiation(subterm_view, this, { -1, 0 }));
-				break;
-			}
-		}		
 		name_.remove_suffix(name_.length() - op);
 		op = find_last_of_skip_pars(name_, "*/");
 	}
 	//last part of name without any '*' or '/' in front
-	if (!is_computable(name_)) {
-		this->factors.push_front(build_subterm(name_, this));
-	}
-	else {
-		known_factor *= compute(name_);
-	}
-	//pushing the known factor into factors
-	if (known_factor != 1.0) {
-		this->factors.push_front(new Value(known_factor, this));
-	}
+	this->factors.push_front(build_subterm(name_, this));
 }
 
-bmath::intern::Product::Product(std::string_view name_, Basic_Term* parent_, std::complex<double> factor) 
+Product::Product(std::string_view name_, Basic_Term* parent_, std::complex<double> factor) 
 	:Basic_Term(parent_), factors({ new Value( factor, this ), build_subterm(name_, this) })
 {
 }
@@ -68,43 +47,22 @@ Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op, st
 	std::complex<double> known_factor = 1.0;
 	while (op != std::string::npos) {
 		const std::string_view subterm_view = name_.substr(op + 1);	//we don't want the operator itself to be part of the substr
-		if (is_computable(subterm_view)) {	//directly computing factor without any memory allocation
-			switch (name_[op]) {
-			case '*':
-				known_factor *= compute(subterm_view);
-				break;
-			case '/':
-				known_factor /= compute(subterm_view);
-				break;
-			}
+		switch (name_[op]) {
+		case '*':
+			this->factors.push_front(build_pattern_subterm(subterm_view, this, variables));
+			break;
+		case '/':
+			this->factors.push_back(new Exponentiation(subterm_view, this, { -1, 0 }, variables));
+			break;
 		}
-		else {	//factor contains variables -> put him into the factors list
-			switch (name_[op]) {
-			case '*':
-				this->factors.push_front(build_pattern_subterm(subterm_view, this, variables));
-				break;
-			case '/':
-				this->factors.push_back(new Exponentiation(subterm_view, this, { -1, 0 }, variables));
-				break;
-			}
-		}		
 		name_.remove_suffix(name_.length() - op);
 		op = find_last_of_skip_pars(name_, "*/");
 	}
 	//last part of name without any '*' or '/' in front
-	if (!is_computable(name_)) {
-		this->factors.push_front(build_pattern_subterm(name_, this, variables));
-	}
-	else {
-		known_factor *= compute(name_);
-	}
-	//pushing the known factor into factors
-	if (known_factor != 1.0) {
-		this->factors.push_front(new Value(known_factor, this));
-	}
+	this->factors.push_front(build_pattern_subterm(name_, this, variables));
 }
 
-bmath::intern::Product::Product(std::string_view name_, Basic_Term* parent_, std::complex<double> factor, std::list<Pattern_Variable*>& variables) 
+Product::Product(std::string_view name_, Basic_Term* parent_, std::complex<double> factor, std::list<Pattern_Variable*>& variables) 
 	:Basic_Term(parent_), factors({ new Value(factor, this), build_pattern_subterm(name_, this, variables) })
 {}
 
@@ -124,8 +82,8 @@ Product::~Product()
 }
 
 
-std::optional<double> bmath::intern::Product::factor_value() const {
-	if (type(this->factors.front()) == value) {
+std::optional<double> Product::factor_value() const {
+	if (type(this->factors.front()) == Type::value) {
 		const Value* const value = static_cast<Value*>(this->factors.front());
 		if (value->val.imag() == 0.0) {
 			return value->val.real();
@@ -143,7 +101,7 @@ void Product::to_str(std::string& str) const
 		str.push_back('(');
 	}
 	bool need_operator = false;
-	bool first = true;	//both bools have nearly opposite meaning but none is redundant.
+	bool first = true;	//both bools have nearly opposite meaning, but none is redundant.
 	for (auto it : this->factors) {
 		if (std::exchange(first, false) && fctr_val) {	//it is first factor and of type value
 			if (std::abs(*fctr_val) != 1.0) {
@@ -153,7 +111,7 @@ void Product::to_str(std::string& str) const
 			}
 		}
 		else {
-			if (it->inverse_str()) {
+			if (it->expect_inverse_str()) {
 				if (!std::exchange(need_operator, true)) {	//first factor -> needs '1' before '/'
 					str.push_back('1');
 				}
@@ -170,10 +128,10 @@ void Product::to_str(std::string& str) const
 	}
 }
 
-bool bmath::intern::Product::inverse_str() const {
+bool Product::expect_inverse_str() const {
 	const std::optional<double> fctr_val = this->factor_value();
 	if (fctr_val) {
-		return *fctr_val < 0 && type(this->parent) == sum;
+		return *fctr_val < 0 && type(this->parent) == Type::sum;
 	}
 	return false;
 }
@@ -192,14 +150,14 @@ void Product::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dis
 
 Type Product::get_type() const
 {
-	return product;
+	return Type::product;
 }
 
 void Product::combine_layers(Basic_Term*& storage_key)
 {
 	for (auto &it = this->factors.begin(); it != this->factors.end();) {	//reference is needed in next line
 		(*it)->combine_layers(*it);
-		if (type(*it) == product) {
+		if (type(*it) == Type::product) {
 			Product* redundant = static_cast<Product*>((*it));
 			for (auto it_red : redundant->factors) {
 				it_red->parent = this;
@@ -226,9 +184,9 @@ Vals_Combined Product::combine_values()
 	std::complex<double> buffer_factor = 1;
 	bool only_known = true;
 	for (auto it = this->factors.begin(); it != this->factors.end();) {
-		const Vals_Combined factor = (*it)->combine_values();
-		if (factor.known) {
-			buffer_factor *= factor.val;
+		const auto [known, factor] = (*it)->combine_values();
+		if (known) {
+			buffer_factor *= factor;
 			delete (*it);
 			it = this->factors.erase(it);
 		}
@@ -238,13 +196,13 @@ Vals_Combined Product::combine_values()
 		}
 	}
 	if (only_known) {
-		return Vals_Combined{ true, buffer_factor };
+		return { true, buffer_factor };
 	}
 	else {	//if product is known completely it will be deleted and replaced with buffer_factor one layer above anyway.
 		if (buffer_factor != 1.0) {
 			this->factors.push_front(new Value(buffer_factor, this));
 		}
-		return Vals_Combined{ false, 0 };
+		return { false, 0 };
 	}
 }
 
@@ -267,7 +225,7 @@ void Product::search_and_replace(const std::string& name_, const Basic_Term* val
 
 void Product::list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const
 {
-	if (listed_type == product) {
+	if (listed_type == Type::product) {
 		subterms.push_back(const_cast<Product*>(this));
 	}
 	for (auto it : this->factors) {
@@ -328,9 +286,9 @@ bool Product::operator<(const Basic_Term& other) const
 bool Product::operator==(const Basic_Term& other) const
 {
 	switch (other.get_type()) {
-	case product:
+	case Type::product:
 		break;
-	case pattern_variable:
+	case Type::pattern_variable:
 		return other == *this;
 	default:
 		return false;
@@ -365,39 +323,20 @@ Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op)
 	std::complex<double> known_summand = 0.0;
 	while (op != std::string::npos) {
 		const std::string_view subterm_view = name_.substr(op + 1);	//we don't want the operator itself to be part of the substr
-		if (is_computable(subterm_view)) {	//directly computing factor without any memory allocation
-			switch (name_[op]) {	//directly computing summand without any memory allocation
-			case '+':
-				known_summand += compute(subterm_view);
-				break;
-			case '-':
-				known_summand -= compute(subterm_view);
-				break;
-			}
-		}
-		else {	//summand contains variables -> put him into the summands list
-			switch (name_[op]) {
-			case '+':
-				this->summands.push_front(build_subterm(subterm_view, this));
-				break;
-			case '-':
-				this->summands.push_front(new Product(subterm_view, this, { -1, 0 }));
-				break;
-			}
-		}		
+		switch (name_[op]) {
+		case '+':
+			this->summands.push_front(build_subterm(subterm_view, this));
+			break;
+		case '-':
+			this->summands.push_front(new Product(subterm_view, this, { -1, 0 }));
+			break;
+		}			
 		name_.remove_suffix(name_.length() - op);
 		op = find_last_of_skip_pars(name_, "+-");
 	}
 	//last part of name without any '+' or '-' in front
-	if (name_.size() != 0 && !is_computable(name_)) {
+	if (name_.size()) {
 		this->summands.push_front(build_subterm(name_, this));
-	}
-	else if (name_.size() != 0) {
-		known_summand += compute(name_);
-	}
-	//pushing the known summand into summands
-	if (known_summand != 0.0) {
-		this->summands.push_front(new Value(known_summand, this));
 	}
 }
 
@@ -407,39 +346,20 @@ Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<
 	std::complex<double> known_summand = 0.0;
 	while (op != std::string::npos) {
 		const std::string_view subterm_view = name_.substr(op + 1);	//we don't want the operator itself to be part of the substr
-		if (is_computable(subterm_view)) {	//directly computing factor without any memory allocation
-			switch (name_[op]) {	//directly computing summand without any memory allocation
-			case '+':
-				known_summand += compute(subterm_view);
-				break;
-			case '-':
-				known_summand -= compute(subterm_view);
-				break;
-			}
-		}
-		else {	//summand contains variables -> put him into the summands list
-			switch (name_[op]) {
-			case '+':
-				this->summands.push_front(build_pattern_subterm(subterm_view, this, variables));
-				break;
-			case '-':
-				this->summands.push_front(new Product(subterm_view, this, { -1, 0 }, variables));
-				break;
-			}
+		switch (name_[op]) {
+		case '+':
+			this->summands.push_front(build_pattern_subterm(subterm_view, this, variables));
+			break;
+		case '-':
+			this->summands.push_front(new Product(subterm_view, this, { -1, 0 }, variables));
+			break;
 		}
 		name_.remove_suffix(name_.length() - op);
 		op = find_last_of_skip_pars(name_, "+-");
 	}
 	//last part of name without any '+' or '-' in front
-	if (name_.size() != 0 && !is_computable(name_)) {
+	if (name_.size()) {
 		this->summands.push_front(build_pattern_subterm(name_, this, variables));
-	}
-	else if (name_.size() != 0) {
-		known_summand += compute(name_);
-	}
-	//pushing the known summand into summands
-	if (known_summand != 0.0) {
-		this->summands.push_front(new Value(known_summand, this));
 	}
 }
 
@@ -466,7 +386,7 @@ void Sum::to_str(std::string& str) const
 	}
 	bool need_operator = false;
 	for (auto it : this->summands) {
-		if (it->inverse_str()) {
+		if (it->expect_inverse_str()) {
 			str.push_back('-');
 			need_operator = true;
 		}
@@ -494,14 +414,14 @@ void Sum::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_ro
 
 Type Sum::get_type() const
 {
-	return sum;
+	return Type::sum;
 }
 
 void Sum::combine_layers(Basic_Term*& storage_key)
 {
 	for (auto &it = this->summands.begin(); it != this->summands.end();) {	//reference is needed next line
 		(*it)->combine_layers(*it);
-		if (type(*it) == sum) {
+		if (type(*it) == Type::sum) {
 			Sum* redundant = static_cast<Sum*>((*it));
 			for (auto it_red : redundant->summands) {
 				it_red->parent = this;
@@ -528,9 +448,9 @@ Vals_Combined Sum::combine_values()
 	std::complex<double> buffer_summand = 0;
 	bool only_known = true;
 	for (auto it = this->summands.begin(); it != this->summands.end();) {
-		const Vals_Combined summand = (*it)->combine_values();
-		if (summand.known) {
-			buffer_summand += summand.val;
+		const auto [known, summand] = (*it)->combine_values();
+		if (known) {
+			buffer_summand += summand;
 			delete (*it);
 			it = this->summands.erase(it);
 		}
@@ -540,13 +460,13 @@ Vals_Combined Sum::combine_values()
 		}
 	}
 	if (only_known) {
-		return Vals_Combined{ true, buffer_summand };
+		return { true, buffer_summand };
 	}
 	else {	//if sum is known completely it will be deleted and replaced with buffer_summand one layer above anyway.
 		if (buffer_summand != 0.0) {
 			this->summands.push_front(new Value(buffer_summand, this));
 		}
-		return Vals_Combined{ false, 0 };
+		return { false, 0 };
 	}	
 }
 
@@ -569,7 +489,7 @@ void Sum::search_and_replace(const std::string& name_, const Basic_Term* value_,
 
 void Sum::list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const
 {
-	if (listed_type == sum) {
+	if (listed_type == Type::sum) {
 		subterms.push_back(const_cast<Sum*>(this));
 	}
 	for (auto it : this->summands) {
@@ -633,9 +553,9 @@ bool Sum::operator<(const Basic_Term& other) const
 bool Sum::operator==(const Basic_Term& other) const
 {
 	switch (other.get_type()) {
-	case sum:
+	case Type::sum:
 		break;
-	case pattern_variable:
+	case Type::pattern_variable:
 		return other == *this;
 	default:
 		return false;
@@ -675,7 +595,7 @@ Exponentiation::Exponentiation(std::string_view name_, Basic_Term* parent_, std:
 	this->base = build_subterm(name_, this);
 }
 
-bmath::intern::Exponentiation::Exponentiation(std::string_view base_, Basic_Term* parent_, std::complex<double> exponent_) 
+Exponentiation::Exponentiation(std::string_view base_, Basic_Term* parent_, std::complex<double> exponent_) 
 	:Basic_Term(parent_), exponent(new Value(exponent_, this)), base(build_subterm(base_, this))
 {
 }
@@ -690,7 +610,7 @@ Exponentiation::Exponentiation(std::string_view name_, Basic_Term* parent_, std:
 	this->base = build_pattern_subterm(name_, this, variables);
 }
 
-bmath::intern::Exponentiation::Exponentiation(std::string_view base_, Basic_Term* parent_, std::complex<double> exponent_, std::list<Pattern_Variable*>& variables) 
+Exponentiation::Exponentiation(std::string_view base_, Basic_Term* parent_, std::complex<double> exponent_, std::list<Pattern_Variable*>& variables) 
 	:Basic_Term(parent_), exponent(new Value(exponent_, this)), base(build_pattern_subterm(base_, this, variables))
 {
 }
@@ -706,8 +626,8 @@ Exponentiation::~Exponentiation()
 	delete base;
 }
 
-std::optional<double> bmath::intern::Exponentiation::exponent_value() const {
-	if (type(this->exponent) == value) {
+std::optional<double> Exponentiation::exponent_value() const {
+	if (type(this->exponent) == Type::value) {
 		const Value* const value = static_cast<Value*>(this->exponent);
 		if (value->val.imag() == 0.0) {
 			return value->val.real();
@@ -724,7 +644,7 @@ void Exponentiation::to_str(std::string& str) const
 	if (pars) {
 		str.push_back('(');
 	}
-	if (negative_exp && type(this->parent) != product) {
+	if (negative_exp && type(this->parent) != Type::product) {
 		str.append("1/");
 	}
 	this->base->to_str(str);
@@ -742,15 +662,15 @@ void Exponentiation::to_str(std::string& str) const
 	}
 }
 
-bool bmath::intern::Exponentiation::inverse_str() const {
+bool Exponentiation::expect_inverse_str() const {
 	const std::optional<double> exp_val = this->exponent_value();
 	if (exp_val) {
-		return *exp_val < 0.0 && type(this->parent) == product;
+		return *exp_val < 0.0 && type(this->parent) == Type::product;
 	}
 	return false;
 }
 
-void bmath::intern::Exponentiation::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
+void Exponentiation::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
 {
 	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
 	new_line.append("exponentiation");
@@ -763,14 +683,14 @@ void bmath::intern::Exponentiation::to_tree_str(std::vector<std::string>& tree_l
 
 Type Exponentiation::get_type() const
 {
-	return exponentiation;
+	return Type::exponentiation;
 }
 
 void Exponentiation::combine_layers(Basic_Term*& storage_key)
 {
 	this->base->combine_layers(this->base);
 	this->exponent->combine_layers(this->exponent);
-	if (this->exponent->get_type() == value) {
+	if (this->exponent->get_type() == Type::value) {
 		Value* const val_exp = static_cast<Value*>(this->exponent);
 		if (val_exp->val == 1.0) {
 			storage_key = this->base;
@@ -785,7 +705,7 @@ void Exponentiation::combine_layers(Basic_Term*& storage_key)
 			return;
 		}
 	}
-	if (this->base->get_type() == value) {
+	if (this->base->get_type() == Type::value) {
 		Value* const val_base = static_cast<Value*>(this->base);
 		if (val_base->val == 1.0) {
 			storage_key = val_base;
@@ -809,22 +729,22 @@ Vals_Combined Exponentiation::combine_values()
 
 	if (base_.known && exponent_.known) {
 		const std::complex<double> result = std::pow(base_.val, exponent_.val);
-		return Vals_Combined{ true, result };
+		return { true, result };
 	}
 	else if (base_.known && !exponent_.known) {
-		if (type(this->base) != value) {
+		if (type(this->base) != Type::value) {
 			delete this->base;
 			this->base = new Value(base_.val, this);
 		}
 	}
 	else if (!base_.known && exponent_.known) {
-		if (type(this->exponent) != value) {
+		if (type(this->exponent) != Type::value) {
 			delete this->exponent;
 			this->exponent = new Value(exponent_.val, this);
 		}
 	}
 
-	return Vals_Combined{ false, 0 };
+	return { false, 0 };
 }
 
 std::complex<double> Exponentiation::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
@@ -842,7 +762,7 @@ void Exponentiation::search_and_replace(const std::string& name_, const Basic_Te
 
 void Exponentiation::list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const
 {
-	if (listed_type == exponentiation) {
+	if (listed_type == Type::exponentiation) {
 		subterms.push_back(const_cast<Exponentiation*>(this));
 	}
 	this->base->list_subterms(subterms, listed_type);
@@ -896,9 +816,9 @@ bool Exponentiation::operator<(const Basic_Term& other) const
 bool Exponentiation::operator==(const Basic_Term& other) const
 {
 	switch (other.get_type()) {
-	case exponentiation:
+	case Type::exponentiation:
 		break;
-	case pattern_variable:
+	case Type::pattern_variable:
 		return other == *this;
 	default:
 		return false;
@@ -918,7 +838,7 @@ bool Exponentiation::operator==(const Basic_Term& other) const
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Par_Operator::Par_Operator(Basic_Term* parent_)
-	:Basic_Term(parent_), argument(nullptr), op_type(log10)
+	:Basic_Term(parent_), argument(nullptr), op_type(Par_Op_Type::log10)	//just some default initialisation
 {
 }
 
@@ -956,7 +876,7 @@ void Par_Operator::to_str(std::string & str) const
 	str.push_back(')');
 }
 
-void bmath::intern::Par_Operator::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
+void Par_Operator::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
 {
 	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
 	new_line.append(par_op_name(this->op_type));
@@ -969,7 +889,7 @@ void bmath::intern::Par_Operator::to_tree_str(std::vector<std::string>& tree_lin
 
 Type Par_Operator::get_type() const
 {
-	return par_operator;
+	return Type::par_operator;
 }
 
 void Par_Operator::combine_layers(Basic_Term*& storage_key)
@@ -979,8 +899,8 @@ void Par_Operator::combine_layers(Basic_Term*& storage_key)
 
 Vals_Combined Par_Operator::combine_values()
 {
-	const Vals_Combined arg_comb = argument->combine_values();
-	return { arg_comb.known, evaluate_par_op(arg_comb.val, this->op_type) };
+	const auto [known, val] = argument->combine_values();
+	return { known, evaluate_par_op(val, this->op_type) };
 }
 
 std::complex<double> Par_Operator::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
@@ -996,7 +916,7 @@ void Par_Operator::search_and_replace(const std::string & name_, const Basic_Ter
 
 void Par_Operator::list_subterms(std::list<Basic_Term*>& subterms, Type listed_type) const
 {
-	if (listed_type == par_operator) {
+	if (listed_type == Type::par_operator) {
 		subterms.push_back(const_cast<Par_Operator*>(this));
 	}
 	this->argument->list_subterms(subterms, listed_type);
@@ -1043,9 +963,9 @@ bool Par_Operator::operator<(const Basic_Term& other) const
 bool Par_Operator::operator==(const Basic_Term& other) const
 {
 	switch (other.get_type()) {
-	case par_operator:
+	case Type::par_operator:
 		break;
-	case pattern_variable:
+	case Type::pattern_variable:
 		return other == *this;
 	default:
 		return false;

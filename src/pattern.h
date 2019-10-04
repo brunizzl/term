@@ -65,7 +65,7 @@ namespace bmath {
 			};
 
 			//private constructor -> only member "static const std::vector<Pattern*> patterns" can be build
-			Pattern(const char* original_, const char* changed_);
+			Pattern(const char * const original_, const char * const changed_);
 
 		public:
 			//members:

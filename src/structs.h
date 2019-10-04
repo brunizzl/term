@@ -10,7 +10,7 @@ namespace bmath {
 
 		//specifies actual type of Basic_Term 
 		//(types ordered for parentheses to allow > / < / == etc. operators to test whether parentheses are needed)
-		enum Type 
+		enum class Type 
 		{
 			undefined,
 			par_operator,		//already has parentheses -> lower order than in reality
@@ -25,7 +25,7 @@ namespace bmath {
 		//used in Par_Operator class to specify whitch operator is actually used 
 		//(comments are corresponding std::complex functions)
 		//types names are sorted by length
-		enum Par_Op_Type 
+		enum class Par_Op_Type 
 		{
 			log10,			//log10()
 			asinh,			//asinh()
@@ -49,9 +49,24 @@ namespace bmath {
 			im,				//imag()
 		};
 
-		//array with instance of every Par_Op_Type to ierate over them
-		static const Par_Op_Type all_par_op_types[] = { log10, asinh, acosh, atanh, asin, acos, atan, sinh, cosh, tanh, sqrt, 
-														exp, sin, cos, tan, abs, arg, ln, re, im };
+		//array with instance of every Par_Op_Type to iterate over them
+		static const Par_Op_Type all_par_op_types[] = { Par_Op_Type::log10, Par_Op_Type::asinh, Par_Op_Type::acosh, Par_Op_Type::atanh, 
+														Par_Op_Type::asin, Par_Op_Type::acos, Par_Op_Type::atan, Par_Op_Type::sinh, 
+														Par_Op_Type::cosh, Par_Op_Type::tanh, Par_Op_Type::sqrt, Par_Op_Type::exp, 
+														Par_Op_Type::sin, Par_Op_Type::cos, Par_Op_Type::tan, Par_Op_Type::abs, 
+														Par_Op_Type::arg, Par_Op_Type::ln, Par_Op_Type::re, Par_Op_Type::im };
+
+		//these constants will not cause function is_computable to return false, as they are known. 
+		//("i" is more of a unit to be exact, but i needed a name for all of them) 
+		enum class Math_Constant
+		{
+			i,
+			e,
+			pi,
+		};
+
+		//array with instance of every Math_Constant to iterate over them
+		static const Math_Constant all_math_constants[] = { Math_Constant::i, Math_Constant::e, Math_Constant::pi };
 
 
 		//return of function combine_values()

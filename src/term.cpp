@@ -10,16 +10,6 @@ using namespace bmath::intern;
 //Basic_Term\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Basic_Term::Basic_Term(Basic_Term* parent_)
-	:parent(parent_)
-{
-}
-
-Basic_Term::Basic_Term(const Basic_Term& source)
-	:parent(source.parent)
-{
-}
-
 Basic_Term::~Basic_Term()
 {
 	//cleaning up the tree is done in derived classes
@@ -29,7 +19,7 @@ void Basic_Term::combine_layers(Basic_Term*& storage_key)
 {
 	//the base class does not know of the tree structures, the derived classes provide.
 	//therefore, no tree can be combined.
-	//the classes Value and Variable dont need an override to this function.
+	//the classes Value, Variable and Pattern_Variable dont need an override to this function.
 	//every derived class not beeing leaf needs an overriding function.
 }
 
@@ -101,20 +91,7 @@ std::string bmath::Term::to_str() const
 
 std::string bmath::Term::to_tree(std::size_t offset) const
 {
-	std::vector<std::string> tree_lines;
-	term_ptr->to_tree_str(tree_lines, 0, '\0');
-
-	std::string return_str;
-	for (unsigned int pos = 0; pos < tree_lines.size(); pos++) {
-		if (pos != 0) {
-			return_str.push_back('\n');
-		}
-		if (offset > 0) {
-			return_str.append(std::string(offset, ' '));
-		}
-		return_str.append(tree_lines[pos]);
-	}
-	return return_str;
+	return ptr_to_tree(this->term_ptr, offset);
 }
 
 std::list<std::string> bmath::Term::get_var_names() const
@@ -132,7 +109,7 @@ bool bmath::Term::match_and_transform(Pattern& pattern)
 {
 	Basic_Term** match = this->term_ptr->match_intern(pattern.original.term_ptr, pattern.var_adresses, &(this->term_ptr));
 	if (match != nullptr) {
-		Basic_Term* transformed = pattern.changed.copy((*match)->parent);
+		Basic_Term* transformed = pattern.changed.copy((*match)->parent());
 		delete *match;
 		*match = transformed;
 		return true;
@@ -222,7 +199,7 @@ bmath::Term& bmath::Term::operator+=(const Term& operand2)
 	}
 	else {
 		Sum* sum = new Sum(nullptr);
-		this->term_ptr->parent = sum;
+		this->term_ptr->set_parent(sum);
 		sum->summands.push_back(this->term_ptr);
 		sum->summands.push_back(copy_subterm(operand2.term_ptr, sum));
 		this->term_ptr = sum;
@@ -238,7 +215,7 @@ bmath::Term& bmath::Term::operator-=(const Term& operand2)
 	}
 	else {
 		Sum* sum = new Sum(nullptr);
-		this->term_ptr->parent = sum;
+		this->term_ptr->set_parent(sum);
 		sum->summands.push_back(this->term_ptr);
 
 		Product* subtractor = new Product(sum);
@@ -259,7 +236,7 @@ bmath::Term& bmath::Term::operator*=(const Term& operand2)
 	}
 	else {
 		Product* product = new Product(nullptr);
-		this->term_ptr->parent = product;
+		this->term_ptr->set_parent(product);
 		product->factors.push_back(this->term_ptr);
 		product->factors.push_back(copy_subterm(operand2.term_ptr, product));
 		this->term_ptr = product;
@@ -275,7 +252,7 @@ bmath::Term& bmath::Term::operator/=(const Term& operand2)
 	}
 	else {
 		Product* product = new Product(nullptr);
-		this->term_ptr->parent = product;
+		this->term_ptr->set_parent(product);
 		product->factors.push_back(this->term_ptr);
 
 		Exponentiation* divisor = new Exponentiation(product);

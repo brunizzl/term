@@ -18,19 +18,20 @@ namespace bmath {
 		class Basic_Term
 		{
 		public:
-			//pointer to whoever owns this (basic_term does not own parent)
-			Basic_Term* parent;
-
-			Basic_Term(Basic_Term* parent_);
-			Basic_Term(const Basic_Term& source);
 			virtual ~Basic_Term();
+
+			//returns adress of Term owning this
+			virtual Basic_Term* parent() const = 0;
+
+			//gives this new adress for its Parent (owner has changed)
+			virtual void set_parent(Basic_Term* new_parent) = 0;
 
 			//appends this to str
 			virtual void to_str(std::string& str) const = 0;
 
 			//called in function to_tree() of bmath::term
-			// tree_lines holds output line by line, dist_root stores distance from this vertex to root, 
-			// line prefix is meant to be set in front of content of this
+			//tree_lines holds output line by line, dist_root stores distance from this vertex to root, 
+			//line prefix is meant to be set in front of content of this
 			virtual void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const = 0;
 
 			//returns kinda true type of term (sum, product, value, etc.)
@@ -39,7 +40,7 @@ namespace bmath {
 			//if one sum/product holds a pointer to another sum/product, both get combined into one,
 			//redundant layers are removed (exponentiation with exponent == 1, sum with only one summand...)
 			//storage key refers to the actual memory holding the pointer to this. 
-			//(aka if you wanna remove the current layer, this is where to reconnect the layers above and below you.
+			//(aka if you wanna remove the current layer, this is where to reconnect the layers above and below you.)
 			virtual void combine_layers(Basic_Term*& storage_key);
 
 			//values are added, multiplied, etc.
@@ -67,8 +68,10 @@ namespace bmath {
 			virtual Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) = 0;
 
 			//works only on sorted terms
+			//MAKE SHURE; THIS OPERATOR NEVER CALLS operator== or operator!=, as these have side effects, and this should not have.
 			virtual bool operator<(const Basic_Term& other) const = 0;
 
+			//WARNING: these operators has side effects if they compare to Pattern_Variable.
 			virtual bool operator==(const Basic_Term& other) const = 0;
 			virtual bool operator!=(const Basic_Term& other) const;
 		};

@@ -17,9 +17,9 @@ namespace bmath {
 			sum,
 			value,
 			variable,
-			pattern_variable,
 			product,
 			exponentiation,
+			pattern_variable,
 		};
 
 		//used in Par_Operator class to specify whitch operator is actually used 

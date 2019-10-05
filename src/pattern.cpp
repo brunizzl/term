@@ -1,4 +1,7 @@
 
+#include <cassert>
+#include <iostream>
+
 #include "pattern.h"
 #include "internal_functions.h"
 
@@ -9,7 +12,7 @@ using namespace bmath::intern;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Pattern_Variable::Pattern_Variable(std::string_view name_, Basic_Term* parent_)
-	:Basic_Term(parent_), name(name_), pattern_value(nullptr)
+	:name(name_), matched_term(nullptr)
 {
 }
 
@@ -18,13 +21,24 @@ Pattern_Variable::~Pattern_Variable()
 	//pattern_value is not owner -> nothing has to be deleted
 }
 
+Basic_Term* bmath::intern::Pattern_Variable::parent() const
+{
+	return nullptr;	//pattern_variable has multiple parents, none of them is stored in the variable itself.
+}
+
+void bmath::intern::Pattern_Variable::set_parent(Basic_Term* new_parent)
+{
+	//pattern_variable has multiple parents and does not know them.
+}
+
 void Pattern_Variable::to_str(std::string& str) const
 {
 	str.push_back('{');
 	str.append(this->name);
-	if (this->pattern_value != nullptr) {
+	if (this->matched_term != nullptr) {
 		str.push_back(',');
-		this->pattern_value->to_str(str);
+		assert(type(this->matched_term) != Type::pattern_variable);
+		this->matched_term->to_str(str);
 	}
 	str.push_back('}');
 }
@@ -69,7 +83,7 @@ void Pattern_Variable::list_subterms(std::list<const Basic_Term*>& subterms, Typ
 
 void Pattern_Variable::sort()
 {
-	//nothing to be done here
+	//nothing to to here
 }
 
 Basic_Term** Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
@@ -91,13 +105,18 @@ bool Pattern_Variable::operator<(const Basic_Term& other) const
 
 bool Pattern_Variable::operator==(const Basic_Term& other) const
 {
-	if (this->pattern_value == nullptr) {
-		this->pattern_value = const_cast<Basic_Term*>(&other);
+	if (this->matched_term == nullptr) {
+		this->matched_term = const_cast<Basic_Term*>(&other);
 		return true;
 	}
 	else {
-		return *(this->pattern_value) == other;
+		return *(this->matched_term) == other;
 	}
+}
+
+Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term(Basic_Term* parent_) const
+{
+	return copy_subterm(this->matched_term, parent_);
 }
 
 
@@ -151,15 +170,19 @@ std::string Pattern::print() const
 
 void Pattern::print_all()
 {
-	for (auto& pattern : patterns) {
+	for (const auto& pattern : patterns) {
 		std::cout << pattern->print() << '\n';
+		std::cout << "original :" << ptr_to_tree(pattern->original.term_ptr, 12).erase(0, 10) << '\n';
+		std::cout << "changed  :" << ptr_to_tree(pattern->changed.term_ptr, 12).erase(0, 10) << '\n';
+		std::cout << "__________________________________________________________\n";
+		std::cout << '\n';
 	}
 }
 
 //rules to simplify terms (left string -> right string)
 const std::vector<Pattern*> Pattern::patterns = {
-	new Pattern("sin(x)^2+cos(x)^2", "1"),
 	new Pattern("ln(a)+ln(b)", "ln(a*b)"),
+	new Pattern("sin(x)^2+cos(x)^2", "1"),
 	new Pattern("(a^b)^c", "a^(b*c)"),
 
 	new Pattern("a*b+a*c", "a*(b+c)"),

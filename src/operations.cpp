@@ -11,12 +11,12 @@ using namespace bmath::intern;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Product::Product(Basic_Term* parent_)
-	:Basic_Term(parent_), value_factor(1.0, this)
+	:parent_ptr(parent_), value_factor(1.0, this)
 {
 }
 
 Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op)
-	:Basic_Term(parent_), value_factor(1.0, this)
+	:parent_ptr(parent_), value_factor(1.0, this)
 {
 	const Value_Manipulator factor_multiplier = { &this->value_factor, \
 		[](std::complex<double>* first, std::complex<double> second) -> void {*first *= second; } };
@@ -51,13 +51,13 @@ Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op)
 }
 
 Product::Product(Basic_Term* name_, Basic_Term* parent_, std::complex<double> factor) 
-	:Basic_Term(parent_), value_factor(factor, this), factors({ name_ })
+	:parent_ptr(parent_), value_factor(factor, this), factors({ name_ })
 {
-	name_->parent = this;
+	name_->set_parent(this);
 }
 
 Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
-	:Basic_Term(parent_), value_factor(1.0, this)
+	:parent_ptr(parent_), value_factor(1.0, this)
 {
 	const Value_Manipulator factor_multiplier = { &this->value_factor, \
 		[](std::complex<double>* first, std::complex<double> second) -> void {*first *= second; } };
@@ -92,7 +92,7 @@ Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op, st
 }
 
 Product::Product(const Product& source, Basic_Term* parent_)
-	:Basic_Term(parent_), value_factor(source.value_factor)
+	:parent_ptr(parent_), value_factor(source.value_factor)
 {
 	for (const auto it : source.factors) {
 		this->factors.push_back(copy_subterm(it, this));
@@ -106,9 +106,19 @@ Product::~Product()
 	}
 }
 
+Basic_Term* bmath::intern::Product::parent() const
+{
+	return this->parent_ptr;
+}
+
+void bmath::intern::Product::set_parent(Basic_Term* new_parent)
+{
+	this->parent_ptr = new_parent;
+}
+
 void Product::to_str(std::string& str) const
 {
-	const bool pars = type(this->parent) > this->get_type();
+	const bool pars = type(this->parent_ptr) > this->get_type();
 	if (pars) {
 		str.push_back('(');
 	}
@@ -155,7 +165,7 @@ void Product::combine_layers(Basic_Term*& storage_key)
 			Product* redundant = static_cast<Product*>((*it));
 			this->value_factor *= redundant->value_factor;
 			for (auto it_red : redundant->factors) {
-				it_red->parent = this;
+				it_red->set_parent(this);
 			}
 			this->factors.splice(this->factors.end(), redundant->factors);
 			delete redundant;
@@ -168,12 +178,12 @@ void Product::combine_layers(Basic_Term*& storage_key)
 	if (this->factors.size() == 1 && this->value_factor == 1.0) {	//this only consists of one "real" factor -> layer is not needed and this is deleted
 		Basic_Term* const only_factor = *(this->factors.begin());
 		storage_key = only_factor;
-		only_factor->parent = this->parent;
+		only_factor->set_parent(this->parent_ptr);
 		this->factors.clear();
 		delete this;
 	}
 	else if (this->factors.size() == 0) {	//this only consists of value_factor -> layer is not needed and this is deleted
-		Value* const only_factor = new Value(this->value_factor, this->parent);
+		Value* const only_factor = new Value(this->value_factor, this->parent_ptr);
 		storage_key = only_factor;
 		delete this;
 	}
@@ -274,8 +284,11 @@ bool Product::operator<(const Basic_Term& other) const
 		auto it_this = this->factors.begin();
 		auto it_other = other_product->factors.begin();
 		for (; it_this != this->factors.end() && it_other != other_product->factors.end(); ++it_this, ++it_other) {
-			if (!((**it_this) == (**it_other))) {
-				return (**it_this) < (**it_other);
+			if ((**it_this) < (**it_other)) {
+				return true;
+			}
+			if ((**it_other) < (**it_this)) {
+				return false;
 			}
 		}
 		return false;
@@ -318,12 +331,12 @@ bool Product::operator==(const Basic_Term& other) const
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Sum::Sum(Basic_Term* parent_)
-	:Basic_Term(parent_), value_summand(0.0, this)
+	:parent_ptr(parent_), value_summand(0.0, this)
 {
 }
 
 Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op)
-	:Basic_Term(parent_), value_summand(0.0, this)
+	:parent_ptr(parent_), value_summand(0.0, this)
 {
 	const Value_Manipulator summand_adder = { &this->value_summand, \
 		[](std::complex<double>* first, std::complex<double> second) -> void {*first += second; } };
@@ -360,7 +373,7 @@ Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op)
 }
 
 Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
-	:Basic_Term(parent_), value_summand(0.0, this)
+	:parent_ptr(parent_), value_summand(0.0, this)
 {
 	const Value_Manipulator summand_adder = { &this->value_summand, \
 		[](std::complex<double>* first, std::complex<double> second) -> void {*first += second; } };
@@ -397,7 +410,7 @@ Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<
 }
 
 Sum::Sum(const Sum& source, Basic_Term* parent_)
-	:Basic_Term(parent_), value_summand(source.value_summand)
+	:parent_ptr(parent_), value_summand(source.value_summand)
 {
 	for (const auto it : source.summands) {
 		this->summands.push_back(copy_subterm(it, this));
@@ -411,9 +424,19 @@ Sum::~Sum()
 	}
 }
 
+Basic_Term* bmath::intern::Sum::parent() const
+{
+	return this->parent_ptr;
+}
+
+void bmath::intern::Sum::set_parent(Basic_Term* new_parent)
+{
+	this->parent_ptr = new_parent;
+}
+
 void Sum::to_str(std::string& str) const
 {
-	const bool pars = type(this->parent) > this->get_type();
+	const bool pars = type(this->parent_ptr) > this->get_type();
 	if (pars) {
 		str.push_back('(');
 	}
@@ -460,7 +483,7 @@ void Sum::combine_layers(Basic_Term*& storage_key)
 			Sum* redundant = static_cast<Sum*>((*it));
 			this->value_summand += redundant->value_summand;
 			for (auto it_red : redundant->summands) {
-				it_red->parent = this;
+				it_red->set_parent(this);
 			}
 			this->summands.splice(this->summands.end(), redundant->summands);
 			delete redundant;
@@ -473,12 +496,12 @@ void Sum::combine_layers(Basic_Term*& storage_key)
 	if (this->summands.size() == 1 && this->value_summand == 0.0) {	//this only consists of one "real" summand -> layer is not needed and this is deleted
 		Basic_Term* const only_summand = *(this->summands.begin());
 		storage_key = only_summand;
-		only_summand->parent = this->parent;
+		only_summand->set_parent(this->parent_ptr);
 		this->summands.clear();
 		delete this;
 	}
 	else if (this->summands.size() == 0) {	//this only consists of value_summand -> layer is not needed and this is deleted
-		Value* const only_summand = new Value(this->value_summand, this->parent);
+		Value* const only_summand = new Value(this->value_summand, this->parent_ptr);
 		storage_key = only_summand;
 		delete this;
 	}
@@ -627,12 +650,12 @@ bool Sum::operator==(const Basic_Term& other) const
 
 
 Exponentiation::Exponentiation(Basic_Term* parent_)
-	:Basic_Term(parent_), base(nullptr), exponent(nullptr)
+	:parent_ptr(parent_), base(nullptr), exponent(nullptr)
 {
 }
 
 Exponentiation::Exponentiation(std::string_view name_, Basic_Term* parent_, std::size_t op)
-	:Basic_Term(parent_)
+	:parent_ptr(parent_)
 {
 	std::string_view subterm_view;
 	subterm_view = name_.substr(op + 1);
@@ -642,13 +665,13 @@ Exponentiation::Exponentiation(std::string_view name_, Basic_Term* parent_, std:
 }
 
 Exponentiation::Exponentiation(Basic_Term* base_, Basic_Term* parent_, std::complex<double> exponent_) 
-	:Basic_Term(parent_), exponent(new Value(exponent_, this)), base(base_)
+	:parent_ptr(parent_), exponent(new Value(exponent_, this)), base(base_)
 {
-	base_->parent = this;
+	base_->set_parent(this);
 }
 
 Exponentiation::Exponentiation(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
-	:Basic_Term(parent_)
+	:parent_ptr(parent_)
 {
 	std::string_view subterm_view;
 	subterm_view = name_.substr(op + 1);
@@ -658,7 +681,7 @@ Exponentiation::Exponentiation(std::string_view name_, Basic_Term* parent_, std:
 }
 
 Exponentiation::Exponentiation(const Exponentiation& source, Basic_Term* parent_)
-	:Basic_Term(parent_), base(copy_subterm(source.base, this)), exponent(copy_subterm(source.exponent, this))
+	:parent_ptr(parent_), base(copy_subterm(source.base, this)), exponent(copy_subterm(source.exponent, this))
 {
 }
 
@@ -668,30 +691,23 @@ Exponentiation::~Exponentiation()
 	delete base;
 }
 
+Basic_Term* bmath::intern::Exponentiation::parent() const
+{
+	return this->parent_ptr;
+}
+
+void bmath::intern::Exponentiation::set_parent(Basic_Term* new_parent)
+{
+	this->parent_ptr = new_parent;
+}
+
 void Exponentiation::to_str(std::string& str) const
 {
-	const std::optional<double> exp_val;// = this->exponent_value();
-	const bool negative_exp = false;
-	const bool pars = type(this->parent) >= this->get_type();
-	if (pars) {
-		str.push_back('(');
-	}
-	if (negative_exp && type(this->parent) != Type::product) {
-		str.append("1/");
-	}
+	str.push_back('(');
 	this->base->to_str(str);
-	if (exp_val && std::abs(*exp_val) != 1.0) {
-		str.push_back('^');
-		const Value* const val = static_cast<Value*>(this->exponent);
-		str.append(to_string(*val, Type::exponentiation, negative_exp));
-	}
-	else if (!exp_val) {
-		str.push_back('^');
-		this->exponent->to_str(str);
-	}	
-	if (pars) {
-		str.push_back(')');
-	}
+	str.push_back('^');
+	this->exponent->to_str(str);
+	str.push_back(')');
 }
 
 void Exponentiation::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
@@ -718,13 +734,13 @@ void Exponentiation::combine_layers(Basic_Term*& storage_key)
 		Value* const val_exp = static_cast<Value*>(this->exponent);
 		if (*val_exp == 1.0) {
 			storage_key = this->base;
-			this->base->parent = this->parent;
+			this->base->set_parent(this->parent_ptr);
 			this->base = nullptr;
 			delete this;
 			return;
 		}
 		if (*val_exp == 0.0) {
-			storage_key = new Value({ 1.0, 0.0 }, this->parent);
+			storage_key = new Value({ 1.0, 0.0 }, this->parent_ptr);
 			delete this;
 			return;
 		}
@@ -733,13 +749,13 @@ void Exponentiation::combine_layers(Basic_Term*& storage_key)
 		Value* const val_base = static_cast<Value*>(this->base);
 		if (*val_base == 1.0) {
 			storage_key = val_base;
-			val_base->parent = this->parent;
+			val_base->parent_ptr = this->parent_ptr;
 			this->base = nullptr;
 			delete this;
 			return;
 		}
 		if (*val_base == 0.0) {
-			storage_key = new Value({ 0.0, 0.0 }, this->parent);
+			storage_key = new Value({ 0.0, 0.0 }, this->parent_ptr);
 			delete this;
 			return;
 		}
@@ -827,14 +843,14 @@ bool Exponentiation::operator<(const Basic_Term& other) const
 	}
 	else {
 		const Exponentiation* other_exp = static_cast<const Exponentiation*>(&other);
-		if (*(this->base) != *(other_exp->base)) {
-			return *(this->base) < *(other_exp->base);
+		if (*(this->base) < *(other_exp->base)) {
+			return true;
 		}
-		if (*(this->exponent) != *(other_exp->exponent)) {
-			return *(this->exponent) < *(other_exp->exponent);
+		if (*(other_exp->base) < *(this->base)) {
+			return false;
 		}
+		return *(this->exponent) < *(other_exp->exponent);
 	}
-	return false;
 }
 
 bool Exponentiation::operator==(const Basic_Term& other) const
@@ -862,12 +878,12 @@ bool Exponentiation::operator==(const Basic_Term& other) const
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Par_Operator::Par_Operator(Basic_Term* parent_)
-	:Basic_Term(parent_), argument(nullptr), op_type(Par_Op_Type::log10)	//just some default initialisation
+	:parent_ptr(parent_), argument(nullptr), op_type(Par_Op_Type::log10)	//just some default initialisation
 {
 }
 
 Par_Operator::Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_Type op_type_)
-	:Basic_Term(parent_), op_type(op_type_), argument(nullptr)
+	:parent_ptr(parent_), op_type(op_type_), argument(nullptr)
 {
 	name_.remove_suffix(1);								//closing parenthesis gets cut of
 	name_.remove_prefix(name_of(op_type).length());	//funktionname and opening parenthesis get cut of
@@ -875,7 +891,7 @@ Par_Operator::Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_T
 }
 
 Par_Operator::Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_Type op_type_, std::list<Pattern_Variable*>& variables)
-	:Basic_Term(parent_), op_type(op_type_), argument(nullptr)
+	:parent_ptr(parent_), op_type(op_type_), argument(nullptr)
 {
 	name_.remove_suffix(1);								//closing parenthesis gets cut of
 	name_.remove_prefix(name_of(op_type).length());	//funktionname and opening parenthesis get cut of
@@ -884,13 +900,23 @@ Par_Operator::Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_T
 
 
 Par_Operator::Par_Operator(const Par_Operator & source, Basic_Term * parent_)
-	:Basic_Term(parent_), argument(copy_subterm(source.argument, this)), op_type(source.op_type)
+	:parent_ptr(parent_), argument(copy_subterm(source.argument, this)), op_type(source.op_type)
 {
 }
 
 Par_Operator::~Par_Operator()
 {
 	delete this->argument;
+}
+
+Basic_Term* bmath::intern::Par_Operator::parent() const
+{
+	return this->parent_ptr;
+}
+
+void bmath::intern::Par_Operator::set_parent(Basic_Term* new_parent)
+{
+	this->parent_ptr = new_parent;
 }
 
 void Par_Operator::to_str(std::string & str) const
@@ -977,11 +1003,8 @@ bool Par_Operator::operator<(const Basic_Term& other) const
 		if (this->op_type != other_par_op->op_type) {
 			return this->op_type < other_par_op->op_type;
 		}
-		if (*(this->argument) != *(other_par_op->argument)) {
-			return *(this->argument) < *(other_par_op->argument);
-		}
+		return *(this->argument) < *(other_par_op->argument);
 	}
-	return false;
 }
 
 bool Par_Operator::operator==(const Basic_Term& other) const

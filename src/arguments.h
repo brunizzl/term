@@ -16,12 +16,13 @@ namespace bmath {
 		class Value : public Basic_Term, public std::complex<double>
 		{
 		private:
+			Basic_Term* parent_ptr;
 
 			Value(const Value& source, Basic_Term* parent_ = nullptr);
 			Value(std::complex<double> value_, Basic_Term* parent_);
 
 			//access to constructors:
-			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_, Value_Manipulator value_storage);
+			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_, Value_Manipulator manipulator);
 			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator);
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 			friend class Product;
@@ -32,6 +33,8 @@ namespace bmath {
 		public:
 			~Value();
 
+			Basic_Term* parent() const override;
+			void set_parent(Basic_Term* new_parent) override;
 			void to_str(std::string& str) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			Type get_type() const override;
@@ -49,18 +52,22 @@ namespace bmath {
 		class Variable : public Basic_Term
 		{
 		private:
+			Basic_Term* parent_ptr;
+
 			Variable(std::string_view name_, Basic_Term* parent_);
 			Variable(const Variable& source, Basic_Term* parent_ = nullptr);
 
 			//access to constructors:
-			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_, Value_Manipulator value_storage);
-			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator);
+			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_, Value_Manipulator manipulator);
 			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 		public:
-			std::string name;
+
+			const std::string name;
 
 			~Variable();
 
+			Basic_Term* parent() const override;
+			void set_parent(Basic_Term* new_parent) override;
 			void to_str(std::string& str) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			Type get_type() const override;

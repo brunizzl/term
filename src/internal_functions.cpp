@@ -12,6 +12,8 @@ void bmath::intern::preprocess_str(std::string& str)
 {
 	int par_diff = 0;	//counts '(' and ')' (parentheses)
 	int brac_diff = 0;	//counts '[' and ']' (brackets)
+	std::size_t last_operator = std::string::npos - 1;	//remembers the position of last '+', '-', '*', '/', '^' (-1 to allow operator at str[0])
+
 	for (std::size_t i = 0; i < str.length(); i++) {	//deleting whitespace and counting parentheses
 		switch (str[i]) {
 		case '\t':
@@ -23,36 +25,56 @@ void bmath::intern::preprocess_str(std::string& str)
 			par_diff++;
 			break;
 		case ')': 
-			par_diff--;
+			if (--par_diff < 0) {	//one can not have more closing, than opening parentheses at any point
+				throw XTermConstructionError("the parentheses or brackets of string do not obey the syntax rules");
+			}
 			break;
 		case '[': 
 			brac_diff++;
 			str[i] = '(';	//later functions expect only parentheses, not brackets
 			break;
 		case ']':
-			brac_diff--;
+			if (--brac_diff < 0) {	//one can not have more closing, than opening brackets at any point
+				throw XTermConstructionError("the parentheses or brackets of string do not obey the syntax rules");
+			}
 			str[i] = ')';	//later functions expect only parentheses, not brackets
+			break;
+		case '+':
+		case '*':
+		case '/':
+		case '^':
+			if (i == 0 || i == str.length() - 1) {
+				throw XTermConstructionError("found binary operator (+ * / ^) at beginning or end of string");
+			}
+			else if (str[i - 1] == '(' || str[i + 1] == ')') {
+				throw XTermConstructionError("found binary operator (+ * / ^) next to enclosing bracket or parenthesis");
+			}
+		case '-':
+			if (last_operator == i - 1) {
+				throw XTermConstructionError("found two operators (+ - * / ^) in direct succession");
+			}
+			last_operator = i;
 			break;
 		default:
 			break; //nothing to do this character
 		}
 	}
 	if (par_diff != 0 || brac_diff != 0) {
-		throw XTermConstructionError("the parentheses / brackets of string do not obey the syntax rules");
+		throw XTermConstructionError("the parentheses or brackets of string do not obey the syntax rules");
 	}
-	const char* const allowed_chars = "1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()_$";	//reserving '#' and curly braces for internal stuff
+	const char* const allowed_chars = "1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()_";	//reserving '#', '$', '§' and curly braces for internal stuff
 	if (str.find_first_not_of(allowed_chars) != std::string::npos) {
-		throw XTermConstructionError("string contains characters other than: 1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()_$");
+		throw XTermConstructionError("string contains characters other than: 1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()_");
 	}
 }
 
 std::size_t bmath::intern::find_open_par(std::size_t clsd_par, const std::string_view name)
 {
-	unsigned int deeper_clsd_par = 0;
+	unsigned int deeper_clsd_par = 0;	//counts how many closed parentheses have been encountered minus how many open parentheses
 	std::size_t nxt_par = clsd_par;
 	while (true) {
 		nxt_par = name.find_last_of("()", nxt_par - 1);
-		assert(nxt_par != std::string::npos);
+		assert(nxt_par != std::string::npos);	//function preprocess_str() already guarantees valid parentheses.
 
 		switch (name[nxt_par]) {
 		case ')':
@@ -73,7 +95,7 @@ std::size_t bmath::intern::find_last_of_skip_pars(const std::string_view name, c
 	std::size_t clsd_par = name.find_last_of(')');
 	while (clsd_par != std::string::npos) {
 		const std::string_view search_view(name.data() + clsd_par, open_par - clsd_par);
-		std::size_t found = search_view.find_last_of(characters);
+		const std::size_t found = search_view.find_last_of(characters);
 		if (found != std::string::npos) {
 			return found + clsd_par;	//search_view starts with offset of clsd_par (two lines above). this offset has to be added to get distance from begin of name
 		} 
@@ -91,7 +113,7 @@ std::size_t bmath::intern::find_last_of_skip_pars(const std::string_view name, c
 	std::size_t clsd_par = name.find_last_of(')');
 	while (clsd_par != std::string::npos) {
 		const std::string_view search_view(name.data() + clsd_par, open_par - clsd_par);
-		std::size_t found = search_view.find_last_of(character);
+		const std::size_t found = search_view.find_last_of(character);
 		if (found != std::string::npos) {
 			return found + clsd_par;	//search_view starts with offset of clsd_par (two lines above). this offset has to be added to get distance from begin of name
 		}
@@ -237,12 +259,7 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* pa
 		//as copy subterm is called, when a pattern has succesfully been matched and should be transformed, 
 		//we do not want to actually copy the pattern_variable, but the subterm held by it.
 		const Pattern_Variable* pattern_variable = static_cast<const Pattern_Variable*>(source);
-		if (pattern_variable->pattern_value != nullptr) {
-			return copy_subterm(pattern_variable->pattern_value, parent_);
-		}
-		else {
-			throw XTermConstructionError("can not copy Pattern_Variable with pattern_value nullptr.");
-		}
+		return pattern_variable->copy_matched_term(parent_);
 	}
 	}
 	throw XTermConstructionError("function copy_subterm expected known type to copy");
@@ -253,6 +270,24 @@ constexpr static signed char LINE_UP_DOWN = -77;		//(179)
 constexpr static signed char LINE_UP_RIGHT = -64;		//(192)
 constexpr static signed char LINE_UP_RIGHT_DOWN = -61;	//(195)
 constexpr static signed char LINE_LEFT_RIGHT = -60;		//(196)
+
+std::string bmath::intern::ptr_to_tree(const Basic_Term* term_ptr, std::size_t offset)
+{
+	std::vector<std::string> tree_lines;
+	term_ptr->to_tree_str(tree_lines, 0, '\0');
+
+	std::string return_str;
+	for (unsigned int pos = 0; pos < tree_lines.size(); pos++) {
+		if (pos != 0) {
+			return_str.push_back('\n');
+		}
+		if (offset > 0) {
+			return_str.append(std::string(offset, ' '));
+		}
+		return_str.append(tree_lines[pos]);
+	}
+	return return_str;
+}
 
 void bmath::intern::append_last_line(std::vector<std::string>& tree_lines, char operation)
 {
@@ -284,29 +319,36 @@ void bmath::intern::append_last_line(std::vector<std::string>& tree_lines, char 
 void bmath::intern::reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses)
 {
 	for (auto pattern_var : var_adresses) {
-		pattern_var->pattern_value = nullptr;
+		pattern_var->matched_term = nullptr;
 	}
 }
 
-bool bmath::intern::about_equal(const double first, const double second, const double allowed_difference)
-{
-	return std::abs(first - second) <= allowed_difference;
-}
+namespace bmath::intern {
 
-void bmath::intern::add_im_to_stream(std::stringstream& buffer, const double im, bool showpos = false)
-{
-	if (about_equal(im, -1.0)) {
-		buffer << '-';
+	// returns, whether the difference of first and second are within the allowed difference
+	//(helper function for to_string())
+	bool about_equal(const double first, const double second, const double allowed_difference = 0.00000000000001)
+	{
+		return std::abs(first - second) <= allowed_difference;
 	}
-	else if (about_equal(im, 1.0)) {
-		if (showpos) {
-			buffer << '+';
+
+	//adds the imaginary part of a complex number (im) to buffer
+	//(helper function for to_string())
+	void add_im_to_stream(std::stringstream& buffer, const double im, bool showpos = false)
+	{
+		if (about_equal(im, -1.0)) {
+			buffer << '-';
 		}
+		else if (about_equal(im, 1.0)) {
+			if (showpos) {
+				buffer << '+';
+			}
+		}
+		else {
+			buffer << (showpos ? std::showpos : std::noshowpos) << im;
+		}
+		buffer << 'i';
 	}
-	else {
-		buffer << (showpos ? std::showpos : std::noshowpos) << im;
-	}
-	buffer << 'i';
 }
 
 std::string bmath::intern::to_string(std::complex<double> val, Type parent_type, bool inverse)

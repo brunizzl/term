@@ -3,7 +3,6 @@
 
 #include <string>
 #include <array>
-#include <iostream>
 
 #include "structs.h"
 #include "term.h"
@@ -16,6 +15,7 @@ namespace bmath {
 		void preprocess_str(std::string& str);
 
 		//finds matching open parethesis to the clsd_par in name 
+		//(starts search at clsd_par and searches to the left of clsd_par)
 		std::size_t find_open_par(std::size_t clsd_par, const std::string_view name);
 
 		//searches characters in name while skipping parts containing parentheses
@@ -45,19 +45,15 @@ namespace bmath {
 		//(needs modification if new termtype is added)
 		Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 
+		//returns visualized tree structure as string
+		//offset is amount of spaces seperating tree from left rim of console
+		std::string ptr_to_tree(const Basic_Term* term_ptr, std::size_t offset);
+
 		//used in output as tree to visually connect last subterm with rest of tree
 		void append_last_line(std::vector<std::string>& tree_lines, char operation);
 
 		//resets all pattern_values to nullptr (needs to be run, before next match can be found)
 		void reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
-
-		// returns, whether the difference of first and second are within the allowed difference
-		//(helper function for to_string())
-		bool about_equal(const double first, const double second, const double allowed_difference = 0.00000000000001);
-
-		//adds the imaginary part of a complex number (im) to buffer
-		//(helper function for to_string())
-		void add_im_to_stream(std::stringstream& buffer, const double im, bool showpos);
 
 		//translates val to a string
 		//parent_type is needed, to determine, wheather to put parenteses around the string

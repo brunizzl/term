@@ -6,7 +6,6 @@
 #include <list>
 #include <vector>
 #include <complex>
-#include <iostream>
 
 #include "structs.h"
 #include "term.h"
@@ -18,16 +17,21 @@ namespace bmath {
 		class Pattern_Variable : public Basic_Term
 		{
 		private:
+			std::string name;
+			mutable Basic_Term* matched_term;	//mutable to allow function matches_to() to stay const (to be called from ==)
+
 			Pattern_Variable(std::string_view name_, Basic_Term* parent_);
 
 			//access to constructor:
 			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator);
-		public:
-			std::string name;
-			mutable Basic_Term* pattern_value;	//mutable to allow operator== to stay const
+			//aces to matched_term:
+			friend void reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
 
+		public:
 			~Pattern_Variable();
 
+			Basic_Term* parent() const override;
+			void set_parent(Basic_Term* new_parent) override;
 			void to_str(std::string& str) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			Type get_type() const override;
@@ -38,7 +42,12 @@ namespace bmath {
 			void sort() override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;
+
+			//WARNING: THIS FUNCTION MODIFIES STATE 
 			bool operator==(const Basic_Term& other) const override;
+
+			//accesses matched_term to copy it, returns copy
+			Basic_Term* copy_matched_term(Basic_Term* parent_) const;
 		};
 
 		

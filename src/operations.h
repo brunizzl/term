@@ -6,7 +6,6 @@
 #include <list>
 #include <vector>
 #include <complex>
-#include <optional>
 
 #include "arguments.h"
 #include "structs.h"
@@ -18,6 +17,13 @@ namespace bmath {
 		class Product : public Basic_Term
 		{
 		private:
+			Basic_Term* parent_ptr;
+
+			//all product methods treat this list as if does not contain any values. 
+			//so better run combine_values() if you replaced a Variable by a Value or have done something similar.
+			std::list<Basic_Term*> factors;
+			Value value_factor;
+
 			Product(Basic_Term* parent_);
 			Product(std::string_view name_, Basic_Term* parent_, std::size_t op);
 			Product(Basic_Term* name_, Basic_Term* parent_, std::complex<double> factor);
@@ -32,13 +38,10 @@ namespace bmath {
 			friend class Sum;
 
 		public:
-			//all product methods treat this list as if does not contain any values. 
-			//so better run combine_values() if you replaced a Variable by a Value or have done something similar.
-			std::list<Basic_Term*> factors;	
-			Value value_factor;
-
 			~Product();
 
+			Basic_Term* parent() const override;
+			void set_parent(Basic_Term* new_parent) override;
 			void to_str(std::string& str) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			Type get_type() const override;
@@ -57,6 +60,13 @@ namespace bmath {
 		class Sum : public Basic_Term
 		{
 		private:
+			Basic_Term* parent_ptr;
+
+			//all sum methods treat this list as if does not contain any values. 
+			//so better run combine_values() if you replaced a Variable by a Value or have done something similar.
+			std::list<Basic_Term*> summands;
+			Value value_summand;
+
 			Sum(Basic_Term* parent_);
 			Sum(std::string_view name_, Basic_Term* parent_, std::size_t op);
 			Sum(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
@@ -69,13 +79,10 @@ namespace bmath {
 			friend class bmath::Term;
 
 		public:
-			//all sum methods treat this list as if does not contain any values. 
-			//so better run combine_values() if you replaced a Variable by a Value or have done something similar.
-			std::list<Basic_Term*> summands;
-			Value value_summand;
-
 			~Sum();
 
+			Basic_Term* parent() const override;
+			void set_parent(Basic_Term* new_parent) override;
 			void to_str(std::string& str) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			Type get_type() const override;
@@ -94,6 +101,11 @@ namespace bmath {
 		class Exponentiation : public Basic_Term
 		{
 		private:
+			Basic_Term* parent_ptr;
+
+			Basic_Term* exponent;
+			Basic_Term* base;
+
 			Exponentiation(Basic_Term* parent_);
 			Exponentiation(std::string_view name_, Basic_Term* parent_, std::size_t op);
 			Exponentiation(Basic_Term* base_, Basic_Term* parent_, std::complex<double> exponent_);
@@ -108,11 +120,10 @@ namespace bmath {
 			friend class Product;
 
 		public:
-			Basic_Term* exponent;
-			Basic_Term* base;
-
 			~Exponentiation();
 
+			Basic_Term* parent() const override;
+			void set_parent(Basic_Term* new_parent) override;
 			void to_str(std::string& str) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			Type get_type() const override;
@@ -131,6 +142,8 @@ namespace bmath {
 		class Par_Operator : public Basic_Term
 		{
 		private:
+			Basic_Term* parent_ptr;
+
 			Par_Op_Type op_type;
 			Basic_Term* argument;
 
@@ -146,6 +159,8 @@ namespace bmath {
 		public:
 			~Par_Operator();
 
+			Basic_Term* parent() const override;
+			void set_parent(Basic_Term* new_parent) override;
 			void to_str(std::string& str) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			Type get_type() const override;

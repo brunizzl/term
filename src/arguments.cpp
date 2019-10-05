@@ -12,12 +12,12 @@ using namespace bmath::intern;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Value::Value(const Value& source, Basic_Term* parent_)
-	:Basic_Term(parent_), std::complex<double>(source)
+	:std::complex<double>(source), parent_ptr(parent_)
 {
 }
 
 Value::Value(std::complex<double> value_, Basic_Term* parent_)
-	: Basic_Term(parent_), std::complex<double>(value_)
+	:std::complex<double>(value_), parent_ptr(parent_)
 {
 }
 
@@ -25,9 +25,19 @@ Value::~Value()
 {
 }
 
+Basic_Term* bmath::intern::Value::parent() const
+{
+	return this->parent_ptr;
+}
+
+void bmath::intern::Value::set_parent(Basic_Term* new_parent)
+{
+	this->parent_ptr = new_parent;
+}
+
 void Value::to_str(std::string& str) const
 {
-	str.append(to_string(*this, type(parent)));
+	str.append(to_string(*this, type(parent_ptr)));
 }
 
 void Value::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
@@ -51,7 +61,7 @@ Vals_Combined Value::combine_values()
 
 std::complex<double> Value::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
-	return *this;
+	return { this->real(), this->imag() };
 }
 
 void Value::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
@@ -117,17 +127,27 @@ bool Value::operator==(const Basic_Term& other) const
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Variable::Variable(std::string_view name_, Basic_Term* parent_)
-	:Basic_Term(parent_), name(name_)
+	:parent_ptr(parent_), name(name_)
 {
 }
 
 Variable::Variable(const Variable& source, Basic_Term* parent_)
-	: Basic_Term(parent_), name(source.name)
+	: parent_ptr(parent_), name(source.name)
 {
 }
 
 Variable::~Variable()
 {
+}
+
+Basic_Term* bmath::intern::Variable::parent() const
+{
+	return this->parent_ptr;
+}
+
+void bmath::intern::Variable::set_parent(Basic_Term* new_parent)
+{
+	this->parent_ptr = new_parent;
 }
 
 void Variable::to_str(std::string& str) const
@@ -167,7 +187,7 @@ std::complex<double> Variable::evaluate(const std::list<bmath::Known_Variable>& 
 void Variable::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
 	if (this->name == name_) {
-		storage_key = copy_subterm(value_, this->parent);
+		storage_key = copy_subterm(value_, this->parent_ptr);
 		delete this;
 	}
 }

@@ -19,7 +19,7 @@ namespace bmath {
 			variable,
 			product,
 			exponentiation,
-			pattern_variable,
+			pattern_variable,	//this has no definite position relative to the others.
 		};
 
 		//used in Par_Operator class to specify whitch operator is actually used 

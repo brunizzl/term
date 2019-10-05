@@ -24,7 +24,7 @@ namespace bmath {
 
 			//access to constructor:
 			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator);
-			//aces to matched_term:
+			//access to matched_term:
 			friend void reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
 
 		public:

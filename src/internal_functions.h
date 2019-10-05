@@ -41,6 +41,7 @@ namespace bmath {
 		//the behavior regarding manipulator is the same as in build_subterm()
 		Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator = { nullptr, nullptr });
 
+		//(needs modification if new termtype is added)
 		//returns pointer to newly build term of right type (u now have ownership of object)
 		//(needs modification if new termtype is added)
 		Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);

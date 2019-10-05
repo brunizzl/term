@@ -193,9 +193,9 @@ Vals_Combined Product::combine_values()
 {
 	bool only_known = true;
 	for (auto it = this->factors.begin(); it != this->factors.end();) {
-		const auto [known, factor] = (*it)->combine_values();
-		if (known) {
-			this->value_factor *= factor;
+		const auto [it_known, it_factor] = (*it)->combine_values();
+		if (it_known) {
+			this->value_factor *= it_factor;
 			delete (*it);
 			it = this->factors.erase(it);
 		}

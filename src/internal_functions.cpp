@@ -12,7 +12,7 @@ void bmath::intern::preprocess_str(std::string& str)
 {
 	int par_diff = 0;	//counts '(' and ')' (parentheses)
 	int brac_diff = 0;	//counts '[' and ']' (brackets)
-	std::size_t last_operator = std::string::npos - 1;	//remembers the position of last '+', '-', '*', '/', '^' (-1 to allow operator at str[0])
+	std::size_t last_operator = std::string::npos - 1;	//remembers the position of last '+', '-', '*', '/', '^'  (-1 to allow operator at str[0])
 
 	for (std::size_t i = 0; i < str.length(); i++) {	//deleting whitespace and counting parentheses
 		switch (str[i]) {
@@ -526,7 +526,7 @@ namespace bmath::intern {
 		}
 		else {
 			name.remove_prefix(1);
-			return -compute(name);
+			return - compute(name);
 		}
 	}
 

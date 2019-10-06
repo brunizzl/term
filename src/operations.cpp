@@ -429,7 +429,7 @@ void Exponentiation::sort()
 
 Basic_Term** Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
-	if (*this == *pattern) {
+	if (this->equal_to_pattern(pattern, storage_key)) {
 		return storage_key;
 	}
 	else {
@@ -445,6 +445,28 @@ Basic_Term** Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern
 		}
 		reset_pattern_vars(pattern_var_adresses);
 		return nullptr;
+	}
+}
+
+bool bmath::intern::Exponentiation::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+{
+	const Type pattern_type = pattern->get_type();
+	if (pattern_type == Type::exponentiation) {
+		const Exponentiation* pattern_exp = static_cast<const Exponentiation*>(pattern);
+		if (!this->base->equal_to_pattern(pattern_exp->base, &this->base)) {
+			return false;
+		}
+		if (!this->exponent->equal_to_pattern(pattern_exp->exponent, &this->exponent)) {
+			return false;
+		}
+		return true;
+	}
+	else if (pattern_type == Type::pattern_variable) {
+		Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
+		return pattern_var->try_matching(this, storage_key);
+	}
+	else {
+		return false;
 	}
 }
 
@@ -467,30 +489,25 @@ bool Exponentiation::operator<(const Basic_Term& other) const
 
 bool Exponentiation::operator==(const Basic_Term& other) const
 {
-	switch (other.get_type()) {
-	case Type::exponentiation:
-		break;
-	case Type::pattern_variable:
-		return other == *this;
-	default:
+	if (other.get_type() == Type::exponentiation) {
+		const Exponentiation* other_exp = static_cast<const Exponentiation*>(&other);
+		if (*(this->base) != *(other_exp->base)) {
+			return false;
+		}
+		return *(this->exponent) == *(other_exp->exponent);
+	}
+	else {
 		return false;
 	}
-	const Exponentiation* other_exp = static_cast<const Exponentiation*>(&other);
-	if (*(this->base) != *(other_exp->base)) {
-		return false;
-	}
-	if (*(this->exponent) != *(other_exp->exponent)) {
-		return false;
-	}
-	return true;
 }
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Parenthesis_Operator\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Par_Operator::Par_Operator(Basic_Term* parent_)
-	:parent_ptr(parent_), argument(nullptr), op_type(Par_Op_Type::log10)	//just some default initialisation
+	:parent_ptr(parent_), argument(nullptr), op_type(Par_Op_Type::log10)	//just some default initialisation for op_type
 {
 }
 
@@ -591,7 +608,7 @@ void Par_Operator::sort()
 
 Basic_Term** Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
-	if (*this == *pattern) {
+	if (this->equal_to_pattern(pattern, storage_key)) {
 		return storage_key;
 	}
 	else {
@@ -602,6 +619,25 @@ Basic_Term** Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_V
 		}
 		reset_pattern_vars(pattern_var_adresses);
 		return nullptr;
+	}
+}
+
+bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+{
+	const Type pattern_type = pattern->get_type();
+	if (pattern_type == Type::par_operator) {
+		const Par_Operator* pattern_par_op = static_cast<const Par_Operator*>(pattern);
+		if (this->op_type != pattern_par_op->op_type) {
+			return false;
+		}
+		return this->argument->equal_to_pattern(pattern_par_op->argument, &this->argument);
+	}
+	else if (pattern_type == Type::pattern_variable) {
+		Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
+		return pattern_var->try_matching(this, storage_key);
+	}
+	else {
+		return false;
 	}
 }
 
@@ -621,20 +657,14 @@ bool Par_Operator::operator<(const Basic_Term& other) const
 
 bool Par_Operator::operator==(const Basic_Term& other) const
 {
-	switch (other.get_type()) {
-	case Type::par_operator:
-		break;
-	case Type::pattern_variable:
-		return other == *this;
-	default:
+	if (other.get_type() == Type::par_operator) {
+		const Par_Operator* other_par_op = static_cast<const Par_Operator*>(&other);
+		if (this->op_type != other_par_op->op_type) {
+			return false;
+		}
+		return *(this->argument) == *(other_par_op->argument);
+	}
+	else {
 		return false;
 	}
-	const Par_Operator* other_par_op = static_cast<const Par_Operator*>(&other);
-	if (this->op_type != other_par_op->op_type) {
-		return false;
-	}
-	if (*(this->argument) != *(other_par_op->argument)) {
-		return false;
-	}
-	return true;
 }

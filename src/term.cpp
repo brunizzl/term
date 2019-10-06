@@ -15,14 +15,6 @@ Basic_Term::~Basic_Term()
 	//cleaning up the tree is done in derived classes
 }
 
-void Basic_Term::combine_layers(Basic_Term*& storage_key)
-{
-	//the base class does not know of the tree structures, the derived classes provide.
-	//therefore, no tree can be combined.
-	//the classes Value, Variable and Pattern_Variable dont need an override to this function.
-	//every derived class not beeing leaf needs an overriding function.
-}
-
 bool Basic_Term::operator!=(const Basic_Term& other) const
 {
 	return !(*this == other);

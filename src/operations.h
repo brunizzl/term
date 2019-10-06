@@ -6,7 +6,7 @@
 #include <list>
 #include <vector>
 #include <complex>
-#include <functional>
+#include <cassert>
 
 #include "arguments.h"
 #include "internal_functions.h"
@@ -42,6 +42,7 @@ namespace bmath {
 			void list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const override;
 			void sort() override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
+			bool equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -108,6 +109,7 @@ namespace bmath {
 			void list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const override;
 			void sort() override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
+			bool equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -139,6 +141,7 @@ namespace bmath {
 			void list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const override;
 			void sort() override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
+			bool equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -284,7 +287,7 @@ namespace bmath {
 		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline Basic_Term** Variadic_Operator<operate, this_type, neutral_val>::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 		{
-			if (*this == *pattern) {
+			if (this->equal_to_pattern(pattern, storage_key)) {
 				return storage_key;
 			}
 			else {
@@ -299,6 +302,40 @@ namespace bmath {
 			}
 			reset_pattern_vars(pattern_var_adresses);
 			return nullptr;
+		}
+
+		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		inline bool Variadic_Operator<operate, this_type, neutral_val>::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+		{
+			const Type pattern_type = pattern->get_type();
+			if (pattern_type == this_type) {
+				const Variadic_Operator<operate, this_type, neutral_val>* variadic_pattern = static_cast<const Variadic_Operator<operate, this_type, neutral_val>*>(pattern);
+				if (this->operands.size() != variadic_pattern->operands.size()) {
+					return false;
+				}
+				if (this->value_operand.real() != variadic_pattern->value_operand.real()) {
+					return false;
+				}
+				if (this->value_operand.imag() != variadic_pattern->value_operand.imag()) {
+					return false;
+				}
+				//the operator assumes from now on to have sorted products to compare
+				auto& this_it = this->operands.begin();	//reference, because equal_to_pattern needs the storage position of operands
+				auto pattern_it = variadic_pattern->operands.begin();
+				for (; this_it != this->operands.end() && pattern_it != variadic_pattern->operands.end(); ++this_it, ++pattern_it) {
+					if ( !(*this_it)->equal_to_pattern(*pattern_it, &*this_it) ) {
+						return false;
+					}
+				}
+				return true;
+			}
+			else if (pattern_type == Type::pattern_variable) {
+				Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
+				return pattern_var->try_matching(this, storage_key);
+			}
+			else {
+				return false;
+			}
 		}
 
 		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
@@ -336,33 +373,30 @@ namespace bmath {
 		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline bool Variadic_Operator<operate, this_type, neutral_val>::operator==(const Basic_Term& other) const
 		{
-			switch (other.get_type()) {
-			case this_type:
-				break;
-			case Type::pattern_variable:
-				return other == *this;
-			default:
-				return false;
-			}
-			const Variadic_Operator<operate, this_type, neutral_val>* other_variadic = static_cast<const Variadic_Operator<operate, this_type, neutral_val>*>(&other);
-			if (this->operands.size() != other_variadic->operands.size()) {
-				return false;
-			}
-			if (this->value_operand.real() != other_variadic->value_operand.real()) {
-				return false;
-			}
-			if (this->value_operand.imag() != other_variadic->value_operand.imag()) {
-				return false;
-			}
-			//the operator assumes from now on to have sorted products to compare
-			auto it_this = this->operands.begin();
-			auto it_other = other_variadic->operands.begin();
-			for (; it_this != this->operands.end() && it_other != other_variadic->operands.end(); ++it_this, ++it_other) {
-				if ((**it_this) != (**it_other)) {
+			if (other.get_type() == this_type) {
+				const Variadic_Operator<operate, this_type, neutral_val>* other_variadic = static_cast<const Variadic_Operator<operate, this_type, neutral_val>*>(&other);
+				if (this->operands.size() != other_variadic->operands.size()) {
 					return false;
 				}
+				if (this->value_operand.real() != other_variadic->value_operand.real()) {
+					return false;
+				}
+				if (this->value_operand.imag() != other_variadic->value_operand.imag()) {
+					return false;
+				}
+				//the operator assumes from now on to have sorted products to compare
+				auto it_this = this->operands.begin();
+				auto it_other = other_variadic->operands.begin();
+				for (; it_this != this->operands.end() && it_other != other_variadic->operands.end(); ++it_this, ++it_other) {
+					if ((**it_this) != (**it_other)) {
+						return false;
+					}
+				}
+				return true;
 			}
-			return true;
+			else {
+				return false;
+			}
 		}
 
 } //namespace intern

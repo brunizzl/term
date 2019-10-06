@@ -57,21 +57,26 @@ Type Pattern_Variable::get_type() const
 	return Type::pattern_variable;
 }
 
+void bmath::intern::Pattern_Variable::combine_layers(Basic_Term*& storage_key)
+{
+	//nothing to combine layerwise.
+}
+
 Vals_Combined Pattern_Variable::combine_values()
 {
-	std::cout << "Error: pattern_variable used instead of variable!\n";
+	assert(false); //patterns can to be evaluated
 	return { false, 0 };
 }
 
 std::complex<double> Pattern_Variable::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
-	std::cout << "Error: pattern_variable used instead of variable!\n";
+	assert(false); //patterns can to be evaluated
 	return 0;
 }
 
 void Pattern_Variable::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
-	std::cout << "Error: pattern_variable used instead of variable!\n";
+	assert(false);	//patternvariables should never become values. then the pattern would change.
 }
 
 void Pattern_Variable::list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const
@@ -88,8 +93,14 @@ void Pattern_Variable::sort()
 
 Basic_Term** Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
-	std::cout << "Error: did not expect Pattern_Variable calling match_intern()\n";
+	assert(false);	//pattern never tries to match to pattern u dummie
 	return nullptr;
+}
+
+bool bmath::intern::Pattern_Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+{
+	assert(false);	//u should call try_matching, because otherwise u did something wrong.
+	return false;
 }
 
 bool Pattern_Variable::operator<(const Basic_Term& other) const
@@ -105,18 +116,33 @@ bool Pattern_Variable::operator<(const Basic_Term& other) const
 
 bool Pattern_Variable::operator==(const Basic_Term& other) const
 {
-	if (this->matched_term == nullptr) {
-		this->matched_term = const_cast<Basic_Term*>(&other);
-		return true;
+	if (other.get_type() == Type::pattern_variable) {
+		const Pattern_Variable* other_var = static_cast<const Pattern_Variable*>(&other);
+		return this->name == other_var->name;
 	}
 	else {
-		return *(this->matched_term) == other;
+		return false;
 	}
 }
 
 Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term(Basic_Term* parent_) const
 {
 	return copy_subterm(this->matched_term, parent_);
+}
+
+bool bmath::intern::Pattern_Variable::try_matching(Basic_Term* other, Basic_Term** other_storage_key)
+{
+	if (this->matched_term == nullptr) {
+		this->matched_term = other;
+		return true;
+	}
+	else {
+		if (*(this->matched_term) == *other) {
+			//if future pattern_variable holds some buffer Basic_Term**, this is where to set it.
+			return true;
+		}
+		return false;
+	}
 }
 
 
@@ -132,10 +158,7 @@ Pattern::Pattern_Term::Pattern_Term()
 
 void Pattern::Pattern_Term::build(std::string name, std::list<Pattern_Variable*>& var_adresses)
 {
-	if (term_ptr != nullptr) {
-		std::cout << "Error: Pattern_Term has already been build.\n";
-		return;
-	}
+	assert(term_ptr == nullptr);
 	preprocess_str(name);
 	this->term_ptr = build_pattern_subterm({ name.data(), name.length() }, nullptr, var_adresses, { nullptr, nullptr });
 	this->term_ptr->combine_layers(this->term_ptr);

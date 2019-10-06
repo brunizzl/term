@@ -41,7 +41,7 @@ namespace bmath {
 			//redundant layers are removed (exponentiation with exponent == 1, sum with only one summand...)
 			//storage key refers to the actual memory holding the pointer to this. 
 			//(aka if you wanna remove the current layer, this is where to reconnect the layers above and below you.)
-			virtual void combine_layers(Basic_Term*& storage_key);
+			virtual void combine_layers(Basic_Term*& storage_key) = 0;
 
 			//values are added, multiplied, etc.
 			virtual Vals_Combined combine_values() = 0;
@@ -61,25 +61,28 @@ namespace bmath {
 			//needs to be run before == makes sense to be used
 			virtual void sort() = 0;
 
-			//returns subterm matching pattern or nullptr (basically operator==, but with pattern matching) 
+			//returns subterm matching pattern or nullptr
 			//storage_key is pointer to the pointer to "this" in the object that owns "this"
-			//only differs from operator== on first layer, as it calls operator== itself.
 			//first tries to match this to pattern, then tries to match subterms
 			virtual Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) = 0;
 
+			//called by match_intern to test if this is eual to pattern.
+			//only differs from operator== in its ability to modify the matched pattern_variables
+			//storage_key is pointer to the space in the term owning this, that holds the pointer to this (as in the function above)
+			virtual bool equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key) = 0;
+
 			//works only on sorted terms
-			//MAKE SHURE; THIS OPERATOR NEVER CALLS operator== or operator!=, as these have side effects, and this should not have.
 			virtual bool operator<(const Basic_Term& other) const = 0;
 
-			//WARNING: these operators has side effects if they compare to Pattern_Variable.
 			virtual bool operator==(const Basic_Term& other) const = 0;
-			virtual bool operator!=(const Basic_Term& other) const;
+			bool operator!=(const Basic_Term& other) const;
 		};
 
 	} //namespace intern
 
 	//"head" used to acess and manage actual term (only expected user interface)
-	class Term {
+	class Term
+	{
 	private:
 		intern::Basic_Term* term_ptr;		//start of actual term tree
 

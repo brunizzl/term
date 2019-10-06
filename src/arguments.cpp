@@ -1,6 +1,7 @@
 
 #include <sstream>
 #include <charconv>
+#include <cassert>
 
 #include "arguments.h"
 #include "internal_functions.h"
@@ -54,6 +55,11 @@ Type Value::get_type() const
 	return Type::value;
 }
 
+void bmath::intern::Value::combine_layers(Basic_Term*& storage_key)
+{
+	//nothing to combine layerwise here
+}
+
 Vals_Combined Value::combine_values()
 {
 	return { true, *this };
@@ -91,6 +97,22 @@ Basic_Term** Value::match_intern(Basic_Term* pattern, std::list<Pattern_Variable
 	}
 }
 
+bool bmath::intern::Value::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+{
+	const Type pattern_type = pattern->get_type();
+	if (pattern_type == Type::value) {
+		const Value* other_val = static_cast<const Value*>(pattern);
+		return static_cast<std::complex<double>>(*this) == static_cast<std::complex<double>>(*other_val);	//making sure to call operator==() for std::complex
+	}
+	else if (pattern_type == Type::pattern_variable) {
+		Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
+		return pattern_var->try_matching(this, storage_key);
+	}
+	else {
+		return false;
+	}
+}
+
 bool Value::operator<(const Basic_Term& other) const
 {
 	if (this->get_type() != other.get_type()) {
@@ -109,16 +131,13 @@ bool Value::operator<(const Basic_Term& other) const
 
 bool Value::operator==(const Basic_Term& other) const
 {
-	switch (other.get_type()) {
-	case Type::value:
-		break;
-	case Type::pattern_variable:
-		return other == *this;	//other is Basic_Term -> the operator==() of Basic_Term has to be used.
-	default:
+	if (other.get_type() == Type::value) {
+		const Value* other_val = static_cast<const Value*>(&other);
+		return static_cast<std::complex<double>>(*this) == static_cast<std::complex<double>>(*other_val);	//making sure to call operator==() for std::complex
+	}
+	else {
 		return false;
 	}
-	const Value* other_val = static_cast<const Value*>(&other);
-	return static_cast<std::complex<double>>(*this) == static_cast<std::complex<double>>(*other_val);	//making sure to call operator==() for std::complex
 }
 
 
@@ -169,6 +188,11 @@ Type Variable::get_type() const
 	return Type::variable;
 }
 
+void bmath::intern::Variable::combine_layers(Basic_Term*& storage_key)
+{
+	//nothing to combine layerwise.
+}
+
 Vals_Combined Variable::combine_values()
 {
 	return { false, 0 };
@@ -214,6 +238,22 @@ Basic_Term** Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Varia
 	}
 }
 
+bool bmath::intern::Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+{
+	const Type pattern_type = pattern->get_type();
+	if (pattern_type == Type::variable) {
+		const Variable* other_var = static_cast<const Variable*>(pattern);
+		return this->name == other_var->name;
+	}
+	else if (pattern_type == Type::pattern_variable) {
+		Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
+		return pattern_var->try_matching(this, storage_key);
+	}
+	else {
+		return false;
+	}
+}
+
 bool Variable::operator<(const Basic_Term& other) const
 {
 	if (this->get_type() != other.get_type()) {
@@ -227,15 +267,12 @@ bool Variable::operator<(const Basic_Term& other) const
 
 bool Variable::operator==(const Basic_Term& other) const
 {
-	switch (other.get_type()) {
-	case Type::variable:
-		break;
-	case Type::pattern_variable:
-		return other == *this;
-	default:
+	if (other.get_type() == Type::variable) {
+		const Variable* other_var = static_cast<const Variable*>(&other);
+		return this->name == other_var->name;
+	}
+	else {
 		return false;
 	}
-	const Variable* other_var = static_cast<const Variable*>(&other);
-	return this->name == other_var->name;
 }
 

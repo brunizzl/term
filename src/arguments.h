@@ -13,10 +13,11 @@
 namespace bmath {
 	namespace intern {
 
-		class Value : public Basic_Term, public std::complex<double>
+		class Value : public Basic_Term
 		{
 		private:
 			Basic_Term* parent_ptr;
+			std::complex<double> value;
 
 		public:
 			Value(const Value& source, Basic_Term* parent_ = nullptr);
@@ -38,6 +39,10 @@ namespace bmath {
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
+
+			//returns reference to this->value
+			std::complex<double>& val();
+			const std::complex<double>& val() const;
 		};
 
 

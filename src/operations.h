@@ -25,7 +25,7 @@ namespace bmath {
 		protected:
 			Basic_Term* parent_ptr;
 			std::list<Basic_Term*> operands;	//summands in sum, factors in product
-			Value value_operand;				//only one summand / factor is allowed to be of Type::value. value_operand is that.
+			Value operand;				//only one summand / factor is allowed to be of Type::value. value_operand is that.
 
 			Variadic_Operator(Basic_Term* parent_);
 			Variadic_Operator(const Variadic_Operator& source, Basic_Term* parent_);
@@ -151,13 +151,13 @@ namespace bmath {
 
 		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline Variadic_Operator<operate, this_type, neutral_val>::Variadic_Operator(Basic_Term* parent_)
-			:parent_ptr(parent_), value_operand({ static_cast<double>(neutral_val), 0 }, this)
+			:parent_ptr(parent_), operand({ static_cast<double>(neutral_val), 0 }, this)
 		{
 		}
 
 		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline Variadic_Operator<operate, this_type, neutral_val>::Variadic_Operator(const Variadic_Operator& source, Basic_Term* parent_)
-			:parent_ptr(parent_), value_operand({ source.value_operand.real(), source.value_operand.imag() }, this)
+			:parent_ptr(parent_), operand(source.operand.val(), this)
 		{
 			for (const auto it : source.operands) {
 				this->operands.push_back(copy_subterm(it, this));
@@ -197,7 +197,7 @@ namespace bmath {
 				(*it)->combine_layers(*it);
 				if (type(*it) == this_type) {
 					Variadic_Operator<operate, this_type, neutral_val>* redundant = static_cast<Variadic_Operator<operate, this_type, neutral_val>*>((*it));
-					this->value_operand *= redundant->value_operand;
+					operate(&(this->operand.val()), redundant->operand.val());
 					for (auto it_red : redundant->operands) {
 						it_red->set_parent(this);
 					}
@@ -209,7 +209,7 @@ namespace bmath {
 					++it;
 				}
 			}
-			if (this->operands.size() == 1 && this->value_operand == static_cast<double>(neutral_val)) {	//this only consists of one non- neutral operand -> layer is not needed and this is deleted
+			if (this->operands.size() == 1 && this->operand.val() == static_cast<double>(neutral_val)) {	//this only consists of one non- neutral operand -> layer is not needed and this is deleted
 				Basic_Term* const only_operand = *(this->operands.begin());
 				storage_key = only_operand;
 				only_operand->set_parent(this->parent_ptr);
@@ -217,7 +217,7 @@ namespace bmath {
 				delete this;
 			}
 			else if (this->operands.size() == 0) {	//this only consists of value_operand -> layer is not needed and this is deleted
-				Value* const only_operand = new Value(this->value_operand, this->parent_ptr);
+				Value* const only_operand = new Value(this->operand, this->parent_ptr);
 				storage_key = only_operand;
 				delete this;
 			}
@@ -229,9 +229,9 @@ namespace bmath {
 			bool only_known = true;
 
 			for (auto it = this->operands.begin(); it != this->operands.end();) {
-				const auto [known, operand] = (*it)->combine_values();
-				if (known) {
-					operate(&(this->value_operand), operand);
+				const auto [it_known, it_val] = (*it)->combine_values();
+				if (it_known) {
+					operate(&(this->operand.val()), it_val);
 					delete (*it);
 					it = this->operands.erase(it);
 				}
@@ -240,13 +240,13 @@ namespace bmath {
 					++it;
 				}
 			}
-			return { only_known, this->value_operand };
+			return { only_known, this->operand.val() };
 		}
 
 		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline std::complex<double> Variadic_Operator<operate, this_type, neutral_val>::evaluate(const std::list<Known_Variable>& known_variables) const
 		{
-			std::complex<double> result = this->value_operand;
+			std::complex<double> result = this->operand.val();
 			for (const auto it : this->operands) {
 				operate(&result, it->evaluate(known_variables));
 			}
@@ -268,7 +268,7 @@ namespace bmath {
 				subterms.push_back(this);
 			}
 			else if (listed_type == Type::value) {
-				subterms.push_back(&this->value_operand);
+				subterms.push_back(&this->operand);
 			}
 			for (auto it : this->operands) {
 				it->list_subterms(subterms, listed_type);
@@ -313,10 +313,7 @@ namespace bmath {
 				if (this->operands.size() != variadic_pattern->operands.size()) {
 					return false;
 				}
-				if (this->value_operand.real() != variadic_pattern->value_operand.real()) {
-					return false;
-				}
-				if (this->value_operand.imag() != variadic_pattern->value_operand.imag()) {
+				if (this->operand.val() != variadic_pattern->operand.val()) {
 					return false;
 				}
 				//the operator assumes from now on to have sorted products to compare
@@ -349,11 +346,11 @@ namespace bmath {
 				if (this->operands.size() != other_product->operands.size()) {
 					return this->operands.size() < other_product->operands.size();
 				}
-				if (this->value_operand.real() != other_product->value_operand.real()) {
-					return this->value_operand.real() < other_product->value_operand.real();
+				if (this->operand.val().real() != other_product->operand.val().real()) {
+					return this->operand.val().real() < other_product->operand.val().real();
 				}
-				if (this->value_operand.imag() != other_product->value_operand.imag()) {
-					return this->value_operand.imag() < other_product->value_operand.imag();
+				if (this->operand.val().imag() != other_product->operand.val().imag()) {
+					return this->operand.val().imag() < other_product->operand.val().imag();
 				}
 				//the operator assumes from now on to have sorted products to compare
 				auto it_this = this->operands.begin();
@@ -378,10 +375,7 @@ namespace bmath {
 				if (this->operands.size() != other_variadic->operands.size()) {
 					return false;
 				}
-				if (this->value_operand.real() != other_variadic->value_operand.real()) {
-					return false;
-				}
-				if (this->value_operand.imag() != other_variadic->value_operand.imag()) {
+				if (this->operand.val() != other_variadic->operand.val()) {
 					return false;
 				}
 				//the operator assumes from now on to have sorted products to compare

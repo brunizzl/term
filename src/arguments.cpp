@@ -13,12 +13,12 @@ using namespace bmath::intern;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Value::Value(const Value& source, Basic_Term* parent_)
-	:std::complex<double>(source), parent_ptr(parent_)
+	: parent_ptr(parent_), value(source.value)
 {
 }
 
 Value::Value(std::complex<double> value_, Basic_Term* parent_)
-	:std::complex<double>(value_), parent_ptr(parent_)
+	: parent_ptr(parent_), value(value_)
 {
 }
 
@@ -38,7 +38,7 @@ void bmath::intern::Value::set_parent(Basic_Term* new_parent)
 
 void Value::to_str(std::string& str) const
 {
-	str.append(to_string(*this, type(parent_ptr)));
+	str.append(to_string(this->value, type(parent_ptr)));
 }
 
 void Value::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
@@ -62,12 +62,12 @@ void bmath::intern::Value::combine_layers(Basic_Term*& storage_key)
 
 Vals_Combined Value::combine_values()
 {
-	return { true, *this };
+	return { true, this->value };
 }
 
 std::complex<double> Value::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
-	return { this->real(), this->imag() };
+	return { this->value.real(), this->value.imag() };
 }
 
 void Value::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
@@ -102,7 +102,7 @@ bool bmath::intern::Value::equal_to_pattern(Basic_Term* pattern, Basic_Term** st
 	const Type pattern_type = pattern->get_type();
 	if (pattern_type == Type::value) {
 		const Value* other_val = static_cast<const Value*>(pattern);
-		return static_cast<std::complex<double>>(*this) == static_cast<std::complex<double>>(*other_val);	//making sure to call operator==() for std::complex
+		return this->value == other_val->value;
 	}
 	else if (pattern_type == Type::pattern_variable) {
 		Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
@@ -120,11 +120,11 @@ bool Value::operator<(const Basic_Term& other) const
 	}
 	else {
 		const Value* other_val = static_cast<const Value*>(&other);
-		if (this->real() != other_val->real()) {
-			return this->real() < other_val->real();
+		if (this->value.real() != other_val->value.real()) {
+			return this->value.real() < other_val->value.real();
 		}
 		else {
-			return this->imag() < other_val->imag();
+			return this->value.imag() < other_val->value.imag();
 		}
 	}
 }
@@ -133,9 +133,19 @@ bool Value::operator==(const Basic_Term& other) const
 {
 	if (other.get_type() == Type::value) {
 		const Value* other_val = static_cast<const Value*>(&other);
-		return std::operator==(static_cast<std::complex<double>>(*this), static_cast<std::complex<double>>(*other_val));	//making sure to call operator==() for std::complex
+		return this->value == other_val->value;
 	}
 	return false;
+}
+
+std::complex<double>& bmath::intern::Value::val()
+{
+	return this->value;
+}
+
+const std::complex<double>& bmath::intern::Value::val() const
+{
+	return this->value;
 }
 
 

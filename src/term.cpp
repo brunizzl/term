@@ -171,18 +171,18 @@ void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 	this->term_ptr->list_subterms(values, Type::value);
 	double quadratic_sum = 0;	//real and imaginary part are added seperatly
 	for (auto &it : values) {
-		quadratic_sum += std::abs(static_cast<const Value*>(it)->real()) * std::abs(static_cast<const Value*>(it)->real());
-		quadratic_sum += std::abs(static_cast<const Value*>(it)->imag()) * std::abs(static_cast<const Value*>(it)->imag());
+		quadratic_sum += std::abs(static_cast<const Value*>(it)->val().real()) * std::abs(static_cast<const Value*>(it)->val().real());
+		quadratic_sum += std::abs(static_cast<const Value*>(it)->val().imag()) * std::abs(static_cast<const Value*>(it)->val().imag());
 	}
 	if (quadratic_sum != 0) {
 		const double quadratic_average = std::sqrt(quadratic_sum / values.size() / 2);	//equal to standard deviation from 0
 		const double limit_to_0 = quadratic_average * std::pow(10, -pow_of_10_diff_to_set_0);
 		for (auto &it : values) {
-			if (std::abs(static_cast<const Value*>(it)->real()) < limit_to_0) {
-				const_cast<Value*>(static_cast<const Value*>(it))->real(0);
+			if (std::abs(static_cast<const Value*>(it)->val().real()) < limit_to_0) {
+				const_cast<Value*>(static_cast<const Value*>(it))->val().real(0);
 			}
-			if (std::abs(static_cast<const Value*>(it)->imag()) < limit_to_0) {
-				const_cast<Value*>(static_cast<const Value*>(it))->imag(0);
+			if (std::abs(static_cast<const Value*>(it)->val().imag()) < limit_to_0) {
+				const_cast<Value*>(static_cast<const Value*>(it))->val().imag(0);
 			}
 		}
 	}
@@ -191,7 +191,7 @@ void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 bmath::Term& bmath::Term::operator+=(const Term& operand2)
 {
 	if (this->term_ptr->get_type() == Type::value && operand2.term_ptr->get_type() == Type::value) {
-		*static_cast<Value*>(this->term_ptr) += *static_cast<Value*>(operand2.term_ptr);
+		static_cast<Value*>(this->term_ptr)->val() += static_cast<Value*>(operand2.term_ptr)->val();
 	}
 	else {
 		Sum* sum = new Sum(nullptr);
@@ -207,7 +207,7 @@ bmath::Term& bmath::Term::operator+=(const Term& operand2)
 bmath::Term& bmath::Term::operator-=(const Term& operand2)
 {
 	if (this->term_ptr->get_type() == Type::value && operand2.term_ptr->get_type() == Type::value) {
-		*static_cast<Value*>(this->term_ptr) -= *static_cast<Value*>(operand2.term_ptr);
+		static_cast<Value*>(this->term_ptr)->val() -= static_cast<Value*>(operand2.term_ptr)->val();
 	}
 	else {
 		Sum* sum = new Sum(nullptr);
@@ -228,7 +228,7 @@ bmath::Term& bmath::Term::operator-=(const Term& operand2)
 bmath::Term& bmath::Term::operator*=(const Term& operand2)
 {
 	if (this->term_ptr->get_type() == Type::value && operand2.term_ptr->get_type() == Type::value) {
-		*static_cast<Value*>(this->term_ptr) *= *static_cast<Value*>(operand2.term_ptr);
+		static_cast<Value*>(this->term_ptr)->val() *= static_cast<Value*>(operand2.term_ptr)->val();
 	}
 	else {
 		Product* product = new Product(nullptr);
@@ -244,7 +244,7 @@ bmath::Term& bmath::Term::operator*=(const Term& operand2)
 bmath::Term& bmath::Term::operator/=(const Term& operand2)
 {
 	if (this->term_ptr->get_type() == Type::value && operand2.term_ptr->get_type() == Type::value) {
-		*static_cast<Value*>(this->term_ptr) /= *static_cast<Value*>(operand2.term_ptr);
+		static_cast<Value*>(this->term_ptr)->val() /= static_cast<Value*>(operand2.term_ptr)->val();
 	}
 	else {
 		Product* product = new Product(nullptr);

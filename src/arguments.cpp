@@ -176,7 +176,7 @@ Vals_Combined Variable::combine_values()
 
 std::complex<double> Variable::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
-	for (auto& it : known_variables) {
+	for (const auto& it : known_variables) {
 		if (it.name == this->name) {
 			return it.value;
 		}

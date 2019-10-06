@@ -89,7 +89,7 @@ void Value::sort()
 
 Basic_Term** Value::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
-	if (*this == *pattern) {
+	if (this->equal_to_pattern(pattern, storage_key)) {
 		return storage_key;
 	}
 	else {
@@ -133,11 +133,9 @@ bool Value::operator==(const Basic_Term& other) const
 {
 	if (other.get_type() == Type::value) {
 		const Value* other_val = static_cast<const Value*>(&other);
-		return static_cast<std::complex<double>>(*this) == static_cast<std::complex<double>>(*other_val);	//making sure to call operator==() for std::complex
+		return std::operator==(static_cast<std::complex<double>>(*this), static_cast<std::complex<double>>(*other_val));	//making sure to call operator==() for std::complex
 	}
-	else {
-		return false;
-	}
+	return false;
 }
 
 
@@ -230,7 +228,7 @@ void Variable::sort()
 
 Basic_Term** Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
-	if (*this == *pattern) {
+	if (this->equal_to_pattern(pattern, storage_key)) {
 		return storage_key;
 	}
 	else {
@@ -271,8 +269,6 @@ bool Variable::operator==(const Basic_Term& other) const
 		const Variable* other_var = static_cast<const Variable*>(&other);
 		return this->name == other_var->name;
 	}
-	else {
-		return false;
-	}
+	return false;
 }
 

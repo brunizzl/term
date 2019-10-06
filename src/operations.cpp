@@ -496,9 +496,7 @@ bool Exponentiation::operator==(const Basic_Term& other) const
 		}
 		return *(this->exponent) == *(other_exp->exponent);
 	}
-	else {
-		return false;
-	}
+	return false;
 }
 
 
@@ -664,7 +662,5 @@ bool Par_Operator::operator==(const Basic_Term& other) const
 		}
 		return *(this->argument) == *(other_par_op->argument);
 	}
-	else {
-		return false;
-	}
+	return false;
 }

@@ -120,9 +120,7 @@ bool Pattern_Variable::operator==(const Basic_Term& other) const
 		const Pattern_Variable* other_var = static_cast<const Pattern_Variable*>(&other);
 		return this->name == other_var->name;
 	}
-	else {
-		return false;
-	}
+	return false;
 }
 
 Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term(Basic_Term* parent_) const

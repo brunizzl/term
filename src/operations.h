@@ -394,9 +394,7 @@ namespace bmath {
 				}
 				return true;
 			}
-			else {
-				return false;
-			}
+			return false;
 		}
 
 } //namespace intern

@@ -17,17 +17,14 @@ namespace bmath {
 		class Pattern_Variable : public Basic_Term
 		{
 		private:
-			std::string name;
 			mutable Basic_Term* matched_term;	//mutable to allow function matches_to() to stay const (to be called from ==)
 
-			Pattern_Variable(std::string_view name_, Basic_Term* parent_);
-
-			//access to constructor:
-			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator);
-			//aces to matched_term:
 			friend void reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
 
 		public:
+			const std::string name;
+
+			Pattern_Variable(std::string_view name_, Basic_Term* parent_);
 			~Pattern_Variable();
 
 			Basic_Term* parent() const override;
@@ -43,14 +40,12 @@ namespace bmath {
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;
 
-			//WARNING: THIS FUNCTION MODIFIES STATE 
+			//WARNING: this function modifies state
 			bool operator==(const Basic_Term& other) const override;
 
 			//accesses matched_term to copy it, returns copy
 			Basic_Term* copy_matched_term(Basic_Term* parent_) const;
-		};
-
-		
+		};		
 
 
 		class  Pattern {	//used to pattern match stuff that can then be simplified

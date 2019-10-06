@@ -18,19 +18,9 @@ namespace bmath {
 		private:
 			Basic_Term* parent_ptr;
 
+		public:
 			Value(const Value& source, Basic_Term* parent_ = nullptr);
 			Value(std::complex<double> value_, Basic_Term* parent_);
-
-			//access to constructors:
-			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_, Value_Manipulator manipulator);
-			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator);
-			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
-			friend class Product;
-			friend class Sum;
-			friend class Exponentiation;
-			friend class bmath::Term;
-
-		public:
 			~Value();
 
 			Basic_Term* parent() const override;
@@ -54,16 +44,11 @@ namespace bmath {
 		private:
 			Basic_Term* parent_ptr;
 
-			Variable(std::string_view name_, Basic_Term* parent_);
-			Variable(const Variable& source, Basic_Term* parent_ = nullptr);
-
-			//access to constructors:
-			friend Basic_Term* build_subterm(std::string_view subtermstr_v, Basic_Term* parent_, Value_Manipulator manipulator);
-			friend Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
 		public:
-
 			const std::string name;
 
+			Variable(std::string_view name_, Basic_Term* parent_);
+			Variable(const Variable& source, Basic_Term* parent_ = nullptr);
 			~Variable();
 
 			Basic_Term* parent() const override;

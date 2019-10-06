@@ -160,6 +160,10 @@ void bmath::Term::combine()
 		if (this->match_and_transform(*Pattern::patterns[i])) {
 			this->term_ptr->combine_layers(this->term_ptr);
 			this->combine_values();
+
+			this->term_ptr->combine_layers(this->term_ptr);	//guarantee well definded structure to match next pattern
+			this->combine_values();
+			this->term_ptr->sort();
 			i = 0;	//if match was successfull, pattern search starts again.
 		}
 		else {
@@ -200,8 +204,8 @@ bmath::Term& bmath::Term::operator+=(const Term& operand2)
 	else {
 		Sum* sum = new Sum(nullptr);
 		this->term_ptr->set_parent(sum);
-		sum->summands.push_back(this->term_ptr);
-		sum->summands.push_back(copy_subterm(operand2.term_ptr, sum));
+		sum->operands.push_back(this->term_ptr);
+		sum->operands.push_back(copy_subterm(operand2.term_ptr, sum));
 		this->term_ptr = sum;
 		this->combine();
 	}
@@ -216,13 +220,13 @@ bmath::Term& bmath::Term::operator-=(const Term& operand2)
 	else {
 		Sum* sum = new Sum(nullptr);
 		this->term_ptr->set_parent(sum);
-		sum->summands.push_back(this->term_ptr);
+		sum->operands.push_back(this->term_ptr);
 
 		Product* subtractor = new Product(sum);
-		subtractor->factors.push_back(new Value(std::complex<double>{ -1, 0 }, subtractor));
-		subtractor->factors.push_back(copy_subterm(operand2.term_ptr, subtractor));
+		subtractor->operands.push_back(new Value(std::complex<double>{ -1, 0 }, subtractor));
+		subtractor->operands.push_back(copy_subterm(operand2.term_ptr, subtractor));
 
-		sum->summands.push_back(subtractor);
+		sum->operands.push_back(subtractor);
 		this->term_ptr = sum;
 		this->combine();
 	}
@@ -237,8 +241,8 @@ bmath::Term& bmath::Term::operator*=(const Term& operand2)
 	else {
 		Product* product = new Product(nullptr);
 		this->term_ptr->set_parent(product);
-		product->factors.push_back(this->term_ptr);
-		product->factors.push_back(copy_subterm(operand2.term_ptr, product));
+		product->operands.push_back(this->term_ptr);
+		product->operands.push_back(copy_subterm(operand2.term_ptr, product));
 		this->term_ptr = product;
 		this->combine();
 	}
@@ -253,13 +257,13 @@ bmath::Term& bmath::Term::operator/=(const Term& operand2)
 	else {
 		Product* product = new Product(nullptr);
 		this->term_ptr->set_parent(product);
-		product->factors.push_back(this->term_ptr);
+		product->operands.push_back(this->term_ptr);
 
 		Exponentiation* divisor = new Exponentiation(product);
 		divisor->exponent = new Value(std::complex<double>{ -1, 0 }, divisor);
 		divisor->base = copy_subterm(operand2.term_ptr, divisor);
 
-		product->factors.push_back(divisor);
+		product->operands.push_back(divisor);
 		this->term_ptr = product;
 		this->combine();
 	}

@@ -169,7 +169,7 @@ Basic_Term* bmath::intern::build_subterm(std::string_view subterm_view, Basic_Te
 			return new Value(result, parent_);
 		}
 	}
-	while (subterm_view.size() > 0) {	// two can (if valid) always be build and dont need further chopping of
+	while (subterm_view.size() > 0) {
 
 		std::size_t op = std::string::npos;
 		Par_Op_Type par_op_type;	//only used if parenthesis operator is found
@@ -470,7 +470,6 @@ constexpr std::complex<double> bmath::intern::value_of(Math_Constant constant)
 	assert(false);
 	return {};
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //stack based calculation\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\

@@ -75,6 +75,12 @@ namespace bmath {
 		//returns value of constant
 		constexpr std::complex<double> value_of(Math_Constant constant);
 
+		//functions used to complete template arguments of Variadic_Operator<> and to use as (*func) in struct Value_Manipulator
+		inline void add(std::complex<double>* first, std::complex<double> second) { *first += second; }
+		inline void sub(std::complex<double>* first, std::complex<double> second) { *first -= second; }
+		inline void mul(std::complex<double>* first, std::complex<double> second) { *first *= second; }
+		inline void div(std::complex<double>* first, std::complex<double> second) { *first /= second; }
+
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//stack based calculation\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

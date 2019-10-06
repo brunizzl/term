@@ -115,16 +115,16 @@ void test_rechner()
 void test_timing() 
 {
 	std::cout << "starting calculations with term..." << std::endl;
-	bmath::Term t1("3+4a");
-	bmath::Term t2("1-2*b");
+	bmath::Term t1("a^3");
+	bmath::Term t2("a");
 	t1.combine();
 	t2.combine();
-	int repetitions = 1000000;
+	int repetitions = 10000;
 	auto start = std::chrono::high_resolution_clock::now();
 	for (int i = 0; i < repetitions; i++) {
 		bmath::Term t3(t1);
 		bmath::Term t4(t2);
-		t3 += t4;
+		t3 *= t4;
 		if (i % (repetitions / 10) == 0) {
 			std::cout << t3 << std::endl;
 		}

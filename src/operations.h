@@ -25,11 +25,13 @@ namespace bmath {
 		protected:
 			Basic_Term* parent_ptr;
 			std::list<Basic_Term*> operands;	//summands in sum, factors in product
-			Value operand;				//only one summand / factor is allowed to be of Type::value. value_operand is that.
+			Value operand;				//only one summand / factor is allowed to be of Type::value.
 
 			Variadic_Operator(Basic_Term* parent_);
 			Variadic_Operator(const Variadic_Operator& source, Basic_Term* parent_);
 			~Variadic_Operator();
+
+			friend class Basic_Term;
 		public:
 
 			Basic_Term* parent() const override;
@@ -39,12 +41,19 @@ namespace bmath {
 			Vals_Combined combine_values() override;
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
-			void list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const override;
-			void sort() override;
+			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
+
+			//this function is called in match_intern() of Variadic_Operator<>. 
+			//match_intern() always tries to match from the highest level (match intern is called -> caller knows he sees full pattern). 
+			//that allows to only match some of operands with the pattern, as long, as all of the pattern is matched.
+			//other operands may still call equal to pattern() and may not need to behave different if pattern is variadic_operator<>.
+			//if parts of this operands match pattern, a new variadic_operator<> will be constructed, with the matched -
+			//operands moved there. the new variadic_operator<> will be returned. otherwise nullptr is returned.
+			Basic_Term** part_equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key);
 		};
 
 		class Sum : public Variadic_Operator<add, Type::sum, 0>
@@ -106,8 +115,7 @@ namespace bmath {
 			Vals_Combined combine_values() override;
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
-			void list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const override;
-			void sort() override;
+			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;
@@ -138,13 +146,17 @@ namespace bmath {
 			Vals_Combined combine_values() override;
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
-			void list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const override;
-			void sort() override;
+			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
+
+
+
+
+
 
 
 
@@ -262,26 +274,12 @@ namespace bmath {
 		}
 
 		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
-		inline void Variadic_Operator<operate, this_type, neutral_val>::list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const
-		{
-			if (listed_type == this_type) {
-				subterms.push_back(this);
-			}
-			else if (listed_type == Type::value) {
-				subterms.push_back(&this->operand);
-			}
-			for (auto it : this->operands) {
-				it->list_subterms(subterms, listed_type);
-			}
-		}
-
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
-		inline void Variadic_Operator<operate, this_type, neutral_val>::sort()
+		inline void Variadic_Operator<operate, this_type, neutral_val>::for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func)
 		{
 			for (auto it : this->operands) {
-				it->sort();
+				it->for_each(func);
 			}
-			this->operands.sort([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; });
+			func(this, this_type);
 		}
 
 		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
@@ -293,14 +291,14 @@ namespace bmath {
 			else {
 				Basic_Term** argument_match;
 				for (auto& it : this->operands) {	//references are important, because we want to return the position of it.
-					reset_pattern_vars(pattern_var_adresses);
+					reset_all_pattern_vars(pattern_var_adresses);
 					argument_match = it->match_intern(pattern, pattern_var_adresses, &it);
 					if (argument_match) {
 						return argument_match;
 					}
 				}
 			}
-			reset_pattern_vars(pattern_var_adresses);
+			reset_all_pattern_vars(pattern_var_adresses);
 			return nullptr;
 		}
 
@@ -389,6 +387,28 @@ namespace bmath {
 				return true;
 			}
 			return false;
+		}
+
+		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		inline Basic_Term** Variadic_Operator<operate, this_type, neutral_val>::part_equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+		{
+			const Type pattern_type = pattern->get_type();
+			if (pattern_type == this_type) {
+				Variadic_Operator<operate, this_type, neutral_val>* const pattern_variadic = static_cast<Variadic_Operator<operate, this_type, neutral_val>*>(pattern);
+				if (pattern_variadic->operands.size() > this->operands.size()) {
+					return nullptr;
+				}
+				else {
+					//HIER MUSS NOCH INHALT HIN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				}				
+			}
+			else if (pattern_type == Type::pattern_variable) {
+				Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
+				if (pattern_var->try_matching(this, storage_key)) {
+					return storage_key;
+				}
+			}
+			return nullptr;
 		}
 
 } //namespace intern

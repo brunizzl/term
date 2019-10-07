@@ -411,19 +411,11 @@ void Exponentiation::search_and_replace(const std::string& name_, const Basic_Te
 	this->exponent->search_and_replace(name_, value_, this->exponent);
 }
 
-void Exponentiation::list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const
+void bmath::intern::Exponentiation::for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func)
 {
-	if (listed_type == Type::exponentiation) {
-		subterms.push_back(this);
-	}
-	this->base->list_subterms(subterms, listed_type);
-	this->exponent->list_subterms(subterms, listed_type);
-}
-
-void Exponentiation::sort()
-{
-	this->base->sort();
-	this->exponent->sort();
+	this->base->for_each(func);
+	this->exponent->for_each(func);
+	func(this, Type::exponentiation);
 }
 
 Basic_Term** Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
@@ -432,17 +424,17 @@ Basic_Term** Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern
 		return storage_key;
 	}
 	else {
-		reset_pattern_vars(pattern_var_adresses);
+		reset_all_pattern_vars(pattern_var_adresses);
 		Basic_Term** argument_match = base->match_intern(pattern, pattern_var_adresses, &base);
 		if (argument_match) {
 			return argument_match;
 		}
-		reset_pattern_vars(pattern_var_adresses);
+		reset_all_pattern_vars(pattern_var_adresses);
 		argument_match = exponent->match_intern(pattern, pattern_var_adresses, &exponent);
 		if (argument_match) {
 			return argument_match;
 		}
-		reset_pattern_vars(pattern_var_adresses);
+		reset_all_pattern_vars(pattern_var_adresses);
 		return nullptr;
 	}
 }
@@ -590,17 +582,10 @@ void Par_Operator::search_and_replace(const std::string & name_, const Basic_Ter
 	this->argument->search_and_replace(name_, value_, this->argument);	
 }
 
-void Par_Operator::list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const
+void bmath::intern::Par_Operator::for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func)
 {
-	if (listed_type == Type::par_operator) {
-		subterms.push_back(this);
-	}
-	this->argument->list_subterms(subterms, listed_type);
-}
-
-void Par_Operator::sort()
-{
-	this->argument->sort();
+	this->argument->for_each(func);
+	func(this, Type::par_operator);
 }
 
 Basic_Term** Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
@@ -609,12 +594,12 @@ Basic_Term** Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_V
 		return storage_key;
 	}
 	else {
-		reset_pattern_vars(pattern_var_adresses);
+		reset_all_pattern_vars(pattern_var_adresses);
 		Basic_Term** argument_match = argument->match_intern(pattern, pattern_var_adresses, &argument);
 		if (argument_match) {
 			return argument_match;
 		}
-		reset_pattern_vars(pattern_var_adresses);
+		reset_all_pattern_vars(pattern_var_adresses);
 		return nullptr;
 	}
 }

@@ -19,7 +19,7 @@ namespace bmath {
 		private:
 			Basic_Term* matched_term;	//mutable to allow function matches_to() to stay const (to be called from ==)
 
-			friend void reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
+			friend void reset_all_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
 
 		public:
 			const std::string name;
@@ -36,8 +36,7 @@ namespace bmath {
 			Vals_Combined combine_values() override;
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
-			void list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const override;
-			void sort() override;
+			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;
@@ -79,7 +78,6 @@ namespace bmath {
 			Pattern_Term changed;	//pattern to replace match in term object
 
 			std::string print() const;
-			static void print_all();
 
 			//only instances of pattern
 			static const std::vector<Pattern*> patterns;

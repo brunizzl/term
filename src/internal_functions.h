@@ -54,7 +54,7 @@ namespace bmath {
 		void append_last_line(std::vector<std::string>& tree_lines, char operation);
 
 		//resets all pattern_values to nullptr (needs to be run, before next match can be found)
-		void reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
+		void reset_all_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
 
 		//translates val to a string
 		//parent_type is needed, to determine, wheather to put parenteses around the string

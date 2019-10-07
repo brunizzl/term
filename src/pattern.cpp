@@ -79,16 +79,9 @@ void Pattern_Variable::search_and_replace(const std::string& name_, const Basic_
 	assert(false);	//patternvariables should never become values. then the pattern would change.
 }
 
-void Pattern_Variable::list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const
+void bmath::intern::Pattern_Variable::for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func)
 {
-	if (listed_type == Type::variable) {
-		subterms.push_back(this);
-	}
-}
-
-void Pattern_Variable::sort()
-{
-	//nothing to to here
+	func(this, Type::pattern_variable);
 }
 
 Basic_Term** Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
@@ -187,17 +180,6 @@ std::string Pattern::print() const
 	str.append(" -> ");
 	this->changed.term_ptr->to_str(str);
 	return str;
-}
-
-void Pattern::print_all()
-{
-	for (const auto& pattern : patterns) {
-		std::cout << pattern->print() << '\n';
-		std::cout << "original :" << ptr_to_tree(pattern->original.term_ptr, 12).erase(0, 10) << '\n';
-		std::cout << "changed  :" << ptr_to_tree(pattern->changed.term_ptr, 12).erase(0, 10) << '\n';
-		std::cout << "__________________________________________________________\n";
-		std::cout << '\n';
-	}
 }
 
 //rules to simplify terms (left string -> right string)

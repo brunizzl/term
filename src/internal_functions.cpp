@@ -316,7 +316,7 @@ void bmath::intern::append_last_line(std::vector<std::string>& tree_lines, char 
 	}
 }
 
-void bmath::intern::reset_pattern_vars(std::list<Pattern_Variable*>& var_adresses)
+void bmath::intern::reset_all_pattern_vars(std::list<Pattern_Variable*>& var_adresses)
 {
 	for (auto pattern_var : var_adresses) {
 		pattern_var->matched_term = nullptr;

@@ -75,16 +75,9 @@ void Value::search_and_replace(const std::string& name_, const Basic_Term* value
 	//nothing to be done here
 }
 
-void Value::list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const
+void bmath::intern::Value::for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func)
 {
-	if (listed_type == Type::value) {
-		subterms.push_back(this);
-	}
-}
-
-void Value::sort()
-{
-	//nothing to be done here
+	func(this, Type::value);
 }
 
 Basic_Term** Value::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
@@ -224,16 +217,9 @@ void Variable::search_and_replace(const std::string& name_, const Basic_Term* va
 	}
 }
 
-void Variable::list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const
+void bmath::intern::Variable::for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func)
 {
-	if (listed_type == Type::variable) {
-		subterms.push_back(this);
-	}
-}
-
-void Variable::sort()
-{
-	//nothing to be done here
+	func(this, Type::variable);
 }
 
 Basic_Term** Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)

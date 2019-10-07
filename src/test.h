@@ -7,6 +7,9 @@
 #include "term.h"
 
 #include "internal_functions.h"
+#include "operations.h"
+#include "arguments.h"
+#include "pattern.h"
 
 void baue_teststrs(const std::vector<std::string>& teststrs) 
 {
@@ -150,3 +153,15 @@ void test_timing()
 	std::cout << "took " << duration2.count() << "s for " << repetitions << " repetitions\n";
 	std::cout << "\nratio durations (term / complex): " << duration1 / duration2 << '\n';
 }
+
+void print_all_patterns()
+{
+	for (const auto& pattern : bmath::intern::Pattern::patterns) {
+		std::cout << pattern->print() << '\n';
+		std::cout << "original :" << ptr_to_tree(pattern->original.term_ptr, 12).erase(0, 10) << '\n';
+		std::cout << "changed  :" << ptr_to_tree(pattern->changed.term_ptr, 12).erase(0, 10) << '\n';
+		std::cout << "__________________________________________________________\n";
+		std::cout << '\n';
+	}
+}
+

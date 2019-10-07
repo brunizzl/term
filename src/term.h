@@ -5,6 +5,7 @@
 #include <list>
 #include <vector>
 #include <complex>
+#include <functional>
 
 #include "structs.h"
 #include "exceptions.h"
@@ -55,11 +56,9 @@ namespace bmath {
 			//this function is meant for permanent changes. else use evaluate()
 			virtual void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) = 0;
 
-			//all subterms of requested type get added to the list (not const, to allow term to add itself
-			virtual void list_subterms(std::list<const Basic_Term*>& subterms, Type listed_type) const = 0;
-
-			//needs to be run before == makes sense to be used
-			virtual void sort() = 0;
+			//executes func first on each subterm, then on itself. 
+			//func takes this of therm that calls it and the type of therm that calls it
+			virtual void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) = 0;
 
 			//returns subterm matching pattern or nullptr
 			//storage_key is pointer to the pointer to "this" in the object that owns "this"
@@ -76,6 +75,15 @@ namespace bmath {
 
 			virtual bool operator==(const Basic_Term& other) const = 0;
 			bool operator!=(const Basic_Term& other) const;
+
+			//these last functions all utilize for_each() -
+			//to circumvent declaring each of them as virtual anf forcing to overload
+
+			//needs to be run before == makes sense to be used (sorts sum and product lists)
+			void sort();
+
+			//all subterms of requested type get added to the list
+			std::list<Basic_Term*> list_subterms(Type listed_type);
 		};
 
 	} //namespace intern
@@ -91,7 +99,7 @@ namespace bmath {
 		//if pattern is sum and matching sum in term has more summands then pattern,
 		//a new sum is constructed in term were summands used to be. the matched summands become summands of new sum. (same with products)
 		//example:	pattern "a^2+b^2" is matched in term "var^2+sin(x)^2+3". term then is changed to "(var^2+sin(x)^2)+3"
-		//this is nessesary, as the match will be replaced. 
+		//this is nessesary, as the match will be replaced. (alles noch zukunftsmusik)
 		bool match_and_transform(intern::Pattern& pattern);
 
 		void combine_values();

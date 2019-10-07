@@ -20,6 +20,41 @@ bool Basic_Term::operator!=(const Basic_Term& other) const
 	return !(*this == other);
 }
 
+void bmath::intern::Basic_Term::sort()
+{
+	this->for_each([](Basic_Term* this_ptr, Type this_type) { \
+		if (this_type == Type::sum) {
+			Sum* const this_sum = static_cast<Sum*>(this_ptr);
+			this_sum->operands.sort([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; });
+		}
+		else if (this_type == Type::product) {
+			Product* const this_product = static_cast<Product*>(this_ptr);
+			this_product->operands.sort([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; });
+		}
+		});
+}
+
+std::list<Basic_Term*> bmath::intern::Basic_Term::list_subterms(Type listed_type)
+{
+	std::list<Basic_Term*> erg_list;
+
+	struct
+	{
+		std::list<Basic_Term*>& list;
+		Type search_type;
+		void operator()(Basic_Term* this_ptr, Type this_type)
+		{
+			if (this_type == search_type) {
+				list.push_back(this_ptr);
+			}
+		}
+	} term_collector = { erg_list, listed_type };
+
+	this->for_each(term_collector);
+	return erg_list;
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Term\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -89,11 +124,19 @@ std::string bmath::Term::to_tree(std::size_t offset) const
 std::list<std::string> bmath::Term::get_var_names() const
 {
 	std::list<std::string> names;
-	std::list<const Basic_Term*> variables;
-	this->term_ptr->list_subterms(variables, Type::variable);
-	for (const auto it : variables) {
-		names.push_back(static_cast<const Variable*>(it)->name);
-	}
+	struct
+	{
+		std::list<std::string>& list;
+		void operator()(Basic_Term* this_ptr, Type this_type)
+		{
+			if (this_type == Type::variable) {
+				const Variable* const var_ptr = static_cast<const Variable*>(this_ptr);
+				list.push_back(var_ptr->name);
+			}
+		}
+	} name_collector = { names };
+
+	this->term_ptr->for_each(name_collector);
 	return names;
 }
 
@@ -101,9 +144,9 @@ bool bmath::Term::match_and_transform(Pattern& pattern)
 {
 	Basic_Term** match = this->term_ptr->match_intern(pattern.original.term_ptr, pattern.var_adresses, &(this->term_ptr));
 	if (match != nullptr) {
-		Basic_Term* transformed = pattern.changed.copy((*match)->parent());
+		Basic_Term* const transformed = pattern.changed.copy((*match)->parent());
 		delete *match;
-		*match = transformed;
+		*match = transformed;	//here the pointer to pointer is needed, as we overwrite the original storage position with the new term.
 		return true;
 	}
 	return false;
@@ -167,8 +210,7 @@ void bmath::Term::combine()
 
 void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 {
-	std::list<const Basic_Term*> values;
-	this->term_ptr->list_subterms(values, Type::value);
+	std::list<Basic_Term*> values = this->term_ptr->list_subterms(Type::value);
 	double quadratic_sum = 0;	//real and imaginary part are added seperatly
 	for (auto &it : values) {
 		quadratic_sum += std::abs(static_cast<const Value*>(it)->val().real()) * std::abs(static_cast<const Value*>(it)->val().real());
@@ -301,4 +343,3 @@ std::ostream& operator<<(std::ostream& stream, const bmath::intern::Basic_Term& 
 	stream << str;
 	return stream;
 }
-

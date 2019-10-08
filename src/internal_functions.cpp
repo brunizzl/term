@@ -244,7 +244,7 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm_view, 
 
 Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source)
 {
-	switch (type(source)) {
+	switch (type_of(source)) {
 	case Type::par_operator:
 		return new Par_Operator(*(static_cast<const Par_Operator*>(source)));
 	case Type::value:
@@ -382,16 +382,6 @@ std::string bmath::intern::to_string(std::complex<double> val, Type parent_type,
 	}
 	else {
 		return buffer.str();
-	}
-}
-
-Type bmath::intern::type(const Basic_Term* obj)
-{
-	if (obj != nullptr) {
-		return obj->get_type();
-	}
-	else {
-		return Type::undefined;
 	}
 }
 

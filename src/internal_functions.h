@@ -46,6 +46,10 @@ namespace bmath {
 		//(needs modification if new termtype is added)
 		Basic_Term* copy_subterm(const Basic_Term* source);
 
+		//beautifier of Basic_Term->get_type()
+		inline Type type_of(const Basic_Term& obj) { return obj.type(); };
+		inline Type type_of(const Basic_Term* const obj) { return obj->type(); };
+
 		//returns visualized tree structure as string
 		//offset is amount of spaces seperating tree from left rim of console
 		std::string ptr_to_tree(const Basic_Term* term_ptr, std::size_t offset);
@@ -60,9 +64,6 @@ namespace bmath {
 		//parent_type is needed, to determine, wheather to put parenteses around the string
 		//if inverse == true, -val will be printed
 		std::string to_string(std::complex<double> val, Type parent_type, bool inverse = false);
-
-		//returns actual type of obj (sum, product, exponentiation...) but if obj is nullptr returns "undefined"
-		Type type(const Basic_Term* obj);
 
 		//returns c string of operator as written in input/output
 		constexpr std::string_view name_of(Par_Op_Type op_type);

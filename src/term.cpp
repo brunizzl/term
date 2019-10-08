@@ -154,7 +154,7 @@ bool bmath::Term::match_and_transform(Pattern& pattern)
 
 void bmath::Term::combine_values()
 {
-	if (type(this->term_ptr) != Type::value) {
+	if (type_of(this->term_ptr) != Type::value) {
 		auto [is_val, val] = this->term_ptr->combine_values();
 		if (is_val) {
 			delete this->term_ptr;
@@ -232,7 +232,7 @@ void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 
 bmath::Term& bmath::Term::operator+=(const Term& operand2)
 {
-	if (this->term_ptr->get_type() == Type::value && operand2.term_ptr->get_type() == Type::value) {
+	if (type_of(this->term_ptr) == Type::value && type_of(operand2.term_ptr) == Type::value) {
 		static_cast<Value*>(this->term_ptr)->val() += static_cast<Value*>(operand2.term_ptr)->val();
 	}
 	else {
@@ -247,7 +247,7 @@ bmath::Term& bmath::Term::operator+=(const Term& operand2)
 
 bmath::Term& bmath::Term::operator-=(const Term& operand2)
 {
-	if (this->term_ptr->get_type() == Type::value && operand2.term_ptr->get_type() == Type::value) {
+	if (type_of(this->term_ptr) == Type::value && type_of(operand2.term_ptr) == Type::value) {
 		static_cast<Value*>(this->term_ptr)->val() -= static_cast<Value*>(operand2.term_ptr)->val();
 	}
 	else {
@@ -267,7 +267,7 @@ bmath::Term& bmath::Term::operator-=(const Term& operand2)
 
 bmath::Term& bmath::Term::operator*=(const Term& operand2)
 {
-	if (this->term_ptr->get_type() == Type::value && operand2.term_ptr->get_type() == Type::value) {
+	if (type_of(this->term_ptr) == Type::value && type_of(operand2.term_ptr) == Type::value) {
 		static_cast<Value*>(this->term_ptr)->val() *= static_cast<Value*>(operand2.term_ptr)->val();
 	}
 	else {
@@ -282,7 +282,7 @@ bmath::Term& bmath::Term::operator*=(const Term& operand2)
 
 bmath::Term& bmath::Term::operator/=(const Term& operand2)
 {
-	if (this->term_ptr->get_type() == Type::value && operand2.term_ptr->get_type() == Type::value) {
+	if (type_of(this->term_ptr) == Type::value && type_of(operand2.term_ptr) == Type::value) {
 		static_cast<Value*>(this->term_ptr)->val() /= static_cast<Value*>(operand2.term_ptr)->val();
 	}
 	else {

@@ -27,7 +27,6 @@ void Pattern_Variable::to_str(std::string& str, Type caller_type) const
 	str.append(this->name);
 	if (this->matched_term != nullptr) {
 		str.push_back(',');
-		assert(type(this->matched_term) != Type::pattern_variable);
 		this->matched_term->to_str(str, Type::undefined);	//parentheses are handled here already (or in this case curly braces) -> Type::undefined
 	}
 	str.push_back('}');
@@ -42,7 +41,7 @@ void Pattern_Variable::to_tree_str(std::vector<std::string>& tree_lines, unsigne
 	append_last_line(tree_lines, line_prefix);
 }
 
-Type Pattern_Variable::get_type() const
+Type Pattern_Variable::type() const
 {
 	return Type::pattern_variable;
 }
@@ -88,8 +87,8 @@ bool bmath::intern::Pattern_Variable::equal_to_pattern(Basic_Term* pattern, Basi
 
 bool Pattern_Variable::operator<(const Basic_Term& other) const
 {
-	if (this->get_type() != other.get_type()) {
-		return this->get_type() < other.get_type();
+	if (Type::pattern_variable != type_of(other)) {
+		return Type::pattern_variable < type_of(other);
 	}
 	else {
 		const Pattern_Variable* other_var = static_cast<const Pattern_Variable*>(&other);
@@ -99,7 +98,7 @@ bool Pattern_Variable::operator<(const Basic_Term& other) const
 
 bool Pattern_Variable::operator==(const Basic_Term& other) const
 {
-	if (other.get_type() == Type::pattern_variable) {
+	if (type_of(other) == Type::pattern_variable) {
 		const Pattern_Variable* other_var = static_cast<const Pattern_Variable*>(&other);
 		return this->name == other_var->name;
 	}

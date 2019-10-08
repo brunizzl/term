@@ -40,7 +40,7 @@ void Value::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_
 	append_last_line(tree_lines, line_prefix);
 }
 
-Type Value::get_type() const
+Type Value::type() const
 {
 	return Type::value;
 }
@@ -82,7 +82,7 @@ Basic_Term** Value::match_intern(Basic_Term* pattern, std::list<Pattern_Variable
 
 bool bmath::intern::Value::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
 {
-	const Type pattern_type = pattern->get_type();
+	const Type pattern_type = type_of(pattern);
 	if (pattern_type == Type::value) {
 		const Value* other_val = static_cast<const Value*>(pattern);
 		return this->value == other_val->value;
@@ -98,8 +98,8 @@ bool bmath::intern::Value::equal_to_pattern(Basic_Term* pattern, Basic_Term** st
 
 bool Value::operator<(const Basic_Term& other) const
 {
-	if (this->get_type() != other.get_type()) {
-		return this->get_type() < other.get_type();
+	if (Type::value != type_of(other)) {
+		return Type::value < type_of(other);
 	}
 	else {
 		const Value* other_val = static_cast<const Value*>(&other);
@@ -114,7 +114,7 @@ bool Value::operator<(const Basic_Term& other) const
 
 bool Value::operator==(const Basic_Term& other) const
 {
-	if (other.get_type() == Type::value) {
+	if (type_of(other) == Type::value) {
 		const Value* other_val = static_cast<const Value*>(&other);
 		return this->value == other_val->value;
 	}
@@ -164,7 +164,7 @@ void Variable::to_tree_str(std::vector<std::string>& tree_lines, unsigned int di
 	append_last_line(tree_lines, line_prefix);
 }
 
-Type Variable::get_type() const
+Type Variable::type() const
 {
 	return Type::variable;
 }
@@ -214,7 +214,7 @@ Basic_Term** Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Varia
 
 bool bmath::intern::Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
 {
-	const Type pattern_type = pattern->get_type();
+	const Type pattern_type = type_of(pattern);
 	if (pattern_type == Type::variable) {
 		const Variable* other_var = static_cast<const Variable*>(pattern);
 		return this->name == other_var->name;
@@ -230,8 +230,8 @@ bool bmath::intern::Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term**
 
 bool Variable::operator<(const Basic_Term& other) const
 {
-	if (this->get_type() != other.get_type()) {
-		return this->get_type() < other.get_type();
+	if (Type::variable != type_of(other)) {
+		return Type::variable < type_of(other);
 	}
 	else {
 		const Variable* other_var = static_cast<const Variable*>(&other);
@@ -241,7 +241,7 @@ bool Variable::operator<(const Basic_Term& other) const
 
 bool Variable::operator==(const Basic_Term& other) const
 {
-	if (other.get_type() == Type::variable) {
+	if (type_of(other) == Type::variable) {
 		const Variable* other_var = static_cast<const Variable*>(&other);
 		return this->name == other_var->name;
 	}

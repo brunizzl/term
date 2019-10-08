@@ -25,7 +25,7 @@ namespace bmath {
 
 			void to_str(std::string& str, Type caller_type) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
-			Type get_type() const override;
+			Type type() const override;
 			void combine_layers(Basic_Term*& storage_key) override;
 			Vals_Combined combine_values() override;
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
@@ -52,7 +52,7 @@ namespace bmath {
 
 			void to_str(std::string& str, Type caller_type) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
-			Type get_type() const override;
+			Type type() const override;
 			void combine_layers(Basic_Term*& storage_key) override;
 			Vals_Combined combine_values() override;
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;

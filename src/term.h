@@ -29,8 +29,8 @@ namespace bmath {
 			//line prefix is meant to be set in front of content of this
 			virtual void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const = 0;
 
-			//returns kinda true type of term (sum, product, value, etc.)
-			virtual Type get_type() const = 0;
+			//returns true type of term (sum, product, value, etc.)
+			virtual Type type() const = 0;
 
 			//if one sum/product holds a pointer to another sum/product, both get combined into one,
 			//redundant layers are removed (exponentiation with exponent == 1, sum with only one summand...)

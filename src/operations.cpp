@@ -174,7 +174,7 @@ Product::Product(Basic_Term* name_, std::complex<double> factor)
 	: Variadic_Operator<mul, Type::product, 1>()
 {
 	this->operand.val() = factor;
-	if (name_->get_type() == Type::product) {	//not making new factor in this, but taking the existing factors of name_ instead
+	if (type_of(name_) == Type::product) {	//not making new factor in this, but taking the existing factors of name_ instead
 		Product* const name_product = static_cast<Product*>(name_);
 		this->operands.splice(this->operands.end(), name_product->operands);
 		this->operand.val() *= name_product->operand.val();
@@ -325,7 +325,7 @@ void Exponentiation::to_tree_str(std::vector<std::string>& tree_lines, unsigned 
 	this->exponent->to_tree_str(tree_lines, dist_root + 1, '^');
 }
 
-Type Exponentiation::get_type() const
+Type Exponentiation::type() const
 {
 	return Type::exponentiation;
 }
@@ -334,7 +334,7 @@ void Exponentiation::combine_layers(Basic_Term*& storage_key)
 {
 	this->base->combine_layers(this->base);
 	this->exponent->combine_layers(this->exponent);
-	if (this->exponent->get_type() == Type::value) {
+	if (type_of(this->exponent) == Type::value) {
 		Value* const val_exp = static_cast<Value*>(this->exponent);
 		if (val_exp->val() == 1.0) {
 			storage_key = this->base;
@@ -348,7 +348,7 @@ void Exponentiation::combine_layers(Basic_Term*& storage_key)
 			return;
 		}
 	}
-	if (this->base->get_type() == Type::value) {
+	if (type_of(this->base) == Type::value) {
 		Value* const val_base = static_cast<Value*>(this->base);
 		if (val_base->val() == 1.0) {
 			storage_key = val_base;
@@ -374,13 +374,13 @@ Vals_Combined Exponentiation::combine_values()
 		return { true, result };
 	}
 	else if (base_.known && !exponent_.known) {
-		if (type(this->base) != Type::value) {
+		if (type_of(this->base) != Type::value) {
 			delete this->base;
 			this->base = new Value(base_.val);
 		}
 	}
 	else if (!base_.known && exponent_.known) {
-		if (type(this->exponent) != Type::value) {
+		if (type_of(this->exponent) != Type::value) {
 			delete this->exponent;
 			this->exponent = new Value(exponent_.val);
 		}
@@ -432,7 +432,7 @@ Basic_Term** Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern
 
 bool bmath::intern::Exponentiation::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
 {
-	const Type pattern_type = pattern->get_type();
+	const Type pattern_type = type_of(pattern);
 	if (pattern_type == Type::exponentiation) {
 		const Exponentiation* pattern_exp = static_cast<const Exponentiation*>(pattern);
 		if (!this->base->equal_to_pattern(pattern_exp->base, &this->base)) {
@@ -454,8 +454,8 @@ bool bmath::intern::Exponentiation::equal_to_pattern(Basic_Term* pattern, Basic_
 
 bool Exponentiation::operator<(const Basic_Term& other) const
 {
-	if (this->get_type() != other.get_type()) {
-		return this->get_type() < other.get_type();
+	if (Type::exponentiation != type_of(other)) {
+		return Type::exponentiation < type_of(other);
 	}
 	else {
 		const Exponentiation* other_exp = static_cast<const Exponentiation*>(&other);
@@ -471,7 +471,7 @@ bool Exponentiation::operator<(const Basic_Term& other) const
 
 bool Exponentiation::operator==(const Basic_Term& other) const
 {
-	if (other.get_type() == Type::exponentiation) {
+	if (type_of(other) == Type::exponentiation) {
 		const Exponentiation* other_exp = static_cast<const Exponentiation*>(&other);
 		if (*(this->base) != *(other_exp->base)) {
 			return false;
@@ -536,7 +536,7 @@ void Par_Operator::to_tree_str(std::vector<std::string>& tree_lines, unsigned in
 	this->argument->to_tree_str(tree_lines, dist_root + 1, '\0');
 }
 
-Type Par_Operator::get_type() const
+Type Par_Operator::type() const
 {
 	return Type::par_operator;
 }
@@ -587,7 +587,7 @@ Basic_Term** Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_V
 
 bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
 {
-	const Type pattern_type = pattern->get_type();
+	const Type pattern_type = type_of(pattern);
 	if (pattern_type == Type::par_operator) {
 		const Par_Operator* pattern_par_op = static_cast<const Par_Operator*>(pattern);
 		if (this->op_type != pattern_par_op->op_type) {
@@ -606,8 +606,8 @@ bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Te
 
 bool Par_Operator::operator<(const Basic_Term& other) const
 {
-	if (this->get_type() != other.get_type()) {
-		return this->get_type() < other.get_type();
+	if (Type::par_operator != type_of(other)) {
+		return Type::par_operator < type_of(other);
 	}
 	else {
 		const Par_Operator* other_par_op = static_cast<const Par_Operator*>(&other);
@@ -620,7 +620,7 @@ bool Par_Operator::operator<(const Basic_Term& other) const
 
 bool Par_Operator::operator==(const Basic_Term& other) const
 {
-	if (other.get_type() == Type::par_operator) {
+	if (type_of(other) == Type::par_operator) {
 		const Par_Operator* other_par_op = static_cast<const Par_Operator*>(&other);
 		if (this->op_type != other_par_op->op_type) {
 			return false;

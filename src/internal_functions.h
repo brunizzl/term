@@ -33,18 +33,18 @@ namespace bmath {
 		//if manipulator is != { nullptr, nullptr } and the new subterm is of type value, the return value of build_subterm() will -
 		//be nullptr and the value will instead be combined with manipulator.key using function manipulator.func
 		//manipulator.func takes *manipulator.key as first argument and the new computed value as second.
-		Basic_Term* build_subterm(std::string_view subterm_view, Basic_Term* parent_, Value_Manipulator manipulator = { nullptr, nullptr });
+		Basic_Term* build_subterm(std::string_view subterm_view, Value_Manipulator manipulator = { nullptr, nullptr });
 
 		//(needs modification if new termtype is added)
 		//behaves like build_subterm, exept when a variable is build, it checks in variables if this exists already.
 		//if so: it will just return the adress of the existing variable. (and variables will become pattern_variables)
 		//the behavior regarding manipulator is the same as in build_subterm()
-		Basic_Term* build_pattern_subterm(std::string_view subtermstr, Basic_Term* parent_, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator = { nullptr, nullptr });
+		Basic_Term* build_pattern_subterm(std::string_view subtermstr, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator = { nullptr, nullptr });
 
 		//(needs modification if new termtype is added)
 		//returns pointer to newly build term of right type (u now have ownership of object)
 		//(needs modification if new termtype is added)
-		Basic_Term* copy_subterm(const Basic_Term* source, Basic_Term* parent_);
+		Basic_Term* copy_subterm(const Basic_Term* source);
 
 		//returns visualized tree structure as string
 		//offset is amount of spaces seperating tree from left rim of console

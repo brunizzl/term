@@ -11,48 +11,13 @@ using namespace bmath::intern;
 //Sum\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Sum::Sum(Basic_Term* parent_)
-	: Variadic_Operator<add, Type::sum, 0>(parent_)
+Sum::Sum()
+	: Variadic_Operator<add, Type::sum, 0>()
 {
 }
 
-Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op)
-	: Variadic_Operator<add, Type::sum, 0>(parent_)
-{
-	const Value_Manipulator value_add = { &(this->operand.val()), add };
-	const Value_Manipulator value_sub = { &(this->operand.val()), sub };
-	Basic_Term* new_subterm = nullptr;
-
-	while (op != std::string::npos) {
-		const std::string_view subterm_view = name_.substr(op + 1);	//we don't want the operator itself to be part of the substr
-		switch (name_[op]) {
-		case '+':
-			new_subterm = build_subterm(subterm_view, this, value_add);
-			if (new_subterm) {
-				this->operands.push_front(new_subterm);
-			}
-			break;
-		case '-':
-			new_subterm = build_subterm(subterm_view, this, value_sub);
-			if (new_subterm) {
-				this->operands.push_front(new Product(new_subterm, this, { -1, 0 }));
-			}
-			break;
-		}
-		name_.remove_suffix(name_.length() - op);
-		op = find_last_of_skip_pars(name_, "+-");
-	}
-	//last part of name without any '+' or '-' in front
-	if (name_.size()) {
-		Basic_Term* const new_subterm = build_subterm(name_, this, value_add);
-		if (new_subterm != nullptr) {
-			this->operands.push_front(new_subterm);
-		}
-	}
-}
-
-Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
-	: Variadic_Operator<add, Type::sum, 0>(parent_)
+Sum::Sum(std::string_view name_, std::size_t op)
+	: Variadic_Operator<add, Type::sum, 0>()
 {
 	const Value_Manipulator value_add = { &(this->operand.val()), add };
 	const Value_Manipulator value_sub = { &(this->operand.val()), sub };
@@ -62,15 +27,15 @@ Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<
 		const std::string_view subterm_view = name_.substr(op + 1);	//we don't want the operator itself to be part of the substr
 		switch (name_[op]) {
 		case '+':
-			new_subterm = build_pattern_subterm(subterm_view, this, variables, value_add);
+			new_subterm = build_subterm(subterm_view, value_add);
 			if (new_subterm) {
 				this->operands.push_front(new_subterm);
 			}
 			break;
 		case '-':
-			new_subterm = build_pattern_subterm(subterm_view, this, variables, value_sub);
+			new_subterm = build_subterm(subterm_view, value_sub);
 			if (new_subterm) {
-				this->operands.push_front(new Product(new_subterm, this, { -1, 0 }));
+				this->operands.push_front(new Product(new_subterm, { -1, 0 }));
 			}
 			break;
 		}
@@ -79,35 +44,70 @@ Sum::Sum(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<
 	}
 	//last part of name without any '+' or '-' in front
 	if (name_.size()) {
-		new_subterm = build_pattern_subterm(name_, this, variables, value_add);
+		Basic_Term* const new_subterm = build_subterm(name_, value_add);
 		if (new_subterm != nullptr) {
 			this->operands.push_front(new_subterm);
 		}
 	}
 }
 
-Sum::Sum(const Sum& source, Basic_Term* parent_)
-	:Variadic_Operator<add, Type::sum, 0>(source, parent_)
+Sum::Sum(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& variables)
+	: Variadic_Operator<add, Type::sum, 0>()
+{
+	const Value_Manipulator value_add = { &(this->operand.val()), add };
+	const Value_Manipulator value_sub = { &(this->operand.val()), sub };
+	Basic_Term* new_subterm = nullptr;
+
+	while (op != std::string::npos) {
+		const std::string_view subterm_view = name_.substr(op + 1);	//we don't want the operator itself to be part of the substr
+		switch (name_[op]) {
+		case '+':
+			new_subterm = build_pattern_subterm(subterm_view, variables, value_add);
+			if (new_subterm) {
+				this->operands.push_front(new_subterm);
+			}
+			break;
+		case '-':
+			new_subterm = build_pattern_subterm(subterm_view, variables, value_sub);
+			if (new_subterm) {
+				this->operands.push_front(new Product(new_subterm, { -1, 0 }));
+			}
+			break;
+		}
+		name_.remove_suffix(name_.length() - op);
+		op = find_last_of_skip_pars(name_, "+-");
+	}
+	//last part of name without any '+' or '-' in front
+	if (name_.size()) {
+		new_subterm = build_pattern_subterm(name_, variables, value_add);
+		if (new_subterm != nullptr) {
+			this->operands.push_front(new_subterm);
+		}
+	}
+}
+
+Sum::Sum(const Sum& source)
+	:Variadic_Operator<add, Type::sum, 0>(source)
 {
 	//nothing to do here
 }
 
-void Sum::to_str(std::string& str) const
+void Sum::to_str(std::string& str, Type caller_type) const
 {
-	const bool pars = type(this->parent_ptr) > this->get_type();
+	const bool pars = caller_type > Type::sum;
 	if (pars) {
 		str.push_back('(');
 	}
 	bool nothing_printed_yet = true;
 	if (this->operand.val() != 0.0) {
-		this->operand.to_str(str);
+		this->operand.to_str(str, Type::sum);
 		nothing_printed_yet = false;
 	}
 	for (const auto it : this->operands) {
 		if (!std::exchange(nothing_printed_yet, false)) {
 			str.push_back('+');
 		}
-		it->to_str(str);
+		it->to_str(str, Type::sum);
 	}
 	if (pars) {
 		str.push_back(')');
@@ -132,13 +132,13 @@ void Sum::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_ro
 //Product\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Product::Product(Basic_Term* parent_)
-	: Variadic_Operator<mul, Type::product, 1>(parent_)
+Product::Product()
+	: Variadic_Operator<mul, Type::product, 1>()
 {
 }
 
-Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op)
-	: Variadic_Operator<mul, Type::product, 1>(parent_)
+Product::Product(std::string_view name_, std::size_t op)
+	: Variadic_Operator<mul, Type::product, 1>()
 {
 	const Value_Manipulator value_mul = { &(this->operand.val()), mul };
 	const Value_Manipulator value_div = { &(this->operand.val()), div };
@@ -148,15 +148,15 @@ Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op)
 		const std::string_view subterm_view = name_.substr(op + 1);	//we don't want the operator itself to be part of the substr
 		switch (name_[op]) {
 		case '*':
-			new_subterm = build_subterm(subterm_view, this, value_mul);
+			new_subterm = build_subterm(subterm_view, value_mul);
 			if (new_subterm) {
 				this->operands.push_front(new_subterm);
 			}
 			break;
 		case '/':
-			new_subterm = build_subterm(subterm_view, this, value_div);
+			new_subterm = build_subterm(subterm_view, value_div);
 			if (new_subterm) {
-				this->operands.push_front(new Exponentiation(new_subterm, this, { -1, 0 }));
+				this->operands.push_front(new Exponentiation(new_subterm, { -1, 0 }));
 			}
 			break;
 		}
@@ -164,23 +164,29 @@ Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op)
 		op = find_last_of_skip_pars(name_, "*/");
 	}
 	//last part of name without any '*' or '/' in front
-	new_subterm = build_subterm(name_, this, value_mul);
+	new_subterm = build_subterm(name_, value_mul);
 	if (new_subterm != nullptr) {
 		this->operands.push_front(new_subterm);
 	}
 }
 
-Product::Product(Basic_Term* name_, Basic_Term* parent_, std::complex<double> factor)
-	: Variadic_Operator<mul, Type::product, 1>(parent_)
+Product::Product(Basic_Term* name_, std::complex<double> factor)
+	: Variadic_Operator<mul, Type::product, 1>()
 {
 	this->operand.val() = factor;
-
-	this->operands.push_back(name_);
-	name_->set_parent(this);
+	if (name_->get_type() == Type::product) {	//not making new factor in this, but taking the existing factors of name_ instead
+		Product* const name_product = static_cast<Product*>(name_);
+		this->operands.splice(this->operands.end(), name_product->operands);
+		this->operand.val() *= name_product->operand.val();
+		delete name_product;
+	}
+	else {
+		this->operands.push_back(name_);
+	}
 }
 
-Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
-	: Variadic_Operator<mul, Type::product, 1>(parent_)
+Product::Product(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& variables)
+	: Variadic_Operator<mul, Type::product, 1>()
 {
 	const Value_Manipulator value_mul = { &this->operand.val(), mul };
 	const Value_Manipulator value_div = { &this->operand.val(), div };
@@ -190,15 +196,15 @@ Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op, st
 		const std::string_view subterm_view = name_.substr(op + 1);	//we don't want the operator itself to be part of the substr
 		switch (name_[op]) {
 		case '*':
-			new_subterm = build_pattern_subterm(subterm_view, this, variables, value_mul);
+			new_subterm = build_pattern_subterm(subterm_view, variables, value_mul);
 			if (new_subterm) {
 				this->operands.push_front(new_subterm);
 			}
 			break;
 		case '/':
-			new_subterm = build_pattern_subterm(subterm_view, this, variables, value_div);
+			new_subterm = build_pattern_subterm(subterm_view, variables, value_div);
 			if (new_subterm) {
-				this->operands.push_front(new Exponentiation(new_subterm, this, { -1, 0 }));
+				this->operands.push_front(new Exponentiation(new_subterm, { -1, 0 }));
 			}
 			break;
 		}
@@ -206,34 +212,34 @@ Product::Product(std::string_view name_, Basic_Term* parent_, std::size_t op, st
 		op = find_last_of_skip_pars(name_, "*/");
 	}
 	//last part of name without any '*' or '/' in front
-	new_subterm = build_pattern_subterm(name_, this, variables, value_mul);
+	new_subterm = build_pattern_subterm(name_, variables, value_mul);
 	if (new_subterm != nullptr) {
 		this->operands.push_front(new_subterm);
 	}
 }
 
-Product::Product(const Product& source, Basic_Term* parent_)
-	: Variadic_Operator<mul, Type::product, 1>(source, parent_)
+Product::Product(const Product& source)
+	: Variadic_Operator<mul, Type::product, 1>(source)
 {	
 	//nothing to do here
 }
 
-void Product::to_str(std::string& str) const
+void Product::to_str(std::string& str, Type caller_type) const
 {
-	const bool pars = type(this->parent_ptr) > this->get_type();
+	const bool pars = caller_type > Type::product;
 	if (pars) {
 		str.push_back('(');
 	}
 	bool nothing_printed_yet = true;
 	if (this->operand.val() != 1.0) {
-		this->operand.to_str(str);
+		this->operand.to_str(str, Type::product);
 		nothing_printed_yet = false;
 	}
 	for (const auto it : this->operands) {
 		if (!std::exchange(nothing_printed_yet, false)) {
 			str.push_back('*');
 		}
-		it->to_str(str);
+		it->to_str(str, Type::product);
 	}
 	if (pars) {
 		str.push_back(')');
@@ -260,39 +266,36 @@ void Product::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dis
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-Exponentiation::Exponentiation(Basic_Term* parent_)
-	:parent_ptr(parent_), base(nullptr), exponent(nullptr)
+Exponentiation::Exponentiation()
+	:base(nullptr), exponent(nullptr)
 {
 }
 
-Exponentiation::Exponentiation(std::string_view name_, Basic_Term* parent_, std::size_t op)
-	:parent_ptr(parent_)
-{
-	std::string_view subterm_view;
-	subterm_view = name_.substr(op + 1);
-	this->exponent = build_subterm(subterm_view, this);
-	name_.remove_suffix(name_.length() - op);
-	this->base = build_subterm(name_, this);
-}
-
-Exponentiation::Exponentiation(Basic_Term* base_, Basic_Term* parent_, std::complex<double> exponent_) 
-	:parent_ptr(parent_), exponent(new Value(exponent_, this)), base(base_)
-{
-	base_->set_parent(this);
-}
-
-Exponentiation::Exponentiation(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables)
-	:parent_ptr(parent_)
+Exponentiation::Exponentiation(std::string_view name_, std::size_t op)
 {
 	std::string_view subterm_view;
 	subterm_view = name_.substr(op + 1);
-	this->exponent = build_pattern_subterm(subterm_view, this, variables, { nullptr, nullptr });
+	this->exponent = build_subterm(subterm_view);
 	name_.remove_suffix(name_.length() - op);
-	this->base = build_pattern_subterm(name_, this, variables, { nullptr, nullptr });
+	this->base = build_subterm(name_);
 }
 
-Exponentiation::Exponentiation(const Exponentiation& source, Basic_Term* parent_)
-	:parent_ptr(parent_), base(copy_subterm(source.base, this)), exponent(copy_subterm(source.exponent, this))
+Exponentiation::Exponentiation(Basic_Term* base_, std::complex<double> exponent_) 
+	:exponent(new Value(exponent_)), base(base_)
+{
+}
+
+Exponentiation::Exponentiation(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& variables)
+{
+	std::string_view subterm_view;
+	subterm_view = name_.substr(op + 1);
+	this->exponent = build_pattern_subterm(subterm_view, variables);
+	name_.remove_suffix(name_.length() - op);
+	this->base = build_pattern_subterm(name_, variables);
+}
+
+Exponentiation::Exponentiation(const Exponentiation& source)
+	:base(copy_subterm(source.base)), exponent(copy_subterm(source.exponent))
 {
 }
 
@@ -302,22 +305,12 @@ Exponentiation::~Exponentiation()
 	delete base;
 }
 
-Basic_Term* bmath::intern::Exponentiation::parent() const
-{
-	return this->parent_ptr;
-}
-
-void bmath::intern::Exponentiation::set_parent(Basic_Term* new_parent)
-{
-	this->parent_ptr = new_parent;
-}
-
-void Exponentiation::to_str(std::string& str) const
+void Exponentiation::to_str(std::string& str, Type caller_type) const
 {
 	str.push_back('(');
-	this->base->to_str(str);
+	this->base->to_str(str, Type::exponentiation);
 	str.push_back('^');
-	this->exponent->to_str(str);
+	this->exponent->to_str(str, Type::exponentiation);
 	str.push_back(')');
 }
 
@@ -345,13 +338,12 @@ void Exponentiation::combine_layers(Basic_Term*& storage_key)
 		Value* const val_exp = static_cast<Value*>(this->exponent);
 		if (val_exp->val() == 1.0) {
 			storage_key = this->base;
-			this->base->set_parent(this->parent_ptr);
-			this->base = nullptr;
+			this->base = nullptr;	//otherwise the term now owned by parent of this, formerly this base, would be destroyed
 			delete this;
 			return;
 		}
 		if (val_exp->val() == 0.0) {
-			storage_key = new Value({ 1.0, 0.0 }, this->parent_ptr);
+			storage_key = new Value({ 1.0, 0.0 });
 			delete this;
 			return;
 		}
@@ -360,13 +352,12 @@ void Exponentiation::combine_layers(Basic_Term*& storage_key)
 		Value* const val_base = static_cast<Value*>(this->base);
 		if (val_base->val() == 1.0) {
 			storage_key = val_base;
-			val_base->set_parent(this->parent_ptr);
 			this->base = nullptr;
 			delete this;
 			return;
 		}
 		if (val_base->val() == 0.0) {
-			storage_key = new Value({ 0.0, 0.0 }, this->parent_ptr);
+			storage_key = new Value({ 0.0, 0.0 });
 			delete this;
 			return;
 		}
@@ -385,13 +376,13 @@ Vals_Combined Exponentiation::combine_values()
 	else if (base_.known && !exponent_.known) {
 		if (type(this->base) != Type::value) {
 			delete this->base;
-			this->base = new Value(base_.val, this);
+			this->base = new Value(base_.val);
 		}
 	}
 	else if (!base_.known && exponent_.known) {
 		if (type(this->exponent) != Type::value) {
 			delete this->exponent;
-			this->exponent = new Value(exponent_.val, this);
+			this->exponent = new Value(exponent_.val);
 		}
 	}
 
@@ -495,30 +486,30 @@ bool Exponentiation::operator==(const Basic_Term& other) const
 //Parenthesis_Operator\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Par_Operator::Par_Operator(Basic_Term* parent_)
-	:parent_ptr(parent_), argument(nullptr), op_type(Par_Op_Type::log10)	//just some default initialisation for op_type
+Par_Operator::Par_Operator()
+	:argument(nullptr), op_type(Par_Op_Type::log10)	//just some default initialisation for op_type
 {
 }
 
-Par_Operator::Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_Type op_type_)
-	:parent_ptr(parent_), op_type(op_type_), argument(nullptr)
-{
-	name_.remove_suffix(1);								//closing parenthesis gets cut of
-	name_.remove_prefix(name_of(op_type).length());	//funktionname and opening parenthesis get cut of
-	this->argument = build_subterm(name_, this);
-}
-
-Par_Operator::Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_Type op_type_, std::list<Pattern_Variable*>& variables)
-	:parent_ptr(parent_), op_type(op_type_), argument(nullptr)
+Par_Operator::Par_Operator(std::string_view name_, Par_Op_Type op_type_)
+	:op_type(op_type_), argument(nullptr)
 {
 	name_.remove_suffix(1);								//closing parenthesis gets cut of
 	name_.remove_prefix(name_of(op_type).length());	//funktionname and opening parenthesis get cut of
-	this-> argument = build_pattern_subterm(name_, this, variables, { nullptr, nullptr });
+	this->argument = build_subterm(name_);
+}
+
+Par_Operator::Par_Operator(std::string_view name_, Par_Op_Type op_type_, std::list<Pattern_Variable*>& variables)
+	:op_type(op_type_), argument(nullptr)
+{
+	name_.remove_suffix(1);								//closing parenthesis gets cut of
+	name_.remove_prefix(name_of(op_type).length());	//funktionname and opening parenthesis get cut of
+	this-> argument = build_pattern_subterm(name_, variables);
 }
 
 
-Par_Operator::Par_Operator(const Par_Operator & source, Basic_Term * parent_)
-	:parent_ptr(parent_), argument(copy_subterm(source.argument, this)), op_type(source.op_type)
+Par_Operator::Par_Operator(const Par_Operator & source)
+	:argument(copy_subterm(source.argument)), op_type(source.op_type)
 {
 }
 
@@ -527,20 +518,10 @@ Par_Operator::~Par_Operator()
 	delete this->argument;
 }
 
-Basic_Term* bmath::intern::Par_Operator::parent() const
+void Par_Operator::to_str(std::string & str, Type caller_type) const
 {
-	return this->parent_ptr;
-}
-
-void bmath::intern::Par_Operator::set_parent(Basic_Term* new_parent)
-{
-	this->parent_ptr = new_parent;
-}
-
-void Par_Operator::to_str(std::string & str) const
-{
-	str.append(name_of(this->op_type));
-	this->argument->to_str(str);
+	str.append(name_of(this->op_type));	//already includes '('
+	this->argument->to_str(str, Type::par_operator);
 	str.push_back(')');
 }
 

@@ -157,16 +157,17 @@ Type bmath::intern::type_subterm(const std::string_view name, std::size_t& op, P
 	throw XTermConstructionError("string is not of expected format");
 }
 
-Basic_Term* bmath::intern::build_subterm(std::string_view subterm_view, Basic_Term* parent_, Value_Manipulator manipulator)
+Basic_Term* bmath::intern::build_subterm(std::string_view subterm_view, Value_Manipulator manipulator)
 {
 	if (is_computable(subterm_view)) {
 		const std::complex<double> result = compute(subterm_view);
-		if (manipulator.key != nullptr && manipulator.func != nullptr) {
+		if (manipulator.key != nullptr) {
+			assert(manipulator.func != nullptr);
 			manipulator.func(manipulator.key, result);
 			return nullptr;
 		}
 		else {
-			return new Value(result, parent_);
+			return new Value(result);
 		}
 	}
 	while (subterm_view.size() > 0) {
@@ -177,15 +178,15 @@ Basic_Term* bmath::intern::build_subterm(std::string_view subterm_view, Basic_Te
 
 		switch (type) {
 		case Type::exponentiation:
-			return new Exponentiation(subterm_view, parent_, op);
+			return new Exponentiation(subterm_view, op);
 		case Type::product:
-			return new Product(subterm_view, parent_, op);
+			return new Product(subterm_view, op);
 		case Type::sum:
-			return new Sum(subterm_view, parent_, op);
+			return new Sum(subterm_view, op);
 		case Type::variable:
-			return new Variable(subterm_view, parent_);
+			return new Variable(subterm_view);
 		case Type::par_operator:
-			return new Par_Operator(subterm_view, parent_, par_op_type);
+			return new Par_Operator(subterm_view, par_op_type);
 			//case value is already handled at beginning of function
 		}
 		//not variable/value -> string contains parentheses, but no operation outside was found. 
@@ -195,16 +196,17 @@ Basic_Term* bmath::intern::build_subterm(std::string_view subterm_view, Basic_Te
 	throw XTermConstructionError("could not find any type to build term(function build_subterm)");
 }
 
-Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm_view, Basic_Term* parent_, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator)
+Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm_view, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator)
 {
 	if (is_computable(subterm_view)) {
 		const std::complex<double> result = compute(subterm_view);
-		if (manipulator.key != nullptr && manipulator.func != nullptr) {
+		if (manipulator.key != nullptr) {
+			assert(manipulator.func != nullptr);
 			manipulator.func(manipulator.key, result);
 			return nullptr;
 		}
 		else {
-			return new Value(result, parent_);
+			return new Value(result);
 		}
 	}
 	while (subterm_view.size() > 0) {
@@ -215,20 +217,20 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm_view, 
 
 		switch (type) {
 		case Type::exponentiation:
-			return new Exponentiation(subterm_view, parent_, op, variables);
+			return new Exponentiation(subterm_view, op, variables);
 		case Type::product:
-			return new Product(subterm_view, parent_, op, variables);
+			return new Product(subterm_view, op, variables);
 		case Type::sum:
-			return new Sum(subterm_view, parent_, op, variables);
+			return new Sum(subterm_view, op, variables);
 		case Type::par_operator:
-			return new Par_Operator(subterm_view, parent_, par_op_type, variables);
+			return new Par_Operator(subterm_view, par_op_type, variables);
 		case Type::variable:
 			for (auto& variable : variables) {
 				if (variable->name == subterm_view) {
 					return variable;
 				}
 			}
-			Pattern_Variable* new_variable = new Pattern_Variable(subterm_view, parent_);
+			Pattern_Variable* new_variable = new Pattern_Variable(subterm_view);
 			variables.push_back(new_variable);
 			return new_variable;
 			//case value is already handled at beginning of function
@@ -240,26 +242,26 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm_view, 
 	throw XTermConstructionError("could not find any type to build term (function build_pattern_subterm)");
 }
 
-Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source, Basic_Term* parent_)
+Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source)
 {
 	switch (type(source)) {
 	case Type::par_operator:
-		return new Par_Operator(*(static_cast<const Par_Operator*>(source)), parent_);
+		return new Par_Operator(*(static_cast<const Par_Operator*>(source)));
 	case Type::value:
-		return new Value(*(static_cast<const Value*>(source)), parent_);
+		return new Value(*(static_cast<const Value*>(source)));
 	case Type::variable:
-		return new Variable(*(static_cast<const Variable*>(source)), parent_);
+		return new Variable(*(static_cast<const Variable*>(source)));
 	case Type::sum:
-		return new Sum(*(static_cast<const Sum*>(source)), parent_);
+		return new Sum(*(static_cast<const Sum*>(source)));
 	case Type::product:
-		return new Product(*(static_cast<const Product*>(source)), parent_);
+		return new Product(*(static_cast<const Product*>(source)));
 	case Type::exponentiation:
-		return new Exponentiation(*(static_cast<const Exponentiation*>(source)), parent_);
+		return new Exponentiation(*(static_cast<const Exponentiation*>(source)));
 	case Type::pattern_variable: {
 		//as copy subterm is called, when a pattern has succesfully been matched and should be transformed, 
 		//we do not want to actually copy the pattern_variable, but the subterm held by it.
 		const Pattern_Variable* pattern_variable = static_cast<const Pattern_Variable*>(source);
-		return pattern_variable->copy_matched_term(parent_);
+		return pattern_variable->copy_matched_term();
 	}
 	}
 	throw XTermConstructionError("function copy_subterm expected known type to copy");

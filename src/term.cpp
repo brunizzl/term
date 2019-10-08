@@ -69,15 +69,15 @@ bmath::Term::Term(std::string name_)
 	:term_ptr(nullptr)
 {
 	preprocess_str(name_);
-	this->term_ptr = build_subterm({ name_.data(), name_.length() }, nullptr);
+	this->term_ptr = build_subterm({ name_.data(), name_.length() });
 }
 
 bmath::Term::Term(std::complex<double> val) 
-	:term_ptr(new Value(val, nullptr))
+	:term_ptr(new Value(val))
 {}
 
 bmath::Term::Term(const Term& source)
-	:term_ptr(copy_subterm(source.term_ptr, nullptr))
+	:term_ptr(copy_subterm(source.term_ptr))
 {
 }
 
@@ -90,7 +90,7 @@ bmath::Term& bmath::Term::operator=(const Term& source)
 {
 	if (this != &source) {
 		delete this->term_ptr;
-		this->term_ptr = copy_subterm(source.term_ptr, nullptr);
+		this->term_ptr = copy_subterm(source.term_ptr);
 	}
 	return *this;
 }
@@ -112,7 +112,7 @@ bmath::Term::~Term()
 std::string bmath::Term::to_str() const
 {
 	std::string str;
-	this->term_ptr->to_str(str);
+	this->term_ptr->to_str(str, Type::undefined);
 	return str;
 }
 
@@ -144,7 +144,7 @@ bool bmath::Term::match_and_transform(Pattern& pattern)
 {
 	Basic_Term** match = this->term_ptr->match_intern(pattern.original.term_ptr, pattern.var_adresses, &(this->term_ptr));
 	if (match != nullptr) {
-		Basic_Term* const transformed = pattern.changed.copy((*match)->parent());
+		Basic_Term* const transformed = pattern.changed.copy();
 		delete *match;
 		*match = transformed;	//here the pointer to pointer is needed, as we overwrite the original storage position with the new term.
 		return true;
@@ -158,7 +158,7 @@ void bmath::Term::combine_values()
 		auto [is_val, val] = this->term_ptr->combine_values();
 		if (is_val) {
 			delete this->term_ptr;
-			this->term_ptr = new Value(val, nullptr);
+			this->term_ptr = new Value(val);
 		}
 	}
 }
@@ -176,7 +176,7 @@ std::complex<double> bmath::Term::evaluate(const std::list<Known_Variable>& know
 
 void bmath::Term::search_and_replace(const std::string& name_, std::complex<double> value_)
 {
-	const Value value_term(value_, nullptr);
+	const Value value_term(value_);
 	this->term_ptr->search_and_replace(name_, &value_term, this->term_ptr);
 }
 
@@ -236,10 +236,9 @@ bmath::Term& bmath::Term::operator+=(const Term& operand2)
 		static_cast<Value*>(this->term_ptr)->val() += static_cast<Value*>(operand2.term_ptr)->val();
 	}
 	else {
-		Sum* sum = new Sum(nullptr);
-		this->term_ptr->set_parent(sum);
-		sum->operands.push_back(this->term_ptr);
-		sum->operands.push_back(copy_subterm(operand2.term_ptr, sum));
+		Sum* const sum = new Sum;
+		sum->move_into_operands(this->term_ptr);
+		sum->copy_into_operands(operand2.term_ptr);
 		this->term_ptr = sum;
 		this->combine();
 	}
@@ -252,15 +251,14 @@ bmath::Term& bmath::Term::operator-=(const Term& operand2)
 		static_cast<Value*>(this->term_ptr)->val() -= static_cast<Value*>(operand2.term_ptr)->val();
 	}
 	else {
-		Sum* sum = new Sum(nullptr);
-		this->term_ptr->set_parent(sum);
-		sum->operands.push_back(this->term_ptr);
+		Sum* const sum = new Sum;
+		sum->move_into_operands(this->term_ptr);
 
-		Product* subtractor = new Product(sum);
-		subtractor->operands.push_back(new Value(std::complex<double>{ -1, 0 }, subtractor));
-		subtractor->operands.push_back(copy_subterm(operand2.term_ptr, subtractor));
+		Product* const subtractor = new Product;
+		subtractor->move_into_operands(new Value(std::complex<double>{ -1, 0 }));
+		subtractor->copy_into_operands(operand2.term_ptr);
 
-		sum->operands.push_back(subtractor);
+		sum->move_into_operands(subtractor);
 		this->term_ptr = sum;
 		this->combine();
 	}
@@ -273,10 +271,9 @@ bmath::Term& bmath::Term::operator*=(const Term& operand2)
 		static_cast<Value*>(this->term_ptr)->val() *= static_cast<Value*>(operand2.term_ptr)->val();
 	}
 	else {
-		Product* product = new Product(nullptr);
-		this->term_ptr->set_parent(product);
-		product->operands.push_back(this->term_ptr);
-		product->operands.push_back(copy_subterm(operand2.term_ptr, product));
+		Product* const product = new Product;
+		product->move_into_operands(this->term_ptr);
+		product->copy_into_operands(operand2.term_ptr);
 		this->term_ptr = product;
 		this->combine();
 	}
@@ -289,15 +286,14 @@ bmath::Term& bmath::Term::operator/=(const Term& operand2)
 		static_cast<Value*>(this->term_ptr)->val() /= static_cast<Value*>(operand2.term_ptr)->val();
 	}
 	else {
-		Product* product = new Product(nullptr);
-		this->term_ptr->set_parent(product);
-		product->operands.push_back(this->term_ptr);
+		Product* const product = new Product;
+		product->move_into_operands(this->term_ptr);
 
-		Exponentiation* divisor = new Exponentiation(product);
-		divisor->exponent = new Value(std::complex<double>{ -1, 0 }, divisor);
-		divisor->base = copy_subterm(operand2.term_ptr, divisor);
+		Exponentiation* const divisor = new Exponentiation;
+		divisor->exponent = new Value(std::complex<double>{ -1, 0 });
+		divisor->base = copy_subterm(operand2.term_ptr);
 
-		product->operands.push_back(divisor);
+		product->move_into_operands(divisor);
 		this->term_ptr = product;
 		this->combine();
 	}
@@ -339,7 +335,7 @@ std::ostream& operator<<(std::ostream& stream, const bmath::Term& term) {
 
 std::ostream& operator<<(std::ostream& stream, const bmath::intern::Basic_Term& term) {
 	std::string str;
-	term.to_str(str);
+	term.to_str(str, Type::undefined);
 	stream << str;
 	return stream;
 }

@@ -16,17 +16,14 @@ namespace bmath {
 		class Value : public Basic_Term
 		{
 		private:
-			Basic_Term* parent_ptr;
 			std::complex<double> value;
 
 		public:
-			Value(const Value& source, Basic_Term* parent_ = nullptr);
-			Value(std::complex<double> value_, Basic_Term* parent_);
+			Value(const Value& source);
+			Value(std::complex<double> value_);
 			~Value();
 
-			Basic_Term* parent() const override;
-			void set_parent(Basic_Term* new_parent) override;
-			void to_str(std::string& str) const override;
+			void to_str(std::string& str, Type caller_type) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			Type get_type() const override;
 			void combine_layers(Basic_Term*& storage_key) override;
@@ -46,19 +43,14 @@ namespace bmath {
 
 		class Variable : public Basic_Term
 		{
-		private:
-			Basic_Term* parent_ptr;
-
 		public:
 			const std::string name;
 
-			Variable(std::string_view name_, Basic_Term* parent_);
-			Variable(const Variable& source, Basic_Term* parent_ = nullptr);
+			Variable(std::string_view name_);
+			Variable(const Variable& source);
 			~Variable();
 
-			Basic_Term* parent() const override;
-			void set_parent(Basic_Term* new_parent) override;
-			void to_str(std::string& str) const override;
+			void to_str(std::string& str, Type caller_type) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			Type get_type() const override;
 			void combine_layers(Basic_Term*& storage_key) override;

@@ -23,19 +23,16 @@ namespace bmath {
 		class Variadic_Operator : public Basic_Term
 		{
 		protected:
-			Basic_Term* parent_ptr;
 			std::list<Basic_Term*> operands;	//summands in sum, factors in product
 			Value operand;				//only one summand / factor is allowed to be of Type::value.
 
-			Variadic_Operator(Basic_Term* parent_);
-			Variadic_Operator(const Variadic_Operator& source, Basic_Term* parent_);
+			Variadic_Operator();
+			Variadic_Operator(const Variadic_Operator& source);
 			~Variadic_Operator();
 
 			friend class Basic_Term;
-		public:
 
-			Basic_Term* parent() const override;
-			void set_parent(Basic_Term* new_parent) override;
+		public:
 			Type get_type() const override;
 			void combine_layers(Basic_Term*& storage_key) override;
 			Vals_Combined combine_values() override;
@@ -54,6 +51,12 @@ namespace bmath {
 			//if parts of this operands match pattern, a new variadic_operator<> will be constructed, with the matched -
 			//operands moved there. the new variadic_operator<> will be returned. otherwise nullptr is returned.
 			Basic_Term** part_equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key);
+
+			//pushes copy of source into this->operands or, if type(source) is value, uses operate() to store in this->operand
+			void copy_into_operands(Basic_Term* source);
+
+			//pushes term_ptr into this->operands or, if (type(term_ptr) is value, uses operate() to store in this->operand and deletes term_ptr
+			void move_into_operands(Basic_Term* term_ptr);
 		};
 
 		class Sum : public Variadic_Operator<add, Type::sum, 0>
@@ -62,12 +65,12 @@ namespace bmath {
 
 			friend class bmath::Term;
 		public:
-			Sum(Basic_Term* parent_);
-			Sum(std::string_view name_, Basic_Term* parent_, std::size_t op);
-			Sum(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
-			Sum(const Sum& source, Basic_Term* parent_ = nullptr);
+			Sum();
+			Sum(std::string_view name_, std::size_t op);
+			Sum(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& variables);
+			Sum(const Sum& source);
 
-			void to_str(std::string& str) const override;
+			void to_str(std::string& str, Type caller_type) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 		};
 
@@ -75,16 +78,16 @@ namespace bmath {
 		class Product : public Variadic_Operator<mul, Type::product, 1>
 		{
 		private:
-
 			friend class bmath::Term;
-		public:
-			Product(Basic_Term* parent_);
-			Product(std::string_view name_, Basic_Term* parent_, std::size_t op);
-			Product(Basic_Term* name_, Basic_Term* parent_, std::complex<double> factor);
-			Product(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
-			Product(const Product& source, Basic_Term* parent_ = nullptr);
 
-			void to_str(std::string& str) const override;
+		public:
+			Product();
+			Product(std::string_view name_, std::size_t op);
+			Product(Basic_Term* name_, std::complex<double> factor);
+			Product(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& variables);
+			Product(const Product& source);
+
+			void to_str(std::string& str, Type caller_type) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 		};
 
@@ -92,23 +95,20 @@ namespace bmath {
 		class Exponentiation : public Basic_Term
 		{
 		private:
-			Basic_Term* parent_ptr;
 			Basic_Term* exponent;
 			Basic_Term* base;
 
 			friend class bmath::Term;
 
 		public:
-			Exponentiation(Basic_Term* parent_);
-			Exponentiation(std::string_view name_, Basic_Term* parent_, std::size_t op);
-			Exponentiation(Basic_Term* base_, Basic_Term* parent_, std::complex<double> exponent_);
-			Exponentiation(std::string_view name_, Basic_Term* parent_, std::size_t op, std::list<Pattern_Variable*>& variables);
-			Exponentiation(const Exponentiation& source, Basic_Term* parent_ = nullptr);
+			Exponentiation();
+			Exponentiation(std::string_view name_, std::size_t op);
+			Exponentiation(Basic_Term* base_, std::complex<double> exponent_);
+			Exponentiation(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& variables);
+			Exponentiation(const Exponentiation& source);
 			~Exponentiation();
 
-			Basic_Term* parent() const override;
-			void set_parent(Basic_Term* new_parent) override;
-			void to_str(std::string& str) const override;
+			void to_str(std::string& str, Type caller_type) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			Type get_type() const override;
 			void combine_layers(Basic_Term*& storage_key) override;
@@ -126,20 +126,17 @@ namespace bmath {
 		class Par_Operator : public Basic_Term
 		{
 		private:
-			Basic_Term* parent_ptr;
 			Par_Op_Type op_type;
 			Basic_Term* argument;
 
 		public:
-			Par_Operator(Basic_Term* parent_);
-			Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_Type op_type_);
-			Par_Operator(std::string_view name_, Basic_Term* parent_, Par_Op_Type op_type_, std::list<Pattern_Variable*>& variables);
-			Par_Operator(const Par_Operator& source, Basic_Term* parent_ = nullptr);
+			Par_Operator();
+			Par_Operator(std::string_view name_, Par_Op_Type op_type_);
+			Par_Operator(std::string_view name_, Par_Op_Type op_type_, std::list<Pattern_Variable*>& variables);
+			Par_Operator(const Par_Operator& source);
 			~Par_Operator();
 
-			Basic_Term* parent() const override;
-			void set_parent(Basic_Term* new_parent) override;
-			void to_str(std::string& str) const override;
+			void to_str(std::string& str, Type caller_type) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			Type get_type() const override;
 			void combine_layers(Basic_Term*& storage_key) override;
@@ -162,17 +159,17 @@ namespace bmath {
 
 
 		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
-		inline Variadic_Operator<operate, this_type, neutral_val>::Variadic_Operator(Basic_Term* parent_)
-			:parent_ptr(parent_), operand({ static_cast<double>(neutral_val), 0 }, this)
+		inline Variadic_Operator<operate, this_type, neutral_val>::Variadic_Operator()
+			:operand({ static_cast<double>(neutral_val), 0 })
 		{
 		}
 
 		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
-		inline Variadic_Operator<operate, this_type, neutral_val>::Variadic_Operator(const Variadic_Operator& source, Basic_Term* parent_)
-			:parent_ptr(parent_), operand(source.operand.val(), this)
+		inline Variadic_Operator<operate, this_type, neutral_val>::Variadic_Operator(const Variadic_Operator& source)
+			:operand(source.operand.val())
 		{
 			for (const auto it : source.operands) {
-				this->operands.push_back(copy_subterm(it, this));
+				this->operands.push_back(copy_subterm(it));
 			}
 		}
 
@@ -182,18 +179,6 @@ namespace bmath {
 			for (const auto it : this->operands) {
 				delete it;
 			}
-		}
-
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
-		inline Basic_Term* Variadic_Operator<operate, this_type, neutral_val>::parent() const
-		{
-			return this->parent_ptr;
-		}
-
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
-		inline void Variadic_Operator<operate, this_type, neutral_val>::set_parent(Basic_Term* new_parent)
-		{
-			this->parent_ptr = new_parent;
 		}
 
 		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
@@ -210,9 +195,6 @@ namespace bmath {
 				if (type(*it) == this_type) {
 					Variadic_Operator<operate, this_type, neutral_val>* redundant = static_cast<Variadic_Operator<operate, this_type, neutral_val>*>((*it));
 					operate(&(this->operand.val()), redundant->operand.val());
-					for (auto it_red : redundant->operands) {
-						it_red->set_parent(this);
-					}
 					this->operands.splice(this->operands.end(), redundant->operands);
 					delete redundant;
 					it = this->operands.erase(it);
@@ -222,15 +204,12 @@ namespace bmath {
 				}
 			}
 			if (this->operands.size() == 1 && this->operand.val() == static_cast<double>(neutral_val)) {	//this only consists of one non- neutral operand -> layer is not needed and this is deleted
-				Basic_Term* const only_operand = *(this->operands.begin());
-				storage_key = only_operand;
-				only_operand->set_parent(this->parent_ptr);
+				storage_key = *(this->operands.begin());
 				this->operands.clear();
 				delete this;
 			}
 			else if (this->operands.size() == 0) {	//this only consists of value_operand -> layer is not needed and this is deleted
-				Value* const only_operand = new Value(this->operand, this->parent_ptr);
-				storage_key = only_operand;
+				storage_key = new Value(this->operand);
 				delete this;
 			}
 		}
@@ -409,6 +388,31 @@ namespace bmath {
 				}
 			}
 			return nullptr;
+		}
+
+		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		inline void Variadic_Operator<operate, this_type, neutral_val>::copy_into_operands(Basic_Term* source)
+		{
+			if (source->get_type() == Type::value) {
+				const Value* const val_source = static_cast<Value*>(source);
+				operate(&(this->operand.val()), val_source->val());
+			}
+			else {
+				this->operands.push_back(copy_subterm(source));
+			}
+		}
+
+		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		inline void Variadic_Operator<operate, this_type, neutral_val>::move_into_operands(Basic_Term* term_ptr)
+		{
+			if (term_ptr->get_type() == Type::value) {
+				Value* const val_ptr = static_cast<Value*>(term_ptr);
+				operate(&(this->operand.val()), val_ptr->val());
+				delete val_ptr;
+			}
+			else {
+				this->operands.push_back(term_ptr);
+			}
 		}
 
 } //namespace intern

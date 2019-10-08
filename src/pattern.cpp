@@ -11,7 +11,7 @@ using namespace bmath::intern;
 //Pattern_Variable\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Pattern_Variable::Pattern_Variable(std::string_view name_, Basic_Term* parent_)
+Pattern_Variable::Pattern_Variable(std::string_view name_)
 	:name(name_), matched_term(nullptr)
 {
 }
@@ -21,24 +21,14 @@ Pattern_Variable::~Pattern_Variable()
 	//pattern_value is not owner -> nothing has to be deleted
 }
 
-Basic_Term* bmath::intern::Pattern_Variable::parent() const
-{
-	return nullptr;	//pattern_variable has multiple parents, none of them is stored in the variable itself.
-}
-
-void bmath::intern::Pattern_Variable::set_parent(Basic_Term* new_parent)
-{
-	//pattern_variable has multiple parents and does not know them.
-}
-
-void Pattern_Variable::to_str(std::string& str) const
+void Pattern_Variable::to_str(std::string& str, Type caller_type) const
 {
 	str.push_back('{');
 	str.append(this->name);
 	if (this->matched_term != nullptr) {
 		str.push_back(',');
 		assert(type(this->matched_term) != Type::pattern_variable);
-		this->matched_term->to_str(str);
+		this->matched_term->to_str(str, Type::undefined);	//parentheses are handled here already (or in this case curly braces) -> Type::undefined
 	}
 	str.push_back('}');
 }
@@ -46,7 +36,7 @@ void Pattern_Variable::to_str(std::string& str) const
 void Pattern_Variable::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
 {
 	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
-	this->to_str(new_line);
+	this->to_str(new_line, Type::pattern_variable);
 
 	tree_lines.push_back(std::move(new_line));
 	append_last_line(tree_lines, line_prefix);
@@ -116,9 +106,9 @@ bool Pattern_Variable::operator==(const Basic_Term& other) const
 	return false;
 }
 
-Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term(Basic_Term* parent_) const
+Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term() const
 {
-	return copy_subterm(this->matched_term, parent_);
+	return copy_subterm(this->matched_term);
 }
 
 bool bmath::intern::Pattern_Variable::try_matching(Basic_Term* other, Basic_Term** other_storage_key)
@@ -151,7 +141,7 @@ void Pattern::Pattern_Term::build(std::string name, std::list<Pattern_Variable*>
 {
 	assert(term_ptr == nullptr);
 	preprocess_str(name);
-	this->term_ptr = build_pattern_subterm({ name.data(), name.length() }, nullptr, var_adresses, { nullptr, nullptr });
+	this->term_ptr = build_pattern_subterm({ name.data(), name.length() }, var_adresses);
 	this->term_ptr->combine_layers(this->term_ptr);
 	this->term_ptr->sort();
 }
@@ -161,9 +151,9 @@ Pattern::Pattern_Term::~Pattern_Term()
 	delete this->term_ptr;
 }
 
-Basic_Term* Pattern::Pattern_Term::copy(Basic_Term* parent_)
+Basic_Term* Pattern::Pattern_Term::copy()
 {
-	return copy_subterm(this->term_ptr, parent_);
+	return copy_subterm(this->term_ptr);
 }
 
 Pattern::Pattern(const char * const original_, const char * const changed_)
@@ -176,9 +166,9 @@ Pattern::Pattern(const char * const original_, const char * const changed_)
 std::string Pattern::print() const
 {
 	std::string str;
-	this->original.term_ptr->to_str(str);
+	this->original.term_ptr->to_str(str, Type::undefined);
 	str.append(" -> ");
-	this->changed.term_ptr->to_str(str);
+	this->changed.term_ptr->to_str(str, Type::undefined);
 	return str;
 }
 

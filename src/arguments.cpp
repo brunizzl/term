@@ -12,13 +12,13 @@ using namespace bmath::intern;
 //Value\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Value::Value(const Value& source, Basic_Term* parent_)
-	: parent_ptr(parent_), value(source.value)
+Value::Value(const Value& source)
+	:value(source.value)
 {
 }
 
-Value::Value(std::complex<double> value_, Basic_Term* parent_)
-	: parent_ptr(parent_), value(value_)
+Value::Value(std::complex<double> value_)
+	:value(value_)
 {
 }
 
@@ -26,25 +26,15 @@ Value::~Value()
 {
 }
 
-Basic_Term* bmath::intern::Value::parent() const
+void Value::to_str(std::string& str, Type caller_type) const
 {
-	return this->parent_ptr;
-}
-
-void bmath::intern::Value::set_parent(Basic_Term* new_parent)
-{
-	this->parent_ptr = new_parent;
-}
-
-void Value::to_str(std::string& str) const
-{
-	str.append(to_string(this->value, type(parent_ptr)));
+	str.append(to_string(this->value, caller_type));
 }
 
 void Value::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
 {
 	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
-	this->to_str(new_line);
+	this->to_str(new_line, Type::undefined);
 
 	tree_lines.push_back(std::move(new_line));
 	append_last_line(tree_lines, line_prefix);
@@ -146,13 +136,13 @@ const std::complex<double>& bmath::intern::Value::val() const
 //Variable\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Variable::Variable(std::string_view name_, Basic_Term* parent_)
-	:parent_ptr(parent_), name(name_)
+Variable::Variable(std::string_view name_)
+	:name(name_)
 {
 }
 
-Variable::Variable(const Variable& source, Basic_Term* parent_)
-	: parent_ptr(parent_), name(source.name)
+Variable::Variable(const Variable& source)
+	:name(source.name)
 {
 }
 
@@ -160,17 +150,7 @@ Variable::~Variable()
 {
 }
 
-Basic_Term* bmath::intern::Variable::parent() const
-{
-	return this->parent_ptr;
-}
-
-void bmath::intern::Variable::set_parent(Basic_Term* new_parent)
-{
-	this->parent_ptr = new_parent;
-}
-
-void Variable::to_str(std::string& str) const
+void Variable::to_str(std::string& str, Type caller_type) const
 {
 	str.append(this->name);
 }
@@ -178,7 +158,7 @@ void Variable::to_str(std::string& str) const
 void Variable::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
 {
 	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
-	this->to_str(new_line);
+	this->to_str(new_line, Type::undefined);
 
 	tree_lines.push_back(std::move(new_line));
 	append_last_line(tree_lines, line_prefix);
@@ -212,7 +192,7 @@ std::complex<double> Variable::evaluate(const std::list<bmath::Known_Variable>& 
 void Variable::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
 	if (this->name == name_) {
-		storage_key = copy_subterm(value_, this->parent_ptr);
+		storage_key = copy_subterm(value_);
 		delete this;
 	}
 }

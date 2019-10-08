@@ -21,14 +21,8 @@ namespace bmath {
 		public:
 			virtual ~Basic_Term();
 
-			//returns adress of Term owning this
-			virtual Basic_Term* parent() const = 0;
-
-			//gives this new adress for its Parent (owner has changed)
-			virtual void set_parent(Basic_Term* new_parent) = 0;
-
 			//appends this to str
-			virtual void to_str(std::string& str) const = 0;
+			virtual void to_str(std::string& str, Type caller_type) const = 0;
 
 			//called in function to_tree() of bmath::term
 			//tree_lines holds output line by line, dist_root stores distance from this vertex to root, 

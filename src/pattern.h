@@ -24,12 +24,10 @@ namespace bmath {
 		public:
 			const std::string name;
 
-			Pattern_Variable(std::string_view name_, Basic_Term* parent_);
+			Pattern_Variable(std::string_view name_);
 			~Pattern_Variable();
 
-			Basic_Term* parent() const override;
-			void set_parent(Basic_Term* new_parent) override;
-			void to_str(std::string& str) const override;
+			void to_str(std::string& str, Type caller_type) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			Type get_type() const override;
 			void combine_layers(Basic_Term*& storage_key) override;
@@ -43,7 +41,7 @@ namespace bmath {
 			bool operator==(const Basic_Term& other) const override;
 
 			//accesses matched_term to copy it, returns copy
-			Basic_Term* copy_matched_term(Basic_Term* parent_) const;
+			Basic_Term* copy_matched_term() const;
 			bool try_matching(Basic_Term* other, Basic_Term** other_storage_key);
 		};		
 
@@ -59,7 +57,7 @@ namespace bmath {
 				void build(std::string name, std::list<Pattern_Variable*>& var_adresses);
 				~Pattern_Term();
 
-				Basic_Term* copy(Basic_Term* parent_);
+				Basic_Term* copy();
 
 				//patterns should not be copied nor changed
 				Pattern_Term(const Pattern_Term& source) = delete;

@@ -7,6 +7,7 @@
 #include <vector>
 #include <complex>
 #include <cassert>
+#include <functional>
 
 #include "arguments.h"
 #include "internal_functions.h"
@@ -24,13 +25,11 @@ namespace bmath {
 		{
 		protected:
 			std::list<Basic_Term*> operands;	//summands in sum, factors in product
-			Value operand;				//only one summand / factor is allowed to be of Type::value.
+			Value value;				//only one summand / factor is allowed to be of Type::value.
 
 			Variadic_Operator();
 			Variadic_Operator(const Variadic_Operator& source);
 			~Variadic_Operator();
-
-			friend class Basic_Term;
 
 		public:
 			Type type() const override;
@@ -52,18 +51,21 @@ namespace bmath {
 			//operands moved there. the new variadic_operator<> will be returned. otherwise nullptr is returned.
 			Basic_Term** part_equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key);
 
-			//pushes copy of source into this->operands or, if type(source) is value, uses operate() to store in this->operand
+			//pushes copy of source into this->operands or, if type(source) is value, uses operate() to store in this->value
 			void copy_into_operands(Basic_Term* source);
 
-			//pushes term_ptr into this->operands or, if (type(term_ptr) is value, uses operate() to store in this->operand and deletes term_ptr
+			//pushes term_ptr into this->operands or, if (type(term_ptr) is value, uses operate() to store in this->value and deletes term_ptr
 			void move_into_operands(Basic_Term* term_ptr);
+
+			//uses operate() on this->value and number (no new allocation, if done via this method.)
+			inline void calc_onto_value(std::complex<double> number) { operate(&(this->value.val()), number); }
+
+			//wrapper for std::list sort()
+			inline void sort_operands(std::function<bool(Basic_Term*& a, Basic_Term*& b)> compare) { this->operands.sort(compare); }
 		};
 
 		class Sum : public Variadic_Operator<add, Type::sum, 0>
 		{
-		private:
-
-			friend class bmath::Term;
 		public:
 			Sum();
 			Sum(std::string_view name_, std::size_t op);
@@ -77,9 +79,6 @@ namespace bmath {
 
 		class Product : public Variadic_Operator<mul, Type::product, 1>
 		{
-		private:
-			friend class bmath::Term;
-
 		public:
 			Product();
 			Product(std::string_view name_, std::size_t op);
@@ -160,13 +159,13 @@ namespace bmath {
 
 		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline Variadic_Operator<operate, this_type, neutral_val>::Variadic_Operator()
-			:operand({ static_cast<double>(neutral_val), 0 })
+			:value({ static_cast<double>(neutral_val), 0 })
 		{
 		}
 
 		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline Variadic_Operator<operate, this_type, neutral_val>::Variadic_Operator(const Variadic_Operator& source)
-			:operand(source.operand.val())
+			:value(source.value.val())
 		{
 			for (const auto it : source.operands) {
 				this->operands.push_back(copy_subterm(it));
@@ -194,7 +193,7 @@ namespace bmath {
 				(*it)->combine_layers(*it);
 				if (type_of(*it) == this_type) {
 					Variadic_Operator<operate, this_type, neutral_val>* redundant = static_cast<Variadic_Operator<operate, this_type, neutral_val>*>((*it));
-					operate(&(this->operand.val()), redundant->operand.val());
+					operate(&(this->value.val()), redundant->value.val());
 					this->operands.splice(this->operands.end(), redundant->operands);
 					delete redundant;
 					it = this->operands.erase(it);
@@ -203,13 +202,13 @@ namespace bmath {
 					++it;
 				}
 			}
-			if (this->operands.size() == 1 && this->operand.val() == static_cast<double>(neutral_val)) {	//this only consists of one non- neutral operand -> layer is not needed and this is deleted
+			if (this->operands.size() == 1 && this->value.val() == static_cast<double>(neutral_val)) {	//this only consists of one non- neutral value -> layer is not needed and this is deleted
 				storage_key = *(this->operands.begin());
 				this->operands.clear();
 				delete this;
 			}
-			else if (this->operands.size() == 0) {	//this only consists of value_operand -> layer is not needed and this is deleted
-				storage_key = new Value(this->operand);
+			else if (this->operands.size() == 0) {	//this only consists of value -> layer is not needed and this is deleted
+				storage_key = new Value(this->value);
 				delete this;
 			}
 		}
@@ -222,7 +221,7 @@ namespace bmath {
 			for (auto it = this->operands.begin(); it != this->operands.end();) {
 				const auto [it_known, it_val] = (*it)->combine_values();
 				if (it_known) {
-					operate(&(this->operand.val()), it_val);
+					operate(&(this->value.val()), it_val);
 					delete (*it);
 					it = this->operands.erase(it);
 				}
@@ -231,13 +230,13 @@ namespace bmath {
 					++it;
 				}
 			}
-			return { only_known, this->operand.val() };
+			return { only_known, this->value.val() };
 		}
 
 		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline std::complex<double> Variadic_Operator<operate, this_type, neutral_val>::evaluate(const std::list<Known_Variable>& known_variables) const
 		{
-			std::complex<double> result = this->operand.val();
+			std::complex<double> result = this->value.val();
 			for (const auto it : this->operands) {
 				operate(&result, it->evaluate(known_variables));
 			}
@@ -290,7 +289,7 @@ namespace bmath {
 				if (this->operands.size() != variadic_pattern->operands.size()) {
 					return false;
 				}
-				if (this->operand.val() != variadic_pattern->operand.val()) {
+				if (this->value.val() != variadic_pattern->value.val()) {
 					return false;
 				}
 				//the operator assumes from now on to have sorted products to compare
@@ -323,11 +322,11 @@ namespace bmath {
 				if (this->operands.size() != other_product->operands.size()) {
 					return this->operands.size() < other_product->operands.size();
 				}
-				if (this->operand.val().real() != other_product->operand.val().real()) {
-					return this->operand.val().real() < other_product->operand.val().real();
+				if (this->value.val().real() != other_product->value.val().real()) {
+					return this->value.val().real() < other_product->value.val().real();
 				}
-				if (this->operand.val().imag() != other_product->operand.val().imag()) {
-					return this->operand.val().imag() < other_product->operand.val().imag();
+				if (this->value.val().imag() != other_product->value.val().imag()) {
+					return this->value.val().imag() < other_product->value.val().imag();
 				}
 				//the operator assumes from now on to have sorted products to compare
 				auto it_this = this->operands.begin();
@@ -352,7 +351,7 @@ namespace bmath {
 				if (this->operands.size() != other_variadic->operands.size()) {
 					return false;
 				}
-				if (this->operand.val() != other_variadic->operand.val()) {
+				if (this->value.val() != other_variadic->value.val()) {
 					return false;
 				}
 				//the operator assumes from now on to have sorted products to compare
@@ -395,7 +394,7 @@ namespace bmath {
 		{
 			if (type_of(source) == Type::value) {
 				const Value* const val_source = static_cast<Value*>(source);
-				operate(&(this->operand.val()), val_source->val());
+				operate(&(this->value.val()), val_source->val());
 			}
 			else {
 				this->operands.push_back(copy_subterm(source));
@@ -407,7 +406,7 @@ namespace bmath {
 		{
 			if (type_of(term_ptr) == Type::value) {
 				Value* const val_ptr = static_cast<Value*>(term_ptr);
-				operate(&(this->operand.val()), val_ptr->val());
+				operate(&(this->value.val()), val_ptr->val());
 				delete val_ptr;
 			}
 			else {

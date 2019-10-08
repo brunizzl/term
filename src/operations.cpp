@@ -19,8 +19,8 @@ Sum::Sum()
 Sum::Sum(std::string_view name_, std::size_t op)
 	: Variadic_Operator<add, Type::sum, 0>()
 {
-	const Value_Manipulator value_add = { &(this->operand.val()), add };
-	const Value_Manipulator value_sub = { &(this->operand.val()), sub };
+	const Value_Manipulator value_add = { &(this->value.val()), add };
+	const Value_Manipulator value_sub = { &(this->value.val()), sub };
 	Basic_Term* new_subterm = nullptr;
 
 	while (op != std::string::npos) {
@@ -54,8 +54,8 @@ Sum::Sum(std::string_view name_, std::size_t op)
 Sum::Sum(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& variables)
 	: Variadic_Operator<add, Type::sum, 0>()
 {
-	const Value_Manipulator value_add = { &(this->operand.val()), add };
-	const Value_Manipulator value_sub = { &(this->operand.val()), sub };
+	const Value_Manipulator value_add = { &(this->value.val()), add };
+	const Value_Manipulator value_sub = { &(this->value.val()), sub };
 	Basic_Term* new_subterm = nullptr;
 
 	while (op != std::string::npos) {
@@ -99,8 +99,8 @@ void Sum::to_str(std::string& str, Type caller_type) const
 		str.push_back('(');
 	}
 	bool nothing_printed_yet = true;
-	if (this->operand.val() != 0.0) {
-		this->operand.to_str(str, Type::sum);
+	if (this->value.val() != 0.0) {
+		this->value.to_str(str, Type::sum);
 		nothing_printed_yet = false;
 	}
 	for (const auto it : this->operands) {
@@ -121,7 +121,7 @@ void Sum::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_ro
 	tree_lines.push_back(std::move(new_line));
 	append_last_line(tree_lines, line_prefix);
 
-	this->operand.to_tree_str(tree_lines, dist_root + 1, '+');
+	this->value.to_tree_str(tree_lines, dist_root + 1, '+');
 
 	for (auto summand : this->operands) {
 		summand->to_tree_str(tree_lines, dist_root + 1, '+');
@@ -140,8 +140,8 @@ Product::Product()
 Product::Product(std::string_view name_, std::size_t op)
 	: Variadic_Operator<mul, Type::product, 1>()
 {
-	const Value_Manipulator value_mul = { &(this->operand.val()), mul };
-	const Value_Manipulator value_div = { &(this->operand.val()), div };
+	const Value_Manipulator value_mul = { &(this->value.val()), mul };
+	const Value_Manipulator value_div = { &(this->value.val()), div };
 	Basic_Term* new_subterm = nullptr;
 
 	while (op != std::string::npos) {
@@ -173,23 +173,23 @@ Product::Product(std::string_view name_, std::size_t op)
 Product::Product(Basic_Term* name_, std::complex<double> factor)
 	: Variadic_Operator<mul, Type::product, 1>()
 {
-	this->operand.val() = factor;
+	this->value.val() = factor;
 	if (type_of(name_) == Type::product) {	//not making new factor in this, but taking the existing factors of name_ instead
 		Product* const name_product = static_cast<Product*>(name_);
 		this->operands.splice(this->operands.end(), name_product->operands);
-		this->operand.val() *= name_product->operand.val();
+		this->value.val() *= name_product->value.val();
 		delete name_product;
 	}
 	else {
-		this->operands.push_back(name_);
+		this->move_into_operands(name_);
 	}
 }
 
 Product::Product(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& variables)
 	: Variadic_Operator<mul, Type::product, 1>()
 {
-	const Value_Manipulator value_mul = { &this->operand.val(), mul };
-	const Value_Manipulator value_div = { &this->operand.val(), div };
+	const Value_Manipulator value_mul = { &this->value.val(), mul };
+	const Value_Manipulator value_div = { &this->value.val(), div };
 	Basic_Term* new_subterm = nullptr;
 
 	while (op != std::string::npos) {
@@ -231,8 +231,8 @@ void Product::to_str(std::string& str, Type caller_type) const
 		str.push_back('(');
 	}
 	bool nothing_printed_yet = true;
-	if (this->operand.val() != 1.0) {
-		this->operand.to_str(str, Type::product);
+	if (this->value.val() != 1.0) {
+		this->value.to_str(str, Type::product);
 		nothing_printed_yet = false;
 	}
 	for (const auto it : this->operands) {
@@ -253,7 +253,7 @@ void Product::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dis
 	tree_lines.push_back(std::move(new_line));
 	append_last_line(tree_lines, line_prefix);
 
-	this->operand.to_tree_str(tree_lines, dist_root + 1, '*');
+	this->value.to_tree_str(tree_lines, dist_root + 1, '*');
 
 	for (const auto factor : this->operands) {
 		factor->to_tree_str(tree_lines, dist_root + 1, '*');

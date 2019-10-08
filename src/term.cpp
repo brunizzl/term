@@ -25,11 +25,11 @@ void bmath::intern::Basic_Term::sort()
 	this->for_each([](Basic_Term* this_ptr, Type this_type) { \
 		if (this_type == Type::sum) {
 			Sum* const this_sum = static_cast<Sum*>(this_ptr);
-			this_sum->operands.sort([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; });
+			this_sum->sort_operands([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; });
 		}
 		else if (this_type == Type::product) {
 			Product* const this_product = static_cast<Product*>(this_ptr);
-			this_product->operands.sort([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; });
+			this_product->sort_operands([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; });
 		}
 		});
 }
@@ -255,7 +255,7 @@ bmath::Term& bmath::Term::operator-=(const Term& operand2)
 		sum->move_into_operands(this->term_ptr);
 
 		Product* const subtractor = new Product;
-		subtractor->move_into_operands(new Value(std::complex<double>{ -1, 0 }));
+		subtractor->calc_onto_value({ -1, 0 });
 		subtractor->copy_into_operands(operand2.term_ptr);
 
 		sum->move_into_operands(subtractor);

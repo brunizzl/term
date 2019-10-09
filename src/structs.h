@@ -9,17 +9,24 @@ namespace bmath {
 	namespace intern {
 
 		//specifies actual type of Basic_Term 
-		//(types ordered for parentheses to allow > / < / == etc. operators to test whether parentheses are needed)
+		//types ordered after their uniqueness (more unique is smaller)
+		//this order is used to sort in an order that makes it easyer to match patterns
 		enum class Type 
 		{
-			undefined,
-			par_operator,		//already has parentheses -> lower order than in reality
-			sum,
-			value,
-			variable,
-			product,
+			//most unique	(likely different op_type and op_type is always given)
+			par_operator,
+			//second most unique	(base is always base, exponent always exponent)
 			exponentiation,
-			pattern_variable,	//this has no definite position relative to the others.
+			//third most unique		(operands can vary in the positioning relative to each other)
+			sum,
+			product,
+			//fourth most unique	(name or val can take nearly infinite states)
+			value,				
+			variable,
+			//least unique			(pattern variable can be representative for all categories)
+			pattern_variable,
+			//not really part of order, as a term is guaranteed to not be undefined.
+			undefined,
 		};
 
 		//used in Par_Operator class to specify whitch operator is actually used 

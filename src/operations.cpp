@@ -92,22 +92,22 @@ Sum::Sum(const Sum& source)
 	//nothing to do here
 }
 
-void Sum::to_str(std::string& str, Type caller_type) const
+void Sum::to_str(std::string& str, int caller_operator_precedence) const
 {
-	const bool pars = caller_type > Type::sum;
+	const bool pars = caller_operator_precedence > operator_precedence(Type::sum);
 	if (pars) {
 		str.push_back('(');
 	}
 	bool nothing_printed_yet = true;
 	if (this->value.val() != 0.0) {
-		this->value.to_str(str, Type::sum);
+		this->value.to_str(str, operator_precedence(Type::sum));
 		nothing_printed_yet = false;
 	}
 	for (const auto it : this->operands) {
 		if (!std::exchange(nothing_printed_yet, false)) {
 			str.push_back('+');
 		}
-		it->to_str(str, Type::sum);
+		it->to_str(str, operator_precedence(Type::sum));
 	}
 	if (pars) {
 		str.push_back(')');
@@ -224,22 +224,22 @@ Product::Product(const Product& source)
 	//nothing to do here
 }
 
-void Product::to_str(std::string& str, Type caller_type) const
+void Product::to_str(std::string& str, int caller_operator_precedence) const
 {
-	const bool pars = caller_type > Type::product;
+	const bool pars = caller_operator_precedence > operator_precedence(Type::product);
 	if (pars) {
 		str.push_back('(');
 	}
 	bool nothing_printed_yet = true;
 	if (this->value.val() != 1.0) {
-		this->value.to_str(str, Type::product);
+		this->value.to_str(str, operator_precedence(Type::product));
 		nothing_printed_yet = false;
 	}
 	for (const auto it : this->operands) {
 		if (!std::exchange(nothing_printed_yet, false)) {
 			str.push_back('*');
 		}
-		it->to_str(str, Type::product);
+		it->to_str(str, operator_precedence(Type::product));
 	}
 	if (pars) {
 		str.push_back(')');
@@ -305,12 +305,12 @@ Exponentiation::~Exponentiation()
 	delete base;
 }
 
-void Exponentiation::to_str(std::string& str, Type caller_type) const
+void Exponentiation::to_str(std::string& str, int caller_operator_precedence) const
 {
 	str.push_back('(');
-	this->base->to_str(str, Type::exponentiation);
+	this->base->to_str(str, operator_precedence(Type::exponentiation));
 	str.push_back('^');
-	this->exponent->to_str(str, Type::exponentiation);
+	this->exponent->to_str(str, operator_precedence(Type::exponentiation));
 	str.push_back(')');
 }
 
@@ -411,7 +411,7 @@ void bmath::intern::Exponentiation::for_each(std::function<void(Basic_Term* this
 
 Basic_Term** Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
-	if (this->equal_to_pattern(pattern, storage_key)) {
+	if (this->equal_to_pattern(pattern, nullptr, storage_key)) {
 		return storage_key;
 	}
 	else {
@@ -430,26 +430,31 @@ Basic_Term** Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern
 	}
 }
 
-bool bmath::intern::Exponentiation::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+bool bmath::intern::Exponentiation::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
 {
 	const Type pattern_type = type_of(pattern);
 	if (pattern_type == Type::exponentiation) {
 		const Exponentiation* pattern_exp = static_cast<const Exponentiation*>(pattern);
-		if (!this->base->equal_to_pattern(pattern_exp->base, &this->base)) {
+		if (!this->base->equal_to_pattern(pattern_exp->base, pattern, &this->base)) {
 			return false;
 		}
-		if (!this->exponent->equal_to_pattern(pattern_exp->exponent, &this->exponent)) {
+		if (!this->exponent->equal_to_pattern(pattern_exp->exponent, pattern, &this->exponent)) {
 			return false;
 		}
 		return true;
 	}
 	else if (pattern_type == Type::pattern_variable) {
 		Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
-		return pattern_var->try_matching(this, storage_key);
+		return pattern_var->try_matching(this, patterns_parent, storage_key );
 	}
 	else {
 		return false;
 	}
+}
+
+bool bmath::intern::Exponentiation::reset_own_matches(Basic_Term* parent)
+{
+	return this->base->reset_own_matches(this) && this->exponent->reset_own_matches(this);
 }
 
 bool Exponentiation::operator<(const Basic_Term& other) const
@@ -518,10 +523,10 @@ Par_Operator::~Par_Operator()
 	delete this->argument;
 }
 
-void Par_Operator::to_str(std::string & str, Type caller_type) const
+void Par_Operator::to_str(std::string & str, int caller_operator_precedence) const
 {
 	str.append(name_of(this->op_type));	//already includes '('
-	this->argument->to_str(str, Type::par_operator);
+	this->argument->to_str(str, operator_precedence(Type::par_operator));
 	str.push_back(')');
 }
 
@@ -571,7 +576,7 @@ void bmath::intern::Par_Operator::for_each(std::function<void(Basic_Term* this_p
 
 Basic_Term** Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
-	if (this->equal_to_pattern(pattern, storage_key)) {
+	if (this->equal_to_pattern(pattern, nullptr, storage_key)) {
 		return storage_key;
 	}
 	else {
@@ -585,7 +590,7 @@ Basic_Term** Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_V
 	}
 }
 
-bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
 {
 	const Type pattern_type = type_of(pattern);
 	if (pattern_type == Type::par_operator) {
@@ -593,15 +598,20 @@ bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Te
 		if (this->op_type != pattern_par_op->op_type) {
 			return false;
 		}
-		return this->argument->equal_to_pattern(pattern_par_op->argument, &this->argument);
+		return this->argument->equal_to_pattern(pattern_par_op->argument, pattern, &this->argument);
 	}
 	else if (pattern_type == Type::pattern_variable) {
 		Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
-		return pattern_var->try_matching(this, storage_key);
+		return pattern_var->try_matching(this, patterns_parent, storage_key );
 	}
 	else {
 		return false;
 	}
+}
+
+bool bmath::intern::Par_Operator::reset_own_matches(Basic_Term* parent)
+{
+	return this->argument->reset_own_matches(this);
 }
 
 bool Par_Operator::operator<(const Basic_Term& other) const

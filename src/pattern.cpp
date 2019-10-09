@@ -12,7 +12,7 @@ using namespace bmath::intern;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Pattern_Variable::Pattern_Variable(std::string_view name_)
-	:name(name_), matched_term(nullptr)
+	:name(name_), matched_term(nullptr), responsible_parent(nullptr)
 {
 }
 
@@ -21,13 +21,13 @@ Pattern_Variable::~Pattern_Variable()
 	//pattern_value is not owner -> nothing has to be deleted
 }
 
-void Pattern_Variable::to_str(std::string& str, Type caller_type) const
+void Pattern_Variable::to_str(std::string& str, int caller_operator_precedence) const
 {
 	str.push_back('{');
 	str.append(this->name);
 	if (this->matched_term != nullptr) {
 		str.push_back(',');
-		this->matched_term->to_str(str, Type::undefined);	//parentheses are handled here already (or in this case curly braces) -> Type::undefined
+		this->matched_term->to_str(str, operator_precedence(Type::pattern_variable));
 	}
 	str.push_back('}');
 }
@@ -35,7 +35,7 @@ void Pattern_Variable::to_str(std::string& str, Type caller_type) const
 void Pattern_Variable::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
 {
 	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
-	this->to_str(new_line, Type::pattern_variable);
+	this->to_str(new_line, operator_precedence(Type::undefined));
 
 	tree_lines.push_back(std::move(new_line));
 	append_last_line(tree_lines, line_prefix);
@@ -79,11 +79,20 @@ Basic_Term** Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Patte
 	return nullptr;
 }
 
-bool bmath::intern::Pattern_Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+bool bmath::intern::Pattern_Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
 {
 	assert(false);	//u should call try_matching, because otherwise u did something wrong.
 	return false;
 }
+
+bool bmath::intern::Pattern_Variable::reset_own_matches(Basic_Term* parent)
+{
+	if (parent == this->responsible_parent) {
+		this->matched_term = nullptr;
+		this->responsible_parent = nullptr;
+	}
+	return true;	//always returns true, as if responsible_parent is not caller_adress, -
+}					//everything is done here already anyway.
 
 bool Pattern_Variable::operator<(const Basic_Term& other) const
 {
@@ -110,10 +119,11 @@ Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term() const
 	return copy_subterm(this->matched_term);
 }
 
-bool bmath::intern::Pattern_Variable::try_matching(Basic_Term* other, Basic_Term** other_storage_key)
+bool bmath::intern::Pattern_Variable::try_matching(Basic_Term* other, Basic_Term* patterns_parent, Basic_Term** other_storage_key)
 {
 	if (this->matched_term == nullptr) {
 		this->matched_term = other;
+		this->responsible_parent = patterns_parent;
 		return true;
 	}
 	else {
@@ -165,9 +175,9 @@ Pattern::Pattern(const char * const original_, const char * const changed_)
 std::string Pattern::print() const
 {
 	std::string str;
-	this->original.term_ptr->to_str(str, Type::undefined);
+	this->original.term_ptr->to_str(str, operator_precedence(Type::undefined));
 	str.append(" -> ");
-	this->changed.term_ptr->to_str(str, Type::undefined);
+	this->changed.term_ptr->to_str(str, operator_precedence(Type::undefined));
 	return str;
 }
 

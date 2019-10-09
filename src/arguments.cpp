@@ -26,15 +26,15 @@ Value::~Value()
 {
 }
 
-void Value::to_str(std::string& str, Type caller_type) const
+void Value::to_str(std::string& str, int caller_operator_precedence) const
 {
-	str.append(to_string(this->value, caller_type));
+	str.append(to_string(this->value, caller_operator_precedence));
 }
 
 void Value::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
 {
 	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
-	this->to_str(new_line, Type::undefined);
+	this->to_str(new_line, operator_precedence(Type::undefined));
 
 	tree_lines.push_back(std::move(new_line));
 	append_last_line(tree_lines, line_prefix);
@@ -72,7 +72,7 @@ void bmath::intern::Value::for_each(std::function<void(Basic_Term* this_ptr, Typ
 
 Basic_Term** Value::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
-	if (this->equal_to_pattern(pattern, storage_key)) {
+	if (this->equal_to_pattern(pattern, nullptr, storage_key)) {
 		return storage_key;
 	}
 	else {
@@ -80,7 +80,7 @@ Basic_Term** Value::match_intern(Basic_Term* pattern, std::list<Pattern_Variable
 	}
 }
 
-bool bmath::intern::Value::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+bool bmath::intern::Value::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
 {
 	const Type pattern_type = type_of(pattern);
 	if (pattern_type == Type::value) {
@@ -89,11 +89,16 @@ bool bmath::intern::Value::equal_to_pattern(Basic_Term* pattern, Basic_Term** st
 	}
 	else if (pattern_type == Type::pattern_variable) {
 		Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
-		return pattern_var->try_matching(this, storage_key);
+		return pattern_var->try_matching(this, patterns_parent, storage_key);
 	}
 	else {
 		return false;
 	}
+}
+
+bool bmath::intern::Value::reset_own_matches(Basic_Term* parent)
+{
+	return true;
 }
 
 bool Value::operator<(const Basic_Term& other) const
@@ -150,7 +155,7 @@ Variable::~Variable()
 {
 }
 
-void Variable::to_str(std::string& str, Type caller_type) const
+void Variable::to_str(std::string& str, int caller_operator_precedence) const
 {
 	str.append(this->name);
 }
@@ -158,7 +163,7 @@ void Variable::to_str(std::string& str, Type caller_type) const
 void Variable::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
 {
 	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
-	this->to_str(new_line, Type::undefined);
+	this->to_str(new_line, operator_precedence(Type::undefined));
 
 	tree_lines.push_back(std::move(new_line));
 	append_last_line(tree_lines, line_prefix);
@@ -204,7 +209,7 @@ void bmath::intern::Variable::for_each(std::function<void(Basic_Term* this_ptr, 
 
 Basic_Term** Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
-	if (this->equal_to_pattern(pattern, storage_key)) {
+	if (this->equal_to_pattern(pattern, nullptr, storage_key )) {
 		return storage_key;
 	}
 	else {
@@ -212,7 +217,7 @@ Basic_Term** Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Varia
 	}
 }
 
-bool bmath::intern::Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+bool bmath::intern::Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
 {
 	const Type pattern_type = type_of(pattern);
 	if (pattern_type == Type::variable) {
@@ -221,11 +226,17 @@ bool bmath::intern::Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term**
 	}
 	else if (pattern_type == Type::pattern_variable) {
 		Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
-		return pattern_var->try_matching(this, storage_key);
+		return pattern_var->try_matching(this, patterns_parent, storage_key );
 	}
 	else {
 		return false;
 	}
+}
+
+bool bmath::intern::Variable::reset_own_matches(Basic_Term* parent)
+{
+	assert(false);	//reset_own_matches should be called exclusively in a pattern. patterns don't hold normal variables
+	return false;
 }
 
 bool Variable::operator<(const Basic_Term& other) const

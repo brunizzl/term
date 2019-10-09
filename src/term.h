@@ -21,8 +21,8 @@ namespace bmath {
 		public:
 			virtual ~Basic_Term();
 
-			//appends this to str
-			virtual void to_str(std::string& str, Type caller_type) const = 0;
+			//appends this to str caller_operator_precedence tells callee, whether to put parentheses around string
+			virtual void to_str(std::string& str, int caller_operator_precedence) const = 0;
 
 			//called in function to_tree() of bmath::term
 			//tree_lines holds output line by line, dist_root stores distance from this vertex to root, 
@@ -59,10 +59,17 @@ namespace bmath {
 			//first tries to match this to pattern, then tries to match subterms
 			virtual Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) = 0;
 
-			//called by match_intern to test if this is eual to pattern.
+			//called by match_intern to test if this is equal to pattern.
 			//only differs from operator== in its ability to modify the matched pattern_variables
+			//patterns_parent is the term owning pattern, used to mark whitch term is responsible for matching. 
+			//(used to set member responsible_parent in pattern_variable)
+			//(if equal_to_pattern() descends one layer, pattern will become patterns_parent)
 			//storage_key is pointer to the space in the term owning this, that holds the pointer to this (as in the function above)
-			virtual bool equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key) = 0;
+			virtual bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) = 0;
+
+			//called by terms part of a pattern to reset the pattern subterms held by this paticualar part or its subterms
+			//returns, whether reset was successful (true) or whether there was another option to match and this is now set (false)
+			virtual bool reset_own_matches(Basic_Term* parent) = 0;
 
 			//works only on sorted terms
 			virtual bool operator<(const Basic_Term& other) const = 0;

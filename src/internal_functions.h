@@ -50,6 +50,9 @@ namespace bmath {
 		inline Type type_of(const Basic_Term& obj) { return obj.type(); };
 		inline Type type_of(const Basic_Term* const obj) { return obj->type(); };
 
+		//returns score to say whether the operator has high precedence (high score) or low precedence over other operators
+		constexpr int operator_precedence(Type operator_type);
+
 		//returns visualized tree structure as string
 		//offset is amount of spaces seperating tree from left rim of console
 		std::string ptr_to_tree(const Basic_Term* term_ptr, std::size_t offset);
@@ -61,9 +64,9 @@ namespace bmath {
 		void reset_all_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
 
 		//translates val to a string
-		//parent_type is needed, to determine, wheather to put parenteses around the string
+		//parent_operator_precedence is needed to determine, wheather to put parenteses around the string
 		//if inverse == true, -val will be printed
-		std::string to_string(std::complex<double> val, Type parent_type, bool inverse = false);
+		std::string to_string(std::complex<double> val, int parent_operator_precedence, bool inverse = false);
 
 		//returns c string of operator as written in input/output
 		constexpr std::string_view name_of(Par_Op_Type op_type);

@@ -10,8 +10,8 @@ int main()
 {
 	try {
 		//test_timing();
-		test_strings();
-		//print_all_patterns();
+		//test_strings();
+		print_all_patterns();
 		//test_function("atan(x)");
 		//test_vergleich();
 		test_rechner();

@@ -158,7 +158,9 @@ void print_all_patterns()
 {
 	for (const auto& pattern : bmath::intern::Pattern::patterns) {
 		std::cout << pattern->print() << '\n';
+		std::cout << '\n';
 		std::cout << "original :" << ptr_to_tree(pattern->original.term_ptr, 12).erase(0, 10) << '\n';
+		std::cout << '\n';
 		std::cout << "changed  :" << ptr_to_tree(pattern->changed.term_ptr, 12).erase(0, 10) << '\n';
 		std::cout << "__________________________________________________________\n";
 		std::cout << '\n';

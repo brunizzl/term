@@ -112,7 +112,7 @@ bmath::Term::~Term()
 std::string bmath::Term::to_str() const
 {
 	std::string str;
-	this->term_ptr->to_str(str, Type::undefined);
+	this->term_ptr->to_str(str, operator_precedence(Type::undefined));
 	return str;
 }
 
@@ -335,7 +335,7 @@ std::ostream& operator<<(std::ostream& stream, const bmath::Term& term) {
 
 std::ostream& operator<<(std::ostream& stream, const bmath::intern::Basic_Term& term) {
 	std::string str;
-	term.to_str(str, Type::undefined);
+	term.to_str(str, operator_precedence(Type::undefined));
 	stream << str;
 	return stream;
 }

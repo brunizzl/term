@@ -267,6 +267,20 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source)
 	throw XTermConstructionError("function copy_subterm expected known type to copy");
 }
 
+constexpr int bmath::intern::operator_precedence(Type operator_type)
+{
+	switch (operator_type) {
+	case Type::par_operator:		return 1;	//lower order because, it already brings its own parentheses.
+	case Type::sum:					return 2;
+	case Type::value:				return 3;	//complex number in carthesian coordinates itself is sum -> we don't want parenthesis around a sum of complex numbers
+	case Type::variable:			return 3;	
+	case Type::product:				return 4;
+	case Type::exponentiation:		return 5;
+	case Type::pattern_variable:	return 0;	//brings its own curly braces in to_str -> lowest precedence
+	default:						return 0;
+	}
+}
+
 // used to create lines of tree output
 constexpr static signed char LINE_UP_DOWN = -77;		//(179)
 constexpr static signed char LINE_UP_RIGHT = -64;		//(192)
@@ -353,7 +367,7 @@ namespace bmath::intern {
 	}
 }
 
-std::string bmath::intern::to_string(std::complex<double> val, Type parent_type, bool inverse)
+std::string bmath::intern::to_string(std::complex<double> val, int parent_operator_precedence, bool inverse)
 {
 	const double re = inverse ? -(val.real()) : val.real();
 	const double im = inverse ? -(val.imag()) : val.imag();
@@ -361,16 +375,16 @@ std::string bmath::intern::to_string(std::complex<double> val, Type parent_type,
 	std::stringstream buffer;
 
 	if (re != 0 && im != 0) {
-		parentheses = parent_type > Type::value;
+		parentheses = parent_operator_precedence > operator_precedence(Type::value);
 		buffer << re;
 		add_im_to_stream(buffer, im, true);		
 	}
 	else if (re != 0 && im == 0) {
-		parentheses = re < 0 && parent_type > Type::value;	//leading '-'
+		parentheses = re < 0 && parent_operator_precedence > operator_precedence(Type::value);	//leading '-'
 		buffer << re;
 	}
 	else if (re == 0 && im != 0) {
-		parentheses = im < 0 && parent_type > Type::value;	//leading '-'		
+		parentheses = im < 0 && parent_operator_precedence > operator_precedence(Type::value);	//leading '-'		
 		add_im_to_stream(buffer, im);
 	}
 	else {

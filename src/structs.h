@@ -31,7 +31,7 @@ namespace bmath {
 
 		//used in Par_Operator class to specify whitch operator is actually used 
 		//(comments are corresponding std::complex functions)
-		//types names are sorted by length
+		//types names are sorted by length (used to be required, as the type_subterm() function searched for par_op at not only the beginning of the name string)
 		enum class Par_Op_Type 
 		{
 			log10,			//log10()
@@ -78,7 +78,7 @@ namespace bmath {
 
 		//return of function combine_values()
 		//if function was able to combine to one single value, this gets returned
-		//otherwise state == unknown and val is uninitialised.
+		//otherwise state == unknown and val is undefinded.
 		struct Vals_Combined 
 		{
 			bool known;

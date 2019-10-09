@@ -25,10 +25,11 @@ namespace bmath {
 		{
 		protected:
 			std::list<Basic_Term*> operands;	//summands in sum, factors in product
-			Value value;				//only one summand / factor is allowed to be of Type::value.
+			Value value;				//only one summand / factor is allowed to be of Type::value. this is stored outside of operands here.
 
 			Variadic_Operator();
 			Variadic_Operator(const Variadic_Operator& source);
+			Variadic_Operator(std::complex<double> value_, std::list<Basic_Term*>&& operands);
 			~Variadic_Operator();
 
 		public:
@@ -48,15 +49,15 @@ namespace bmath {
 			//this function is called in match_intern() of Variadic_Operator<>. 
 			//match_intern() always tries to match from the highest level (match intern is called -> caller knows he sees full pattern). 
 			//that allows to only match some of operands with the pattern, as long, as all of the pattern is matched.
-			//other operands may still call equal_to_pattern() and may not need behaving different if pattern is variadic_operator<>.
+			//other operands may still call equal_to_pattern() and may not need behaving different if pattern is of type variadic_operator<>.
 			//if parts of this operands match pattern, a new variadic_operator<> will be constructed, with the matched -
 			//operands moved there. the new variadic_operator<> will be returned. otherwise nullptr is returned.
 			Basic_Term** part_equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key);
 
-			//pushes copy of source into this->operands or, if type(source) is value, uses operate() to store in this->value
+			//pushes copy of source into this->operands or, if type_of(source) is value, uses operate() to add/ multiply onto this->value
 			void copy_into_operands(Basic_Term* source);
 
-			//pushes term_ptr into this->operands or, if (type(term_ptr) is value, uses operate() to store in this->value and deletes term_ptr
+			//pushes term_ptr into this->operands or, if (type(term_ptr) is value, uses operate() to add/ multiply onto this->value and deletes term_ptr
 			void move_into_operands(Basic_Term* term_ptr);
 
 			//uses operate() on this->value and number (no new allocation, if done via this method.)
@@ -174,6 +175,12 @@ namespace bmath {
 			for (const auto it : source.operands) {
 				this->operands.push_back(copy_subterm(it));
 			}
+		}
+
+		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		inline Variadic_Operator<operate, this_type, neutral_val>::Variadic_Operator(std::complex<double> value_, std::list<Basic_Term*>&& operands_)
+			:value(value_), operands(std::move(operands_))
+		{
 		}
 
 		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>

@@ -66,7 +66,7 @@ namespace bmath {
 
 				Basic_Term* copy();
 
-				//patterns should not be copied nor changed
+				//patterns should not be copied nor changed. they only help other terms to change.
 				Pattern_Term(const Pattern_Term& source) = delete;
 				Pattern_Term(Pattern_Term&& source) = delete;
 				Pattern_Term& operator=(const Pattern_Term& source) = delete;
@@ -82,7 +82,7 @@ namespace bmath {
 			Pattern_Term original;	//pattern to be compared to term opject
 			Pattern_Term changed;	//pattern to replace match in term object
 
-			std::string print() const;
+			std::string print() const;	//debugging
 
 			//only instances of pattern
 			static const std::vector<Pattern*> patterns;

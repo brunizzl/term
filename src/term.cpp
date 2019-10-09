@@ -34,7 +34,7 @@ void bmath::intern::Basic_Term::sort()
 		});
 }
 
-std::list<Basic_Term*> bmath::intern::Basic_Term::list_subterms(Type listed_type)
+std::list<Basic_Term*> bmath::intern::Basic_Term::list_subterms(Type requested_type)
 {
 	std::list<Basic_Term*> erg_list;
 
@@ -48,7 +48,7 @@ std::list<Basic_Term*> bmath::intern::Basic_Term::list_subterms(Type listed_type
 				list.push_back(this_ptr);
 			}
 		}
-	} term_collector = { erg_list, listed_type };
+	} term_collector = { erg_list, requested_type };
 
 	this->for_each(term_collector);
 	return erg_list;
@@ -142,7 +142,7 @@ std::list<std::string> bmath::Term::get_var_names() const
 
 bool bmath::Term::match_and_transform(Pattern& pattern)
 {
-	Basic_Term** match = this->term_ptr->match_intern(pattern.original.term_ptr, pattern.var_adresses, &(this->term_ptr));
+	Basic_Term** const match = this->term_ptr->match_intern(pattern.original.term_ptr, pattern.var_adresses, &(this->term_ptr));
 	if (match != nullptr) {
 		Basic_Term* const transformed = pattern.changed.copy();
 		delete *match;
@@ -196,7 +196,7 @@ void bmath::Term::combine()
 			this->term_ptr->combine_layers(this->term_ptr);
 			this->combine_values();
 
-			this->term_ptr->combine_layers(this->term_ptr);	//guarantee well definded structure to match next pattern
+			this->term_ptr->combine_layers(this->term_ptr);	//guaranteeing well definded structure to match next pattern
 			this->combine_values();
 			this->term_ptr->sort();
 			i = 0;	//if match was successfull, pattern search starts again.

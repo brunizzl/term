@@ -307,11 +307,16 @@ Exponentiation::~Exponentiation()
 
 void Exponentiation::to_str(std::string& str, int caller_operator_precedence) const
 {
-	str.push_back('(');
+	const bool pars = caller_operator_precedence > operator_precedence(Type::exponentiation);
+	if (pars) {
+		str.push_back('(');
+	}
 	this->base->to_str(str, operator_precedence(Type::exponentiation));
 	str.push_back('^');
 	this->exponent->to_str(str, operator_precedence(Type::exponentiation));
-	str.push_back(')');
+	if (pars) {
+		str.push_back(')');
+	}
 }
 
 void Exponentiation::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const

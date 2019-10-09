@@ -116,6 +116,7 @@ bool Pattern_Variable::operator==(const Basic_Term& other) const
 
 Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term() const
 {
+	assert(this->matched_term != nullptr);
 	return copy_subterm(this->matched_term);
 }
 

@@ -267,7 +267,7 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source)
 	throw XTermConstructionError("function copy_subterm expected known type to copy");
 }
 
-constexpr int bmath::intern::operator_precedence(Type operator_type)
+int bmath::intern::operator_precedence(Type operator_type)
 {
 	switch (operator_type) {
 	case Type::par_operator:		return 1;	//lower order because, it already brings its own parentheses.
@@ -336,6 +336,7 @@ void bmath::intern::reset_all_pattern_vars(std::list<Pattern_Variable*>& var_adr
 {
 	for (auto pattern_var : var_adresses) {
 		pattern_var->matched_term = nullptr;
+		pattern_var->responsible_parent = nullptr;
 	}
 }
 

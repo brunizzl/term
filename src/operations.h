@@ -8,6 +8,7 @@
 #include <complex>
 #include <cassert>
 #include <functional>
+#include <iostream>
 
 #include "arguments.h"
 #include "internal_functions.h"
@@ -20,16 +21,15 @@ namespace bmath {
 		//sum and product can have an arbitrary amount of summands / factors and behave nearly identical in structure.
 		//this class tries to implement all identic behavior of sum / product
 		//operate is add for sum, mul for product, this_type is Type::sum or Type::product, neutral_val is 0 for sum, 1 for product
-		template<void(*operate)(std::complex<double>* first, const std::complex<double> second), Type this_type, int neutral_val>
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double> second), Type this_type, int neutral_val>
 		class Variadic_Operator : public Basic_Term
 		{
 		protected:
-			std::list<Basic_Term*> operands;	//summands in sum, factors in product
-			Value value;				//only one summand / factor is allowed to be of Type::value. this is stored outside of operands here.
+			std::list<Basic_Term*> operands;	//summands in sum, factors in product 
 
 			Variadic_Operator();
 			Variadic_Operator(const Variadic_Operator& source);
-			Variadic_Operator(std::complex<double> value_, std::list<Basic_Term*>&& operands);
+			Variadic_Operator(std::list<Basic_Term*>&& operands);
 			~Variadic_Operator();
 
 		public:
@@ -54,17 +54,11 @@ namespace bmath {
 			//operands moved there. the new variadic_operator<> will be returned. otherwise nullptr is returned.
 			Basic_Term** part_equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key);
 
-			//pushes copy of source into this->operands or, if type_of(source) is value, uses operate() to add/ multiply onto this->value
-			void copy_into_operands(Basic_Term* source);
-
-			//pushes term_ptr into this->operands or, if (type(term_ptr) is value, uses operate() to add/ multiply onto this->value and deletes term_ptr
-			void move_into_operands(Basic_Term* term_ptr);
-
-			//uses operate() on this->value and number (no new allocation, if done via this method.)
-			inline void calc_onto_value(std::complex<double> number) { operate(&(this->value.val()), number); }
+			//pushes term_ptr back into operands
+			void push_back(Basic_Term* const term_ptr);
 
 			//wrapper for std::list sort()
-			inline void sort_operands(std::function<bool(Basic_Term*& a, Basic_Term*& b)> compare) { this->operands.sort(compare); }
+			inline void sort_operands() { this->operands.sort([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; }); }
 		};
 
 		class Sum : public Variadic_Operator<add, Type::sum, 0>
@@ -73,6 +67,7 @@ namespace bmath {
 			Sum();
 			Sum(std::string_view name_, std::size_t op);
 			Sum(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& variables);
+			Sum(std::list<Basic_Term*>&& operands);
 			Sum(const Sum& source);
 
 			void to_str(std::string& str, int caller_operator_precedence) const override;
@@ -87,6 +82,7 @@ namespace bmath {
 			Product(std::string_view name_, std::size_t op);
 			Product(Basic_Term* name_, std::complex<double> factor);
 			Product(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& variables);
+			Product(std::list<Basic_Term*>&& operands);
 			Product(const Product& source);
 
 			void to_str(std::string& str, int caller_operator_precedence) const override;
@@ -161,29 +157,27 @@ namespace bmath {
 
 
 
-
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline Variadic_Operator<operate, this_type, neutral_val>::Variadic_Operator()
-			:value({ static_cast<double>(neutral_val), 0 })
 		{
 		}
 
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline Variadic_Operator<operate, this_type, neutral_val>::Variadic_Operator(const Variadic_Operator& source)
-			:value(source.value.val())
+			//:operands(source.operands)
 		{
 			for (const auto it : source.operands) {
 				this->operands.push_back(copy_subterm(it));
 			}
 		}
 
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
-		inline Variadic_Operator<operate, this_type, neutral_val>::Variadic_Operator(std::complex<double> value_, std::list<Basic_Term*>&& operands_)
-			:value(value_), operands(std::move(operands_))
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
+		inline Variadic_Operator<operate, this_type, neutral_val>::Variadic_Operator(std::list<Basic_Term*>&& operands_)
+			: operands(std::move(operands_))
 		{
 		}
 
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline Variadic_Operator<operate, this_type, neutral_val>::~Variadic_Operator()
 		{
 			for (const auto it : this->operands) {
@@ -191,20 +185,19 @@ namespace bmath {
 			}
 		}
 
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline Type Variadic_Operator<operate, this_type, neutral_val>::type() const
 		{
 			return this_type;
 		}
 
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline void Variadic_Operator<operate, this_type, neutral_val>::combine_layers(Basic_Term*& storage_key)
 		{
 			for (auto& it = this->operands.begin(); it != this->operands.end();) {	//reference is needed in next line
 				(*it)->combine_layers(*it);
 				if (type_of(*it) == this_type) {
-					Variadic_Operator<operate, this_type, neutral_val>* redundant = static_cast<Variadic_Operator<operate, this_type, neutral_val>*>((*it));
-					operate(&(this->value.val()), redundant->value.val());
+					Variadic_Operator<operate, this_type, neutral_val>* redundant = static_cast<Variadic_Operator<operate, this_type, neutral_val>*>(*it);
 					this->operands.splice(this->operands.end(), redundant->operands);
 					delete redundant;
 					it = this->operands.erase(it);
@@ -213,26 +206,23 @@ namespace bmath {
 					++it;
 				}
 			}
-			if (this->operands.size() == 1 && this->value.val() == static_cast<double>(neutral_val)) {	//this only consists of one non- neutral value -> layer is not needed and this is deleted
+			if (this->operands.size() == 1) {	//this only consists of one operand -> this layer is not needed and removed
 				storage_key = *(this->operands.begin());
 				this->operands.clear();
 				delete this;
 			}
-			else if (this->operands.size() == 0) {	//this only consists of value -> layer is not needed and this is deleted
-				storage_key = new Value(this->value);
-				delete this;
-			}
 		}
 
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline Vals_Combined Variadic_Operator<operate, this_type, neutral_val>::combine_values()
 		{
 			bool only_known = true;
+			std::complex<double> value = static_cast<double>(neutral_val);
 
 			for (auto it = this->operands.begin(); it != this->operands.end();) {
 				const auto [it_known, it_val] = (*it)->combine_values();
 				if (it_known) {
-					operate(&(this->value.val()), it_val);
+					operate(&value, it_val);
 					delete (*it);
 					it = this->operands.erase(it);
 				}
@@ -241,20 +231,29 @@ namespace bmath {
 					++it;
 				}
 			}
-			return { only_known, this->value.val() };
+			if (!only_known && value != static_cast<double>(neutral_val)) {	//if only_known, this would be deleted anyway.
+				if constexpr (this_type == Type::product)
+				{
+					if (value == 0.0) {
+						return { true, 0 };
+					}
+				}
+				this->operands.push_back(new Value(value));
+			}
+			return { only_known, value };
 		}
 
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline std::complex<double> Variadic_Operator<operate, this_type, neutral_val>::evaluate(const std::list<Known_Variable>& known_variables) const
 		{
-			std::complex<double> result = this->value.val();
+			std::complex<double> result = static_cast<double>(neutral_val);
 			for (const auto it : this->operands) {
 				operate(&result, it->evaluate(known_variables));
 			}
 			return result;
 		}
 
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline void Variadic_Operator<operate, this_type, neutral_val>::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 		{
 			for (auto& it : this->operands) {	//reference is needed in next line
@@ -262,7 +261,7 @@ namespace bmath {
 			}
 		}
 
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline void Variadic_Operator<operate, this_type, neutral_val>::for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func)
 		{
 			for (auto it : this->operands) {
@@ -271,11 +270,13 @@ namespace bmath {
 			func(this, this_type);
 		}
 
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline Basic_Term** Variadic_Operator<operate, this_type, neutral_val>::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 		{
-			if (this->equal_to_pattern(pattern, nullptr, storage_key)) {
-				return storage_key;
+			reset_all_pattern_vars(pattern_var_adresses);
+			Basic_Term** const found_part = this->part_equal_to_pattern(pattern, nullptr, storage_key);
+			if (found_part) {
+				return found_part;
 			}
 			else {
 				Basic_Term** argument_match;
@@ -287,24 +288,20 @@ namespace bmath {
 					}
 				}
 			}
-			reset_all_pattern_vars(pattern_var_adresses);
 			return nullptr;
 		}
 
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline bool Variadic_Operator<operate, this_type, neutral_val>::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
 		{
 			const Type pattern_type = type_of(pattern);
 			if (pattern_type == this_type) {
-				const Variadic_Operator<operate, this_type, neutral_val>* variadic_pattern = static_cast<const Variadic_Operator<operate, this_type, neutral_val>*>(pattern);
-				//HIER MUSS NOCH TEST HIN, OB PATTERN NEUTRALES ELEMENT ALS VALUE HAT. 
+				const Variadic_Operator<operate, this_type, neutral_val>* const variadic_pattern = static_cast<const Variadic_Operator<operate, this_type, neutral_val>*>(pattern);
 				if (this->operands.size() != variadic_pattern->operands.size()) {
 					return false;
 				}
-				if (this->value.val() != variadic_pattern->value.val()) {
-					return false;
-				}
 				//the operator assumes from now on to have sorted products to compare
+				//BRAUCH TROTZDEM NOCH WEITERE ÜBERPRÜFUNGEN MIT MEHR REIHENFOLGEN. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 				auto& this_it = this->operands.begin();	//reference, because equal_to_pattern() needs the storage position of operands
 				auto pattern_it = variadic_pattern->operands.begin();
 				for (; this_it != this->operands.end() && pattern_it != variadic_pattern->operands.end(); ++this_it, ++pattern_it) {
@@ -323,7 +320,7 @@ namespace bmath {
 			}
 		}
 
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline bool Variadic_Operator<operate, this_type, neutral_val>::reset_own_matches(Basic_Term* parent)
 		{
 			//NOCH NICHT FERTIG - bisher ist resettable immer true
@@ -334,7 +331,7 @@ namespace bmath {
 			return resettable;
 		}
 
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline bool Variadic_Operator<operate, this_type, neutral_val>::operator<(const Basic_Term& other) const
 		{
 			if (this_type != type_of(other)) {
@@ -344,12 +341,6 @@ namespace bmath {
 				const Variadic_Operator<operate, this_type, neutral_val>* other_product = static_cast<const Variadic_Operator<operate, this_type, neutral_val>*>(&other);
 				if (this->operands.size() != other_product->operands.size()) {
 					return this->operands.size() < other_product->operands.size();
-				}
-				if (this->value.val().real() != other_product->value.val().real()) {
-					return this->value.val().real() < other_product->value.val().real();
-				}
-				if (this->value.val().imag() != other_product->value.val().imag()) {
-					return this->value.val().imag() < other_product->value.val().imag();
 				}
 				//the operator assumes from now on to have sorted products to compare
 				auto it_this = this->operands.begin();
@@ -366,15 +357,12 @@ namespace bmath {
 			}
 		}
 
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline bool Variadic_Operator<operate, this_type, neutral_val>::operator==(const Basic_Term& other) const
 		{
 			if (type_of(other) == this_type) {
 				const Variadic_Operator<operate, this_type, neutral_val>* other_variadic = static_cast<const Variadic_Operator<operate, this_type, neutral_val>*>(&other);
 				if (this->operands.size() != other_variadic->operands.size()) {
-					return false;
-				}
-				if (this->value.val() != other_variadic->value.val()) {
 					return false;
 				}
 				//the operator assumes from now on to have sorted products to compare
@@ -390,17 +378,89 @@ namespace bmath {
 			return false;
 		}
 
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline Basic_Term** Variadic_Operator<operate, this_type, neutral_val>::part_equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
 		{
 			const Type pattern_type = type_of(pattern);
 			if (pattern_type == this_type) {
-				Variadic_Operator<operate, this_type, neutral_val>* const pattern_variadic = static_cast<Variadic_Operator<operate, this_type, neutral_val>*>(pattern);
-				if (pattern_variadic->operands.size() > this->operands.size()) {
+				Variadic_Operator<operate, this_type, neutral_val>* const pattern_ = static_cast<Variadic_Operator<operate, this_type, neutral_val>*>(pattern);
+				if (pattern_->operands.size() > this->operands.size()) {
 					return nullptr;
 				}
 				else {
-					//HIER MUSS NOCH INHALT HIN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+					auto it_pattern = pattern_->operands.begin();
+					auto it_test = this->operands.begin();	//gets compared to it_pattern
+					std::list<Basic_Term*> matched_operands;	//if it_pattern matches successfully, the matching it_test is moved in here.
+					bool it_pattern_no_variable = type_of(*it_pattern) != Type::pattern_variable;	//pattern_vars need special handling. they are guaranteed to be at end of pattern->operands.
+
+					while (true) {
+						if (it_pattern_no_variable && type_of(*it_pattern) == Type::pattern_variable) {	//pattern_it is now pattern_variable.
+							it_pattern_no_variable = false;
+							pattern_->sort_operands();		//pattern_variables with match will be put before pattern_variables without.
+						}
+						if ((*it_test)->equal_to_pattern(*it_pattern, pattern, storage_key)) {
+							matched_operands.splice(matched_operands.end(), this->operands, it_test);	//moving test_it from this->operands to end of matched_operands
+							it_test = this->operands.begin();
+							if (++it_pattern == pattern_->operands.end()) {
+								break;	//success, match was found
+							}
+						}
+						else {
+							if (++it_test == this->operands.end()) {
+								if (it_pattern == pattern_->operands.begin()) {
+									break;
+								}
+								else {	//last match was not successfull -> no operand was pushed into matched_operands for current it_pattern
+									(*it_pattern)->reset_own_matches(pattern);	//match already was unsuccessful -> no need to check for another option
+									--it_pattern;
+								}
+								bool still_options_left = true;
+								while ((*it_pattern)->reset_own_matches(pattern)) {
+									this->operands.splice(this->operands.begin(), matched_operands, std::prev(matched_operands.end()));
+									if (it_pattern != pattern_->operands.begin()) {
+										--it_pattern;
+									}
+									else {
+										still_options_left = false;
+										break;
+									}
+								}
+								if (still_options_left) {
+									++it_pattern;
+									it_test = this->operands.begin();
+									this->sort_operands();
+									continue;
+								}
+								else {
+									break;
+								}
+							}
+						}
+					}
+
+					if (it_pattern == pattern_->operands.end()) {	//match was successful
+						if (this->operands.size()) {
+							if constexpr (this_type == Type::sum)
+							{
+								Sum* new_operand = new Sum(std::move(matched_operands));
+								this->operands.push_back(new_operand);
+								return &(this->operands.back());
+							}
+							else if constexpr (this_type == Type::product)
+							{
+								Product* new_operand = new Product(std::move(matched_operands));
+								this->operands.push_back(new_operand);
+								return &(this->operands.back());
+							}
+							else {
+								assert(false);	//the only (currently implemented) variadic_operands are sum and product.
+							}
+						}
+						else {
+							this->operands.splice(this->operands.end(), matched_operands);
+							return storage_key;
+						}
+					}
 				}				
 			}
 			else if (pattern_type == Type::pattern_variable) {
@@ -412,29 +472,10 @@ namespace bmath {
 			return nullptr;
 		}
 
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
-		inline void Variadic_Operator<operate, this_type, neutral_val>::copy_into_operands(Basic_Term* source)
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
+		inline void Variadic_Operator<operate, this_type, neutral_val>::push_back(Basic_Term* const term_ptr)
 		{
-			if (type_of(source) == Type::value) {
-				const Value* const val_source = static_cast<Value*>(source);
-				operate(&(this->value.val()), val_source->val());
-			}
-			else {
-				this->operands.push_back(copy_subterm(source));
-			}
-		}
-
-		template<void(*operate)(std::complex<double>* first, const std::complex<double>second), Type this_type, int neutral_val>
-		inline void Variadic_Operator<operate, this_type, neutral_val>::move_into_operands(Basic_Term* term_ptr)
-		{
-			if (type_of(term_ptr) == Type::value) {
-				Value* const val_ptr = static_cast<Value*>(term_ptr);
-				operate(&(this->value.val()), val_ptr->val());
-				delete val_ptr;
-			}
-			else {
-				this->operands.push_back(term_ptr);
-			}
+			this->operands.push_back(term_ptr);
 		}
 
 } //namespace intern

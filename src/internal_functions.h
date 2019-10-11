@@ -46,7 +46,7 @@ namespace bmath {
 		inline Type type_of(const Basic_Term* const obj) { return obj->type(); };
 
 		//returns score to say whether the operator has high precedence (high score) or low precedence over other operators
-		int operator_precedence(Type operator_type);
+		constexpr int operator_precedence(Type operator_type);
 
 		//returns visualized tree structure as string
 		//offset is amount of spaces seperating tree from left rim of console
@@ -77,10 +77,10 @@ namespace bmath {
 		constexpr std::complex<double> value_of(Math_Constant constant);
 
 		//functions used to complete template arguments of Variadic_Operator<> and to use as (*func) in struct Value_Manipulator
-		inline void add(std::complex<double>* first, std::complex<double> second) { *first += second; }
-		inline void sub(std::complex<double>* first, std::complex<double> second) { *first -= second; }
-		inline void mul(std::complex<double>* first, std::complex<double> second) { *first *= second; }
-		inline void div(std::complex<double>* first, std::complex<double> second) { *first /= second; }
+		inline void add(std::complex<double>* const first, std::complex<double> second) { *first += second; }
+		inline void sub(std::complex<double>* const first, std::complex<double> second) { *first -= second; }
+		inline void mul(std::complex<double>* const first, std::complex<double> second) { *first *= second; }
+		inline void div(std::complex<double>* const first, std::complex<double> second) { *first /= second; }
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		//stack based calculation\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\

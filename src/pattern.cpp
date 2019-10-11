@@ -53,13 +53,13 @@ void bmath::intern::Pattern_Variable::combine_layers(Basic_Term*& storage_key)
 
 Vals_Combined Pattern_Variable::combine_values()
 {
-	assert(false); //patterns can to be evaluated
+	assert(false); //patterns can not be evaluated
 	return { false, 0 };
 }
 
 std::complex<double> Pattern_Variable::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
-	assert(false); //patterns can to be evaluated
+	assert(false); //patterns can not be evaluated
 	return 0;
 }
 
@@ -101,7 +101,15 @@ bool Pattern_Variable::operator<(const Basic_Term& other) const
 	}
 	else {
 		const Pattern_Variable* other_var = static_cast<const Pattern_Variable*>(&other);
-		return this->name < other_var->name;
+		if (this->matched_term && other_var->matched_term) {
+			return *(this->matched_term) < *(other_var->matched_term);
+		}
+		else if (!this->matched_term && !other_var->matched_term) {
+			return this->name < other_var->name;
+		}
+		else {
+			return this->matched_term > other_var->matched_term;	//pattern_variables with match are sorted before ones without
+		}
 	}
 }
 

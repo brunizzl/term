@@ -72,6 +72,7 @@ void bmath::intern::Value::for_each(std::function<void(Basic_Term* this_ptr, Typ
 
 Basic_Term** Value::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
+	reset_all_pattern_vars(pattern_var_adresses);
 	if (this->equal_to_pattern(pattern, nullptr, storage_key)) {
 		return storage_key;
 	}
@@ -209,6 +210,7 @@ void bmath::intern::Variable::for_each(std::function<void(Basic_Term* this_ptr, 
 
 Basic_Term** Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
+	reset_all_pattern_vars(pattern_var_adresses);
 	if (this->equal_to_pattern(pattern, nullptr, storage_key )) {
 		return storage_key;
 	}

@@ -267,7 +267,7 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source)
 	throw XTermConstructionError("function copy_subterm expected known type to copy");
 }
 
-int bmath::intern::operator_precedence(Type operator_type)
+constexpr int bmath::intern::operator_precedence(Type operator_type)
 {
 	switch (operator_type) {
 	case Type::par_operator:		return 1;	//lower order because, it already brings its own parentheses.
@@ -276,7 +276,7 @@ int bmath::intern::operator_precedence(Type operator_type)
 	case Type::variable:			return 3;	
 	case Type::product:				return 4;
 	case Type::exponentiation:		return 5;
-	case Type::pattern_variable:	return 0;	//brings its own curly braces in to_str -> lowest precedence
+	case Type::pattern_variable:	return 0;	//brings its own curly braces in to_str() -> lowest precedence
 	default:						return 0;
 	}
 }

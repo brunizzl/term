@@ -56,7 +56,7 @@ void test_strings()
 		"-4*q/s^2",
 		"re(3+4i)*im(2-3i)",
 		"a+ln(b^2)+ln(c)+2-b^2-c*a",
-		"3*(sin(a+b+c)^2+cos(a+b+c)^2)+i",
+		"3*(sin(a+b+c)^2+cos(a+b+c)^2+4)+i",
 		"(3^(x^2))^(x)",
 		"sin(-a*b)",
 		"atanh(3+sqrt(-2i))+1*5-12*cos(2i-3)",

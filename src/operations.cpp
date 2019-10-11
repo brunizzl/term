@@ -12,15 +12,14 @@ using namespace bmath::intern;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Sum::Sum()
-	: Variadic_Operator<add, Type::sum, 0>()
 {
 }
 
 Sum::Sum(std::string_view name_, std::size_t op)
-	: Variadic_Operator<add, Type::sum, 0>()
 {
-	const Value_Manipulator value_add = { &(this->value.val()), add };
-	const Value_Manipulator value_sub = { &(this->value.val()), sub };
+	std::complex<double> value = 0;
+	const Value_Manipulator value_add = { &value, add };
+	const Value_Manipulator value_sub = { &value, sub };
 	Basic_Term* new_subterm = nullptr;
 
 	while (op != std::string::npos) {
@@ -49,13 +48,16 @@ Sum::Sum(std::string_view name_, std::size_t op)
 			this->operands.push_front(new_subterm);
 		}
 	}
+	if (value != 0.0) {
+		this->operands.push_back(new Value(value));
+	}
 }
 
 Sum::Sum(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& variables)
-	: Variadic_Operator<add, Type::sum, 0>()
 {
-	const Value_Manipulator value_add = { &(this->value.val()), add };
-	const Value_Manipulator value_sub = { &(this->value.val()), sub };
+	std::complex<double> value = 0;
+	const Value_Manipulator value_add = { &value, add };
+	const Value_Manipulator value_sub = { &value, sub };
 	Basic_Term* new_subterm = nullptr;
 
 	while (op != std::string::npos) {
@@ -84,12 +86,19 @@ Sum::Sum(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& v
 			this->operands.push_front(new_subterm);
 		}
 	}
+	if (value != 0.0) {
+		this->operands.push_back(new Value(value));
+	}
+}
+
+bmath::intern::Sum::Sum(std::list<Basic_Term*>&& operands)
+	:Variadic_Operator<add, Type::sum, 0>(std::move(operands))
+{
 }
 
 Sum::Sum(const Sum& source)
 	:Variadic_Operator<add, Type::sum, 0>(source)
 {
-	//nothing to do here
 }
 
 void Sum::to_str(std::string& str, int caller_operator_precedence) const
@@ -99,10 +108,6 @@ void Sum::to_str(std::string& str, int caller_operator_precedence) const
 		str.push_back('(');
 	}
 	bool nothing_printed_yet = true;
-	if (this->value.val() != 0.0) {
-		this->value.to_str(str, operator_precedence(Type::sum));
-		nothing_printed_yet = false;
-	}
 	for (const auto it : this->operands) {
 		if (!std::exchange(nothing_printed_yet, false)) {
 			str.push_back('+');
@@ -121,8 +126,6 @@ void Sum::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_ro
 	tree_lines.push_back(std::move(new_line));
 	append_last_line(tree_lines, line_prefix);
 
-	this->value.to_tree_str(tree_lines, dist_root + 1, '+');
-
 	for (auto summand : this->operands) {
 		summand->to_tree_str(tree_lines, dist_root + 1, '+');
 	}
@@ -133,15 +136,14 @@ void Sum::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_ro
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Product::Product()
-	: Variadic_Operator<mul, Type::product, 1>()
 {
 }
 
 Product::Product(std::string_view name_, std::size_t op)
-	: Variadic_Operator<mul, Type::product, 1>()
 {
-	const Value_Manipulator value_mul = { &(this->value.val()), mul };
-	const Value_Manipulator value_div = { &(this->value.val()), div };
+	std::complex<double> value = 1;
+	const Value_Manipulator value_mul = { &value, mul };
+	const Value_Manipulator value_div = { &value, div };
 	Basic_Term* new_subterm = nullptr;
 
 	while (op != std::string::npos) {
@@ -168,28 +170,29 @@ Product::Product(std::string_view name_, std::size_t op)
 	if (new_subterm != nullptr) {
 		this->operands.push_front(new_subterm);
 	}
+	if (value != 1.0) {
+		this->operands.push_back(new Value(value));
+	}
 }
 
 Product::Product(Basic_Term* name_, std::complex<double> factor)
-	: Variadic_Operator<mul, Type::product, 1>()
 {
-	this->value.val() = factor;
 	if (type_of(name_) == Type::product) {	//not making new factor in this, but taking the existing factors of name_ instead
 		Product* const name_product = static_cast<Product*>(name_);
 		this->operands.splice(this->operands.end(), name_product->operands);
-		this->value.val() *= name_product->value.val();
 		delete name_product;
 	}
 	else {
-		this->move_into_operands(name_);
+		this->operands.push_back(name_);
 	}
+	this->operands.push_back(new Value(factor));
 }
 
 Product::Product(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& variables)
-	: Variadic_Operator<mul, Type::product, 1>()
 {
-	const Value_Manipulator value_mul = { &this->value.val(), mul };
-	const Value_Manipulator value_div = { &this->value.val(), div };
+	std::complex<double> value = 1;
+	const Value_Manipulator value_mul = { &value, mul };
+	const Value_Manipulator value_div = { &value, div };
 	Basic_Term* new_subterm = nullptr;
 
 	while (op != std::string::npos) {
@@ -216,6 +219,14 @@ Product::Product(std::string_view name_, std::size_t op, std::list<Pattern_Varia
 	if (new_subterm != nullptr) {
 		this->operands.push_front(new_subterm);
 	}
+	if (value != 1.0) {
+		this->operands.push_back(new Value(value));
+	}
+}
+
+bmath::intern::Product::Product(std::list<Basic_Term*>&& operands)
+	:Variadic_Operator<mul, Type::product, 1>(std::move(operands))
+{
 }
 
 Product::Product(const Product& source)
@@ -231,10 +242,6 @@ void Product::to_str(std::string& str, int caller_operator_precedence) const
 		str.push_back('(');
 	}
 	bool nothing_printed_yet = true;
-	if (this->value.val() != 1.0) {
-		this->value.to_str(str, operator_precedence(Type::product));
-		nothing_printed_yet = false;
-	}
 	for (const auto it : this->operands) {
 		if (!std::exchange(nothing_printed_yet, false)) {
 			str.push_back('*');
@@ -252,8 +259,6 @@ void Product::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dis
 	new_line.append("product");
 	tree_lines.push_back(std::move(new_line));
 	append_last_line(tree_lines, line_prefix);
-
-	this->value.to_tree_str(tree_lines, dist_root + 1, '*');
 
 	for (const auto factor : this->operands) {
 		factor->to_tree_str(tree_lines, dist_root + 1, '*');
@@ -307,7 +312,7 @@ Exponentiation::~Exponentiation()
 
 void Exponentiation::to_str(std::string& str, int caller_operator_precedence) const
 {
-	const bool pars = caller_operator_precedence > operator_precedence(Type::exponentiation);
+	const bool pars = caller_operator_precedence >= operator_precedence(Type::exponentiation);
 	if (pars) {
 		str.push_back('(');
 	}
@@ -416,6 +421,7 @@ void bmath::intern::Exponentiation::for_each(std::function<void(Basic_Term* this
 
 Basic_Term** Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
+	reset_all_pattern_vars(pattern_var_adresses);
 	if (this->equal_to_pattern(pattern, nullptr, storage_key)) {
 		return storage_key;
 	}
@@ -430,7 +436,6 @@ Basic_Term** Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern
 		if (argument_match) {
 			return argument_match;
 		}
-		reset_all_pattern_vars(pattern_var_adresses);
 		return nullptr;
 	}
 }
@@ -581,6 +586,7 @@ void bmath::intern::Par_Operator::for_each(std::function<void(Basic_Term* this_p
 
 Basic_Term** Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
+	reset_all_pattern_vars(pattern_var_adresses);
 	if (this->equal_to_pattern(pattern, nullptr, storage_key)) {
 		return storage_key;
 	}
@@ -590,7 +596,6 @@ Basic_Term** Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_V
 		if (argument_match) {
 			return argument_match;
 		}
-		reset_all_pattern_vars(pattern_var_adresses);
 		return nullptr;
 	}
 }

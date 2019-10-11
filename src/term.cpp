@@ -22,16 +22,16 @@ bool Basic_Term::operator!=(const Basic_Term& other) const
 
 void bmath::intern::Basic_Term::sort()
 {
-	this->for_each([](Basic_Term* this_ptr, Type this_type) { \
+	this->for_each([](Basic_Term* this_ptr, Type this_type) { 
 		if (this_type == Type::sum) {
 			Sum* const this_sum = static_cast<Sum*>(this_ptr);
-			this_sum->sort_operands([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; });
+			this_sum->sort_operands();
 		}
 		else if (this_type == Type::product) {
 			Product* const this_product = static_cast<Product*>(this_ptr);
-			this_product->sort_operands([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; });
+			this_product->sort_operands();
 		}
-		});
+	});
 }
 
 std::list<Basic_Term*> bmath::intern::Basic_Term::list_subterms(Type requested_type)
@@ -195,9 +195,6 @@ void bmath::Term::combine()
 		if (this->match_and_transform(*Pattern::patterns[i])) {
 			this->term_ptr->combine_layers(this->term_ptr);
 			this->combine_values();
-
-			this->term_ptr->combine_layers(this->term_ptr);	//guaranteeing well definded structure to match next pattern
-			this->combine_values();
 			this->term_ptr->sort();
 			i = 0;	//if match was successfull, pattern search starts again.
 		}
@@ -237,8 +234,8 @@ bmath::Term& bmath::Term::operator+=(const Term& operand2)
 	}
 	else {
 		Sum* const sum = new Sum;
-		sum->move_into_operands(this->term_ptr);
-		sum->copy_into_operands(operand2.term_ptr);
+		sum->push_back(this->term_ptr);
+		sum->push_back(copy_subterm(operand2.term_ptr));
 		this->term_ptr = sum;
 		this->combine();
 	}
@@ -252,13 +249,13 @@ bmath::Term& bmath::Term::operator-=(const Term& operand2)
 	}
 	else {
 		Sum* const sum = new Sum;
-		sum->move_into_operands(this->term_ptr);
+		sum->push_back(this->term_ptr);
 
 		Product* const subtractor = new Product;
-		subtractor->calc_onto_value({ -1, 0 });
-		subtractor->copy_into_operands(operand2.term_ptr);
+		subtractor->push_back(new Value({ -1, 0 }));
+		subtractor->push_back(copy_subterm(operand2.term_ptr));
 
-		sum->move_into_operands(subtractor);
+		sum->push_back(subtractor);
 		this->term_ptr = sum;
 		this->combine();
 	}
@@ -272,8 +269,8 @@ bmath::Term& bmath::Term::operator*=(const Term& operand2)
 	}
 	else {
 		Product* const product = new Product;
-		product->move_into_operands(this->term_ptr);
-		product->copy_into_operands(operand2.term_ptr);
+		product->push_back(this->term_ptr);
+		product->push_back(copy_subterm(operand2.term_ptr));
 		this->term_ptr = product;
 		this->combine();
 	}
@@ -287,13 +284,13 @@ bmath::Term& bmath::Term::operator/=(const Term& operand2)
 	}
 	else {
 		Product* const product = new Product;
-		product->move_into_operands(this->term_ptr);
+		product->push_back(this->term_ptr);
 
 		Exponentiation* const divisor = new Exponentiation;
 		divisor->exponent = new Value(std::complex<double>{ -1, 0 });
 		divisor->base = copy_subterm(operand2.term_ptr);
 
-		product->move_into_operands(divisor);
+		product->push_back(divisor);
 		this->term_ptr = product;
 		this->combine();
 	}

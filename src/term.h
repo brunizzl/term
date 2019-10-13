@@ -69,7 +69,7 @@ namespace bmath {
 
 			//called by terms part of a pattern to reset the pattern subterms held by this paticualar part or its subterms
 			//returns, whether reset was successful (true) or whether there was another option to match and this is now set (false)
-			virtual bool reset_own_matches(Basic_Term* parent) = 0;
+			virtual void reset_own_matches(Basic_Term* parent) = 0;
 
 			//works as expected only on sorted terms
 			virtual bool operator<(const Basic_Term& other) const = 0;

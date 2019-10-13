@@ -60,6 +60,8 @@ void test_strings()
 		"(3^(x^2))^(x)",
 		"sin(-a*b)",
 		"atanh(3+sqrt(-2i))+1*5-12*cos(2i-3)",
+		"sin(x)*b+3*b",
+		"sin(x)*3^a+b*3^a",
 	};
 	baue_teststrs(teststrs);
 	//berechne_teststrs(teststrs);

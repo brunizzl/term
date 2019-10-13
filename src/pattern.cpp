@@ -12,7 +12,7 @@ using namespace bmath::intern;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Pattern_Variable::Pattern_Variable(std::string_view name_)
-	:name(name_), matched_term(nullptr), responsible_parent(nullptr)
+	:name(name_), matched_term(nullptr), responsible_parent(nullptr), matched_storage_key(nullptr)
 {
 }
 
@@ -85,14 +85,14 @@ bool bmath::intern::Pattern_Variable::equal_to_pattern(Basic_Term* pattern, Basi
 	return false;
 }
 
-bool bmath::intern::Pattern_Variable::reset_own_matches(Basic_Term* parent)
+void bmath::intern::Pattern_Variable::reset_own_matches(Basic_Term* parent)
 {
 	if (parent == this->responsible_parent) {
 		this->matched_term = nullptr;
 		this->responsible_parent = nullptr;
+		this->matched_storage_key = nullptr;
 	}
-	return true;	//always returns true, as if responsible_parent is not caller_adress, -
-}					//everything is done here already anyway.
+}
 
 bool Pattern_Variable::operator<(const Basic_Term& other) const
 {
@@ -125,7 +125,13 @@ bool Pattern_Variable::operator==(const Basic_Term& other) const
 Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term() const
 {
 	assert(this->matched_term != nullptr);
-	return copy_subterm(this->matched_term);
+	if (this->matched_storage_key != nullptr) {
+		*(this->matched_storage_key) = nullptr;
+		return this->matched_term;
+	}
+	else {
+		return copy_subterm(this->matched_term);
+	}
 }
 
 bool bmath::intern::Pattern_Variable::try_matching(Basic_Term* other, Basic_Term* patterns_parent, Basic_Term** other_storage_key)

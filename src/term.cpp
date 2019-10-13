@@ -287,7 +287,7 @@ bmath::Term& bmath::Term::operator/=(const Term& operand2)
 		product->push_back(this->term_ptr);
 
 		Exponentiation* const divisor = new Exponentiation;
-		divisor->exponent = new Value(std::complex<double>{ -1, 0 });
+		divisor->expo = new Value(std::complex<double>{ -1, 0 });
 		divisor->base = copy_subterm(operand2.term_ptr);
 
 		product->push_back(divisor);

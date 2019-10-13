@@ -272,7 +272,7 @@ void Product::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dis
 
 
 Exponentiation::Exponentiation()
-	:base(nullptr), exponent(nullptr)
+	:base(nullptr), expo(nullptr)
 {
 }
 
@@ -280,13 +280,13 @@ Exponentiation::Exponentiation(std::string_view name_, std::size_t op)
 {
 	std::string_view subterm_view;
 	subterm_view = name_.substr(op + 1);
-	this->exponent = build_subterm(subterm_view);
+	this->expo = build_subterm(subterm_view);
 	name_.remove_suffix(name_.length() - op);
 	this->base = build_subterm(name_);
 }
 
 Exponentiation::Exponentiation(Basic_Term* base_, std::complex<double> exponent_) 
-	:exponent(new Value(exponent_)), base(base_)
+	:expo(new Value(exponent_)), base(base_)
 {
 }
 
@@ -294,19 +294,19 @@ Exponentiation::Exponentiation(std::string_view name_, std::size_t op, std::list
 {
 	std::string_view subterm_view;
 	subterm_view = name_.substr(op + 1);
-	this->exponent = build_pattern_subterm(subterm_view, variables);
+	this->expo = build_pattern_subterm(subterm_view, variables);
 	name_.remove_suffix(name_.length() - op);
 	this->base = build_pattern_subterm(name_, variables);
 }
 
 Exponentiation::Exponentiation(const Exponentiation& source)
-	:base(copy_subterm(source.base)), exponent(copy_subterm(source.exponent))
+	:base(copy_subterm(source.base)), expo(copy_subterm(source.expo))
 {
 }
 
 Exponentiation::~Exponentiation()
 {
-	delete exponent;
+	delete expo;
 	delete base;
 }
 
@@ -318,7 +318,7 @@ void Exponentiation::to_str(std::string& str, int caller_operator_precedence) co
 	}
 	this->base->to_str(str, operator_precedence(Type::exponentiation));
 	str.push_back('^');
-	this->exponent->to_str(str, operator_precedence(Type::exponentiation));
+	this->expo->to_str(str, operator_precedence(Type::exponentiation));
 	if (pars) {
 		str.push_back(')');
 	}
@@ -332,7 +332,7 @@ void Exponentiation::to_tree_str(std::vector<std::string>& tree_lines, unsigned 
 	append_last_line(tree_lines, line_prefix);
 
 	this->base->to_tree_str(tree_lines, dist_root + 1, '_');
-	this->exponent->to_tree_str(tree_lines, dist_root + 1, '^');
+	this->expo->to_tree_str(tree_lines, dist_root + 1, '^');
 }
 
 Type Exponentiation::type() const
@@ -343,9 +343,9 @@ Type Exponentiation::type() const
 void Exponentiation::combine_layers(Basic_Term*& storage_key)
 {
 	this->base->combine_layers(this->base);
-	this->exponent->combine_layers(this->exponent);
-	if (type_of(this->exponent) == Type::value) {
-		Value* const val_exp = static_cast<Value*>(this->exponent);
+	this->expo->combine_layers(this->expo);
+	if (type_of(this->expo) == Type::value) {
+		Value* const val_exp = static_cast<Value*>(this->expo);
 		if (val_exp->val() == 1.0) {
 			storage_key = this->base;
 			this->base = nullptr;	//otherwise the term now owned by parent of this, formerly this base, would be destroyed
@@ -377,7 +377,7 @@ void Exponentiation::combine_layers(Basic_Term*& storage_key)
 Vals_Combined Exponentiation::combine_values()
 {
 	const Vals_Combined base_ = this->base->combine_values();
-	const Vals_Combined exponent_ = this->exponent->combine_values();
+	const Vals_Combined exponent_ = this->expo->combine_values();
 
 	if (base_.known && exponent_.known) {
 		const std::complex<double> result = std::pow(base_.val, exponent_.val);
@@ -390,9 +390,9 @@ Vals_Combined Exponentiation::combine_values()
 		}
 	}
 	else if (!base_.known && exponent_.known) {
-		if (type_of(this->exponent) != Type::value) {
-			delete this->exponent;
-			this->exponent = new Value(exponent_.val);
+		if (type_of(this->expo) != Type::value) {
+			delete this->expo;
+			this->expo = new Value(exponent_.val);
 		}
 	}
 
@@ -402,20 +402,20 @@ Vals_Combined Exponentiation::combine_values()
 std::complex<double> Exponentiation::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
 	const std::complex<double> base_ = this->base->evaluate(known_variables);
-	const std::complex<double> exponent_ = this->exponent->evaluate(known_variables);
+	const std::complex<double> exponent_ = this->expo->evaluate(known_variables);
 	return std::pow(base_, exponent_);
 }
 
 void Exponentiation::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
 	this->base->search_and_replace(name_, value_, this->base);
-	this->exponent->search_and_replace(name_, value_, this->exponent);
+	this->expo->search_and_replace(name_, value_, this->expo);
 }
 
 void bmath::intern::Exponentiation::for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func)
 {
 	this->base->for_each(func);
-	this->exponent->for_each(func);
+	this->expo->for_each(func);
 	func(this, Type::exponentiation);
 }
 
@@ -432,7 +432,7 @@ Basic_Term** Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern
 			return argument_match;
 		}
 		reset_all_pattern_vars(pattern_var_adresses);
-		argument_match = exponent->match_intern(pattern, pattern_var_adresses, &exponent);
+		argument_match = expo->match_intern(pattern, pattern_var_adresses, &expo);
 		if (argument_match) {
 			return argument_match;
 		}
@@ -448,7 +448,7 @@ bool bmath::intern::Exponentiation::equal_to_pattern(Basic_Term* pattern, Basic_
 		if (!this->base->equal_to_pattern(pattern_exp->base, pattern, &this->base)) {
 			return false;
 		}
-		if (!this->exponent->equal_to_pattern(pattern_exp->exponent, pattern, &this->exponent)) {
+		if (!this->expo->equal_to_pattern(pattern_exp->expo, pattern, &this->expo)) {
 			return false;
 		}
 		return true;
@@ -462,9 +462,10 @@ bool bmath::intern::Exponentiation::equal_to_pattern(Basic_Term* pattern, Basic_
 	}
 }
 
-bool bmath::intern::Exponentiation::reset_own_matches(Basic_Term* parent)
+void bmath::intern::Exponentiation::reset_own_matches(Basic_Term* parent)
 {
-	return this->base->reset_own_matches(this) && this->exponent->reset_own_matches(this);
+	this->expo->reset_own_matches(this);
+	this->base->reset_own_matches(this);
 }
 
 bool Exponentiation::operator<(const Basic_Term& other) const
@@ -480,7 +481,7 @@ bool Exponentiation::operator<(const Basic_Term& other) const
 		if (*(other_exp->base) < *(this->base)) {
 			return false;
 		}
-		return *(this->exponent) < *(other_exp->exponent);
+		return *(this->expo) < *(other_exp->expo);
 	}
 }
 
@@ -491,7 +492,7 @@ bool Exponentiation::operator==(const Basic_Term& other) const
 		if (*(this->base) != *(other_exp->base)) {
 			return false;
 		}
-		return *(this->exponent) == *(other_exp->exponent);
+		return *(this->expo) == *(other_exp->expo);
 	}
 	return false;
 }
@@ -619,9 +620,9 @@ bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Te
 	}
 }
 
-bool bmath::intern::Par_Operator::reset_own_matches(Basic_Term* parent)
+void bmath::intern::Par_Operator::reset_own_matches(Basic_Term* parent)
 {
-	return this->argument->reset_own_matches(this);
+	this->argument->reset_own_matches(this);
 }
 
 bool Par_Operator::operator<(const Basic_Term& other) const

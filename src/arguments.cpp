@@ -97,9 +97,8 @@ bool bmath::intern::Value::equal_to_pattern(Basic_Term* pattern, Basic_Term* pat
 	}
 }
 
-bool bmath::intern::Value::reset_own_matches(Basic_Term* parent)
+void bmath::intern::Value::reset_own_matches(Basic_Term* parent)
 {
-	return true;
 }
 
 bool Value::operator<(const Basic_Term& other) const
@@ -235,10 +234,9 @@ bool bmath::intern::Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term* 
 	}
 }
 
-bool bmath::intern::Variable::reset_own_matches(Basic_Term* parent)
+void bmath::intern::Variable::reset_own_matches(Basic_Term* parent)
 {
 	assert(false);	//reset_own_matches should be called exclusively in a pattern. patterns don't hold normal variables
-	return false;
 }
 
 bool Variable::operator<(const Basic_Term& other) const

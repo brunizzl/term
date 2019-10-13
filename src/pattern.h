@@ -18,9 +18,11 @@ namespace bmath {
 		{
 		private:
 			Basic_Term* matched_term;
-			//parent under whitch the match was found, -
-			//and that is responsible for cleaning up the match, if overall no match was made
+			//parent under whitch the match was found -
+			//and that is responsible for resetting the member matched_term, if overall no match was made
 			Basic_Term* responsible_parent;	
+			//actual storage position of matched_term (place in parent, where matched_term is stored)
+			Basic_Term** matched_storage_key;
 
 			friend void reset_all_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
 
@@ -40,7 +42,7 @@ namespace bmath {
 			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
-			bool reset_own_matches(Basic_Term* parent) override;
+			void reset_own_matches(Basic_Term* parent) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 

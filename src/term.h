@@ -71,6 +71,10 @@ namespace bmath {
 			//returns, whether reset was successful (true) or whether there was another option to match and this is now set (false)
 			virtual void reset_own_matches(Basic_Term* parent) = 0;
 
+			//changes order in sums and products beeing subterms of this
+			//behaves like std::next_permutation()
+			virtual bool next_permutation() = 0;
+
 			//works as expected only on sorted terms
 			virtual bool operator<(const Basic_Term& other) const = 0;
 

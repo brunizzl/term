@@ -44,6 +44,7 @@ namespace bmath {
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
 			//this is the only overload of reset_own_matches() able to fail, as it is the only able to try multiple matches.
 			void reset_own_matches(Basic_Term* parent) override;
+			bool next_permutation() override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 
@@ -118,6 +119,7 @@ namespace bmath {
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
 			void reset_own_matches(Basic_Term* parent) override;
+			bool next_permutation() override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -147,6 +149,7 @@ namespace bmath {
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
 			void reset_own_matches(Basic_Term* parent) override;
+			bool next_permutation() override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -275,6 +278,7 @@ namespace bmath {
 		inline Basic_Term** Variadic_Operator<operate, this_type, neutral_val>::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 		{
 			reset_all_pattern_vars(pattern_var_adresses);
+			this->sort();
 			Basic_Term** const found_part = this->part_equal_to_pattern(pattern, nullptr, storage_key);
 			if (found_part) {
 				return found_part;
@@ -317,7 +321,7 @@ namespace bmath {
 					if (equals) {
 						return true;
 					}
-				} while (std::next_permutation(this->operands.begin(), this->operands.end(), [](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; }));
+				} while (this->next_permutation());
 				return false;
 			}
 			else if (pattern_type == Type::pattern_variable) {
@@ -335,6 +339,17 @@ namespace bmath {
 			for (auto it : this->operands) {
 				it->reset_own_matches(this);
 			}
+		}
+
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
+		inline bool Variadic_Operator<operate, this_type, neutral_val>::next_permutation()
+		{
+			for (auto it : this->operands) {
+				if (it->next_permutation()) {
+					return true;
+				}
+			}
+			return std::next_permutation(this->operands.begin(), this->operands.end(), [](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; });
 		}
 
 		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
@@ -397,11 +412,11 @@ namespace bmath {
 					auto it_pattern = pattern_->operands.begin();
 					auto it_test = this->operands.begin();	//gets compared to it_pattern
 					std::list<Basic_Term*> matched_operands;	//if it_pattern matches successfully, the matching it_test is moved in here.
-					bool it_pattern_no_variable = type_of(*it_pattern) != Type::pattern_variable;	//pattern_vars need special handling. they are guaranteed to be at end of pattern->operands.
+					bool matching_pattern_vars = type_of(*it_pattern) == Type::pattern_variable;	//pattern_vars need special handling. they are guaranteed to be at end of pattern->operands.
 
 					while (true) {
-						if (it_pattern_no_variable && type_of(*it_pattern) == Type::pattern_variable) {	//pattern_it is now pattern_variable.
-							it_pattern_no_variable = false;
+						if (!matching_pattern_vars && type_of(*it_pattern) == Type::pattern_variable) {	//pattern_it is now pattern_variable.
+							matching_pattern_vars = true;
 							pattern_->sort_operands();		//pattern_variables with match will be put before pattern_variables without.
 						}
 						if ((*it_test)->equal_to_pattern(*it_pattern, pattern, storage_key)) {
@@ -425,7 +440,7 @@ namespace bmath {
 								break;
 							}
 						}
-					}
+					}					
 
 					if (it_pattern == pattern_->operands.end()) {	//match was successful
 						if (this->operands.size()) {

@@ -46,7 +46,7 @@ namespace bmath {
 		inline Type type_of(const Basic_Term* const obj) { return obj->type(); };
 
 		//returns score to say whether the operator has high precedence (high score) or low precedence over other operators
-		constexpr int operator_precedence(Type operator_type);
+		int operator_precedence(Type operator_type);
 
 		//returns visualized tree structure as string
 		//offset is amount of spaces seperating tree from left rim of console

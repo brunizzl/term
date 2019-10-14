@@ -45,11 +45,11 @@ void berechne_teststrs(const std::vector<std::string>& teststrs)
 void test_strings() 
 {
 	const std::vector<std::string> teststrs = {
+		"(3*x-2*y)/5",
 		"(1*[2i^(-2)*3*(4*(a^5))])",
 		"-i+300*a/(a*b)",
 		"1-2*3",
 		"(10/5)^3",
-		"(3*x-2*y)/5",
 		"5+pi+7/(5-a+ln[2])^3",
 		"auto^herbert*3+auto^(-32*a)-4",
 		"6/7/8*a/4",

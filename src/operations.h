@@ -302,15 +302,14 @@ namespace bmath {
 				if (this->operands.size() != pattern_->operands.size()) {
 					return false;
 				}
-				//the operator assumes from now on to have sorted products to compare
-				auto& this_it = this->operands.begin();	//reference, because equal_to_pattern needs the storage position of operands
-				auto pattern_it = pattern_->operands.begin();
-				for (; this_it != this->operands.end() && pattern_it != pattern_->operands.end(); ++this_it, ++pattern_it) {
-					if (!(*this_it)->equal_to_pattern(*pattern_it, pattern, &*this_it)) {
-						return false;
-					}
+				auto matched_operands = operands_contain_pattern(this->operands, pattern_->operands, pattern);
+				if (matched_operands) {
+					this->operands.splice(this->operands.end(), *matched_operands);
+					return true;
 				}
-				return true;
+				else {
+					return false;
+				}
 			}
 			else if (pattern_type == Type::pattern_variable) {
 				Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
@@ -385,64 +384,31 @@ namespace bmath {
 				if (pattern_->operands.size() > this->operands.size()) {
 					return nullptr;
 				}
-				else {
-					auto it_pattern = pattern_->operands.begin();
-					auto it_test = this->operands.begin();	//gets compared to it_pattern
-					std::list<Basic_Term*> matched_operands;	//if it_pattern matches successfully, the matching it_test is moved in here.
-					bool matching_pattern_vars = type_of(*it_pattern) == Type::pattern_variable;	//pattern_vars need special handling. they are guaranteed to be at end of pattern->operands.
-
-					while (true) {
-						if (!matching_pattern_vars && type_of(*it_pattern) == Type::pattern_variable) {	//pattern_it is now pattern_variable.
-							matching_pattern_vars = true;
-							pattern_->sort_operands();		//pattern_variables with match will be put before pattern_variables without.
+				auto matched_operands = operands_contain_pattern(this->operands, pattern_->operands, pattern);
+				if (matched_operands) {
+					if (this->operands.size()) {
+						if constexpr (this_type == Type::sum) {
+							Sum* new_operand = new Sum(std::move(*matched_operands));
+							this->operands.push_back(new_operand);
+							return &(this->operands.back());
 						}
-						if ((*it_test)->equal_to_pattern(*it_pattern, pattern, storage_key)) {
-							matched_operands.splice(matched_operands.end(), this->operands, it_test);	//moving test_it from this->operands to end of matched_operands
-							it_test = this->operands.begin();
-							if (++it_pattern == pattern_->operands.end()) {
-								break;	//success, match was found
-							}
-						}
-						else if (++it_test == this->operands.end()) {
-							(*it_pattern)->reset_own_matches(pattern);
-							if (it_pattern == pattern_->operands.begin()) {
-								break;
-							}
-							else {
-								do {
-									--it_pattern;
-									this->operands.splice(this->operands.begin(), matched_operands, std::prev(matched_operands.end()));
-									(*it_pattern)->reset_own_matches(pattern);
-								} while (it_pattern != pattern_->operands.begin());
-								break;
-							}
-						}
-					}					
-
-					if (it_pattern == pattern_->operands.end()) {	//match was successful
-						if (this->operands.size()) {
-							if constexpr (this_type == Type::sum)
-							{
-								Sum* new_operand = new Sum(std::move(matched_operands));
-								this->operands.push_back(new_operand);
-								return &(this->operands.back());
-							}
-							else if constexpr (this_type == Type::product)
-							{
-								Product* new_operand = new Product(std::move(matched_operands));
-								this->operands.push_back(new_operand);
-								return &(this->operands.back());
-							}
-							else {
-								assert(false);	//the only (currently implemented) variadic_operands are sum and product.
-							}
+						else if constexpr (this_type == Type::product) {
+							Product* new_operand = new Product(std::move(*matched_operands));
+							this->operands.push_back(new_operand);
+							return &(this->operands.back());
 						}
 						else {
-							this->operands.splice(this->operands.end(), matched_operands);
-							return storage_key;
+							assert(false);	//the only (currently implemented) variadic_operands are sum and product.
 						}
 					}
-				}				
+					else {
+						this->operands.splice(this->operands.end(), *matched_operands);
+						return storage_key;
+					}
+				}
+				else {
+					return false;
+				}
 			}
 			else if (pattern_type == Type::pattern_variable) {
 				Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);

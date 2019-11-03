@@ -1,6 +1,7 @@
 
 #include <charconv>
 #include <cassert>
+#include <algorithm>
 
 #include "internal_functions.h"
 #include "arguments.h"
@@ -338,6 +339,50 @@ void bmath::intern::reset_all_pattern_vars(std::list<Pattern_Variable*>& var_adr
 		pattern_var->matched_term = nullptr;
 		pattern_var->responsible_parent = nullptr;
 	}
+}
+
+std::list<Basic_Term*>::iterator bmath::intern::find_first_of(std::list<Basic_Term*>& search, Type type)
+{
+	for (auto it = search.begin(); it != search.end(); ++it) {
+		if (type_of(*it) == type) {
+			return it;
+		}
+	}
+	return search.end();
+}
+
+std::optional<std::list<Basic_Term*>> bmath::intern::operands_contain_pattern(std::list<Basic_Term*>& test_ops, std::list<Basic_Term*>& pattern_ops, Basic_Term* pattern)
+{
+	assert(std::is_sorted(test_ops.begin(), test_ops.end(), [](Basic_Term* a, Basic_Term* b) { return *a < *b; }));
+	assert(std::is_sorted(pattern_ops.begin(), pattern_ops.end(), [](Basic_Term* a, Basic_Term* b) {return *a < *b; }));
+
+	std::list<Basic_Term*> matched_operands;	//to not be matched multiple times, already matched operands need to be moved here.
+	bool already_matching_pattern_vars = false;	
+
+	for (auto pattern_it = pattern_ops.begin(); pattern_it != pattern_ops.end(); ++pattern_it) {
+
+		//once we start to compare to pattern_variables, we need to make sure, already matched ones are compared first. (hence we sort)
+		if (!already_matching_pattern_vars && type_of(*pattern_it) == Type::pattern_variable) {
+			already_matching_pattern_vars = true;
+			pattern_ops.sort([](Basic_Term* a, Basic_Term* b) {return *a < *b; });
+			pattern_it = find_first_of(pattern_ops, Type::pattern_variable);
+		}
+
+		bool found_match = false;
+		for (auto test_it = test_ops.begin(); test_it != test_ops.end(); ++test_it) {
+			if ((*test_it)->equal_to_pattern(*pattern_it, pattern, &*test_it)) {
+				matched_operands.splice(matched_operands.end(), test_ops, test_it);
+				found_match = true;
+				break;
+			}
+		}
+		if (!found_match) {	//cleanup
+			test_ops.splice(test_ops.end(), matched_operands);
+			test_ops.sort([](Basic_Term* a, Basic_Term* b) { return *a < *b; });
+			return {};
+		}
+	}
+	return std::move(matched_operands);
 }
 
 namespace bmath::intern {

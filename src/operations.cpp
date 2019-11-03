@@ -446,22 +446,13 @@ bool bmath::intern::Exponentiation::equal_to_pattern(Basic_Term* pattern, Basic_
 	const Type pattern_type = type_of(pattern);
 	if (pattern_type == Type::exponentiation) {
 		const Exponentiation* pattern_exp = static_cast<const Exponentiation*>(pattern);
-		do {
-			bool equal = true;
-			if (!this->base->equal_to_pattern(pattern_exp->base, pattern, &this->base)) {
-				equal = false;
-			}
-			if (equal && !this->expo->equal_to_pattern(pattern_exp->expo, pattern, &this->expo)) {
-				equal = false;
-			}
-			if (equal) {
-				return true;
-			}
-			else {
-				this->reset_own_matches(this);
-			}
-		} while (this->next_permutation());
-		return false;
+		if (!this->base->equal_to_pattern(pattern_exp->base, pattern, &this->base)) {
+			return false;
+		}
+		if (!this->expo->equal_to_pattern(pattern_exp->expo, pattern, &this->expo)) {
+			return false;
+		}
+		return true;
 	}
 	else if (pattern_type == Type::pattern_variable) {
 		Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
@@ -476,16 +467,6 @@ void bmath::intern::Exponentiation::reset_own_matches(Basic_Term* parent)
 {
 	this->expo->reset_own_matches(this);
 	this->base->reset_own_matches(this);
-}
-
-bool bmath::intern::Exponentiation::next_permutation()
-{
-	if (this->expo->next_permutation()) {
-		return true;
-	}
-	else {
-		return this->base->next_permutation();
-	}
 }
 
 bool Exponentiation::operator<(const Basic_Term& other) const
@@ -630,15 +611,7 @@ bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Te
 		if (this->op_type != pattern_par_op->op_type) {
 			return false;
 		}
-		do {
-			if (this->argument->equal_to_pattern(pattern_par_op->argument, pattern, &this->argument)) {
-				return true;
-			}
-			else {
-				this->reset_own_matches(this);
-			}
-		} while (this->next_permutation());
-		return false;
+		return this->argument->equal_to_pattern(pattern_par_op->argument, pattern, &this->argument);
 	}
 	else if (pattern_type == Type::pattern_variable) {
 		Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
@@ -652,11 +625,6 @@ bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Te
 void bmath::intern::Par_Operator::reset_own_matches(Basic_Term* parent)
 {
 	this->argument->reset_own_matches(this);
-}
-
-bool bmath::intern::Par_Operator::next_permutation()
-{
-	return this->argument->next_permutation();
 }
 
 bool Par_Operator::operator<(const Basic_Term& other) const

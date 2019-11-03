@@ -44,7 +44,6 @@ namespace bmath {
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
 			//this is the only overload of reset_own_matches() able to fail, as it is the only able to try multiple matches.
 			void reset_own_matches(Basic_Term* parent) override;
-			bool next_permutation() override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 
@@ -119,7 +118,6 @@ namespace bmath {
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
 			void reset_own_matches(Basic_Term* parent) override;
-			bool next_permutation() override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -149,7 +147,6 @@ namespace bmath {
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
 			void reset_own_matches(Basic_Term* parent) override;
-			bool next_permutation() override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -305,24 +302,15 @@ namespace bmath {
 				if (this->operands.size() != pattern_->operands.size()) {
 					return false;
 				}
-				//assumes operands to have been sorted at beginning of the attemt to match this exact subterm with this exact part of the pattern
-				//this way, all permutations will be tried out to be matched.
-				do {
-					bool equals = true;
-					auto& this_it = this->operands.begin();	//reference, because equal_to_pattern() needs the storage position of operands
-					auto pattern_it = pattern_->operands.begin();
-					for (; this_it != this->operands.end(); ++this_it, ++pattern_it) {
-						if (!(*this_it)->equal_to_pattern(*pattern_it, pattern, &*this_it)) {
-							equals = false;
-							pattern_->reset_own_matches(patterns_parent);
-							break;
-						}
+				//the operator assumes from now on to have sorted products to compare
+				auto& this_it = this->operands.begin();	//reference, because equal_to_pattern needs the storage position of operands
+				auto pattern_it = pattern_->operands.begin();
+				for (; this_it != this->operands.end() && pattern_it != pattern_->operands.end(); ++this_it, ++pattern_it) {
+					if (!(*this_it)->equal_to_pattern(*pattern_it, pattern, &*this_it)) {
+						return false;
 					}
-					if (equals) {
-						return true;
-					}
-				} while (this->next_permutation());
-				return false;
+				}
+				return true;
 			}
 			else if (pattern_type == Type::pattern_variable) {
 				Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
@@ -339,17 +327,6 @@ namespace bmath {
 			for (auto it : this->operands) {
 				it->reset_own_matches(this);
 			}
-		}
-
-		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
-		inline bool Variadic_Operator<operate, this_type, neutral_val>::next_permutation()
-		{
-			for (auto it : this->operands) {
-				if (it->next_permutation()) {
-					return true;
-				}
-			}
-			return std::next_permutation(this->operands.begin(), this->operands.end(), [](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; });
 		}
 
 		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>

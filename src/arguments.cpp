@@ -102,11 +102,6 @@ void bmath::intern::Value::reset_own_matches(Basic_Term* parent)
 {
 }
 
-bool bmath::intern::Value::next_permutation()
-{
-	return false;	//can not change order of a single value
-}
-
 bool Value::operator<(const Basic_Term& other) const
 {
 	if (Type::value != type_of(other)) {
@@ -244,11 +239,6 @@ bool bmath::intern::Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term* 
 void bmath::intern::Variable::reset_own_matches(Basic_Term* parent)
 {
 	assert(false);	//reset_own_matches should be called exclusively in a pattern. patterns don't hold normal variables
-}
-
-bool bmath::intern::Variable::next_permutation()
-{
-	return false;	//can not change order on a single value
 }
 
 bool Variable::operator<(const Basic_Term& other) const

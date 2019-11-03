@@ -71,19 +71,6 @@ namespace bmath {
 			//returns, whether reset was successful (true) or whether there was another option to match and this is now set (false)
 			virtual void reset_own_matches(Basic_Term* parent) = 0;
 
-			//changes order in sums and products beeing subterms of this
-			//behaves like std::next_permutation()
-			virtual bool next_permutation() = 0;
-
-			//called by match_intern() to test if this (called on pattern) finds match on comp
-			//if comp is already matched to this, next_match_in_term() tries to find the next way to match. if there is no other way to match ordered after -
-			//the current match, every pattern_variable owned by this or its subterms gets resetted and false is returned.
-			//comp is term matched to this (this is pattern / part of pattern) patterns_parent is term owning this (nullptr if function is called on full pattern)
-
-			//soll equal_to_pattern, reset_own_matches und next_permutation ablösen
-			//muss noch inplementiert werden.
-			virtual bool next_match_in_term(const Basic_Term* const comp, Basic_Term* patterns_parent) = 0;
-
 			//works as expected only on sorted terms
 			virtual bool operator<(const Basic_Term& other) const = 0;
 

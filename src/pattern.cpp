@@ -94,12 +94,6 @@ void bmath::intern::Pattern_Variable::reset_own_matches(Basic_Term* parent)
 	}
 }
 
-bool bmath::intern::Pattern_Variable::next_permutation()
-{
-	assert(false);	//only non- pattern terms should permutate.
-	return false;
-}
-
 bool Pattern_Variable::operator<(const Basic_Term& other) const
 {
 	if (Type::pattern_variable != type_of(other)) {
@@ -205,10 +199,12 @@ std::string Pattern::print() const
 //rules to simplify terms (left string -> right string)
 const std::vector<Pattern*> Pattern::patterns = {
 	new Pattern("ln(a)+ln(b)", "ln(a*b)"),
+	new Pattern("ln(a)-ln(b)", "ln(a/b)"),
 	new Pattern("sin(x)^2+cos(x)^2", "1"),
 	new Pattern("(a^b)^c", "a^(b*c)"),
 
 	new Pattern("a*b+a*c", "a*(b+c)"),
+	new Pattern("b*a+b*c", "b*(a+c)"),
 	new Pattern("a*b+a", "a*(b+1)"),
 	new Pattern("a+a", "a*2"),
 	new Pattern("a^b*a^c", "a^(b+c)"),

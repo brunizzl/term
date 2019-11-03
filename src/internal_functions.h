@@ -57,7 +57,6 @@ namespace bmath {
 		void append_last_line(std::vector<std::string>& tree_lines, char operation);
 
 		//resets all pattern_values to nullptr (needs to be run, before next match can be found)
-		//an alternative is reset_own_matches(), member of Basic_Term. reset_pattern_vars() gurantees to reset every everything.
 		void reset_all_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
 
 		//returns first iterator of matching type in search, if none is found returns search.end()

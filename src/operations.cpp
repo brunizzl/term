@@ -463,12 +463,6 @@ bool bmath::intern::Exponentiation::equal_to_pattern(Basic_Term* pattern, Basic_
 	}
 }
 
-void bmath::intern::Exponentiation::reset_own_matches(Basic_Term* parent)
-{
-	this->expo->reset_own_matches(this);
-	this->base->reset_own_matches(this);
-}
-
 bool Exponentiation::operator<(const Basic_Term& other) const
 {
 	if (Type::exponentiation != type_of(other)) {
@@ -620,11 +614,6 @@ bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Te
 	else {
 		return false;
 	}
-}
-
-void bmath::intern::Par_Operator::reset_own_matches(Basic_Term* parent)
-{
-	this->argument->reset_own_matches(this);
 }
 
 bool Par_Operator::operator<(const Basic_Term& other) const

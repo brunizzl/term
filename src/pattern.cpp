@@ -85,15 +85,6 @@ bool bmath::intern::Pattern_Variable::equal_to_pattern(Basic_Term* pattern, Basi
 	return false;
 }
 
-void bmath::intern::Pattern_Variable::reset_own_matches(Basic_Term* parent)
-{
-	if (parent == this->responsible_parent) {
-		this->matched_term = nullptr;
-		this->responsible_parent = nullptr;
-		this->matched_storage_key = nullptr;
-	}
-}
-
 bool Pattern_Variable::operator<(const Basic_Term& other) const
 {
 	if (Type::pattern_variable != type_of(other)) {

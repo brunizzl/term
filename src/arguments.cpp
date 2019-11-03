@@ -98,10 +98,6 @@ bool bmath::intern::Value::equal_to_pattern(Basic_Term* pattern, Basic_Term* pat
 	}
 }
 
-void bmath::intern::Value::reset_own_matches(Basic_Term* parent)
-{
-}
-
 bool Value::operator<(const Basic_Term& other) const
 {
 	if (Type::value != type_of(other)) {
@@ -234,11 +230,6 @@ bool bmath::intern::Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term* 
 	else {
 		return false;
 	}
-}
-
-void bmath::intern::Variable::reset_own_matches(Basic_Term* parent)
-{
-	assert(false);	//reset_own_matches should be called exclusively in a pattern. patterns don't hold normal variables
 }
 
 bool Variable::operator<(const Basic_Term& other) const

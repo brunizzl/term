@@ -17,16 +17,18 @@ namespace bmath {
 		class Pattern_Variable : public Basic_Term
 		{
 		private:
-			Basic_Term* matched_term;
-			//actual storage position of matched_term (place in parent, where matched_term is stored)
-			Basic_Term** matched_storage_key;
+			Basic_Term* matched_term;			//term this variable gets compared to (if nullptr, current comparison is true and variable is set)
+			Basic_Term** matched_storage_key;	//actual storage position of matched_term (place in parent, where matched_term is stored)
+			Type type_restriction;				//if variable != Type::undefined, this can only match terms of same type
 
 			friend void reset_all_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
+			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator);
+
+			Pattern_Variable(std::string_view name_, Type type_);
 
 		public:
 			const std::string name;
 
-			Pattern_Variable(std::string_view name_);
 			~Pattern_Variable();
 
 			void to_str(std::string& str, int caller_operator_precedence) const override;

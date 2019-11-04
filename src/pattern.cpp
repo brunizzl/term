@@ -11,8 +11,8 @@ using namespace bmath::intern;
 //Pattern_Variable\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Pattern_Variable::Pattern_Variable(std::string_view name_)
-	:name(name_), matched_term(nullptr), matched_storage_key(nullptr)
+Pattern_Variable::Pattern_Variable(std::string_view name_, Type type_)
+	:name(name_), matched_term(nullptr), matched_storage_key(nullptr), type_restriction(type_)
 {
 }
 

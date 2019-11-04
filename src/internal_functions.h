@@ -77,11 +77,14 @@ namespace bmath {
 		//returns operation(argument), operation depends on op_type
 		constexpr std::complex<double> value_of(std::complex<double> argument, Par_Op_Type op_type);
 
-		//returns c string of constant as written in input/output
+		//returns string_view of constant as written in input/output
 		constexpr std::string_view name_of(Math_Constant constant);
 
 		//returns value of constant
 		constexpr std::complex<double> value_of(Math_Constant constant);
+
+		//returns type written out as string_view
+		constexpr std::string_view name_of(Type type);
 
 		//functions used to complete template arguments of Variadic_Operator<> and to use as (*func) in struct Value_Manipulator
 		inline void add(std::complex<double>* const first, std::complex<double> second) { *first += second; }

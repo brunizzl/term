@@ -63,9 +63,9 @@ void bmath::intern::preprocess_str(std::string& str)
 	if (par_diff != 0 || brac_diff != 0) {
 		throw XTermConstructionError("the parentheses or brackets of string do not obey the syntax rules");
 	}
-	const char* const allowed_chars = "1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()_";	//reserving '#', '$', '§' and curly braces for internal stuff
+	const char* const allowed_chars = "1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()$_";	//reserving '#', '§', and braces for internal stuff
 	if (str.find_first_not_of(allowed_chars) != std::string::npos) {
-		throw XTermConstructionError("string contains characters other than: 1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()_");
+		throw XTermConstructionError("string contains characters other than: 1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()$_");
 	}
 }
 
@@ -158,10 +158,10 @@ Type bmath::intern::type_subterm(const std::string_view name, std::size_t& op, P
 	throw XTermConstructionError("string is not of expected format");
 }
 
-Basic_Term* bmath::intern::build_subterm(std::string_view subterm_view, Value_Manipulator manipulator)
+Basic_Term* bmath::intern::build_subterm(std::string_view subterm, Value_Manipulator manipulator)
 {
-	if (is_computable(subterm_view)) {
-		const std::complex<double> result = compute(subterm_view);
+	if (is_computable(subterm)) {
+		const std::complex<double> result = compute(subterm);
 		if (manipulator.key != nullptr) {
 			assert(manipulator.func != nullptr);
 			manipulator.func(manipulator.key, result);
@@ -171,36 +171,36 @@ Basic_Term* bmath::intern::build_subterm(std::string_view subterm_view, Value_Ma
 			return new Value(result);
 		}
 	}
-	while (subterm_view.size() > 0) {
+	while (subterm.size() > 0) {
 
 		std::size_t op = std::string::npos;
 		Par_Op_Type par_op_type;	//only used if parenthesis operator is found
-		Type type = type_subterm(subterm_view, op, par_op_type);
+		Type type = type_subterm(subterm, op, par_op_type);
 
 		switch (type) {
 		case Type::exponentiation:
-			return new Exponentiation(subterm_view, op);
+			return new Exponentiation(subterm, op);
 		case Type::product:
-			return new Product(subterm_view, op);
+			return new Product(subterm, op);
 		case Type::sum:
-			return new Sum(subterm_view, op);
+			return new Sum(subterm, op);
 		case Type::variable:
-			return new Variable(subterm_view);
+			return new Variable(subterm);
 		case Type::par_operator:
-			return new Par_Operator(subterm_view, par_op_type);
+			return new Par_Operator(subterm, par_op_type);
 			//case value is already handled at beginning of function
 		}
 		//not variable/value -> string contains parentheses, but no operation outside was found. 
-		subterm_view.remove_prefix(1); //chopping of enclosing parentheses
-		subterm_view.remove_suffix(1);
+		subterm.remove_prefix(1); //chopping of enclosing parentheses
+		subterm.remove_suffix(1);
 	}
 	throw XTermConstructionError("could not find any type to build term(function build_subterm)");
 }
 
-Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm_view, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator)
+Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator)
 {
-	if (is_computable(subterm_view)) {
-		const std::complex<double> result = compute(subterm_view);
+	if (is_computable(subterm)) {
+		const std::complex<double> result = compute(subterm);
 		if (manipulator.key != nullptr) {
 			assert(manipulator.func != nullptr);
 			manipulator.func(manipulator.key, result);
@@ -210,35 +210,53 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm_view, 
 			return new Value(result);
 		}
 	}
-	while (subterm_view.size() > 0) {
+	while (subterm.size() > 0) {
 
 		std::size_t op = std::string::npos;
 		Par_Op_Type par_op_type;	//only used if parenthesis operator is found
-		Type type = type_subterm(subterm_view, op, par_op_type);
+		Type type = type_subterm(subterm, op, par_op_type);
 
 		switch (type) {
 		case Type::exponentiation:
-			return new Exponentiation(subterm_view, op, variables);
+			return new Exponentiation(subterm, op, variables);
 		case Type::product:
-			return new Product(subterm_view, op, variables);
+			return new Product(subterm, op, variables);
 		case Type::sum:
-			return new Sum(subterm_view, op, variables);
+			return new Sum(subterm, op, variables);
 		case Type::par_operator:
-			return new Par_Operator(subterm_view, par_op_type, variables);
+			return new Par_Operator(subterm, par_op_type, variables);
 		case Type::variable:
-			for (auto& variable : variables) {
-				if (variable->name == subterm_view) {
-					return variable;
+			{
+				Type restriction = Type::undefined;
+				const std::size_t dollar = subterm.find_first_of('$');
+				if (dollar != std::string::npos) {
+					//subterm is expected to be of format "name$type". type_name only views "type"
+					std::string_view type_name(subterm.data() + dollar + 1, subterm.size() - dollar - 1);
+					for (Type type : all_types) {
+						if (name_of(type) == type_name) {
+							restriction = type;
+							break;
+						}
+					}
+					subterm.remove_suffix(subterm.size() - dollar);	//"name$type -> "name"
 				}
-			}
-			Pattern_Variable* new_variable = new Pattern_Variable(subterm_view);
-			variables.push_back(new_variable);
-			return new_variable;
-			//case value is already handled at beginning of function
+				for (auto& variable : variables) {
+					if (variable->name == subterm) {
+						if (variable->type_restriction == Type::undefined) {
+							variable->type_restriction = restriction;
+						}
+						return variable;
+					}
+				}
+				Pattern_Variable* new_variable = new Pattern_Variable(subterm, restriction);
+				variables.push_back(new_variable);
+				return new_variable;
+			}			
+		//case value is already handled at beginning of function
 		}
 		//not variable/value -> string contains parentheses, but no operation outside was found. 
-		subterm_view.remove_prefix(1); //chopping of enclosing parentheses
-		subterm_view.remove_suffix(1);
+		subterm.remove_prefix(1); //chopping of enclosing parentheses
+		subterm.remove_suffix(1);
 	}
 	throw XTermConstructionError("could not find any type to build term (function build_pattern_subterm)");
 }
@@ -517,6 +535,22 @@ constexpr std::complex<double> bmath::intern::value_of(Math_Constant constant)
 	case Math_Constant::i:	return { 0, 1 };
 	case Math_Constant::e:	return { 2.718281828459045, 0 };
 	case Math_Constant::pi:	return { 3.141592653589793, 0 };
+	}
+	assert(false);
+	return {};
+}
+
+constexpr std::string_view bmath::intern::name_of(Type type)
+{
+	switch (type) {
+	case Type::par_operator:		return { "par_operator" };
+	case Type::exponentiation:		return { "expo" };
+	case Type::sum:					return { "sum" };
+	case Type::product:				return { "product" };
+	case Type::variable:			return { "variable" };
+	case Type::value:				return { "value" };
+	case Type::pattern_variable:	return { "pattern_variable" };
+	case Type::undefined:			return { "undefined" };
 	}
 	assert(false);
 	return {};

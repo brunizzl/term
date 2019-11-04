@@ -29,6 +29,9 @@ namespace bmath {
 			undefined,
 		};
 
+		static const Type all_types[] = { Type::par_operator, Type::exponentiation, Type::sum, Type::product, 
+										  Type::variable, Type::value, Type::pattern_variable, Type::undefined };
+
 		//used in Par_Operator class to specify whitch operator is actually used 
 		//(comments are corresponding std::complex functions)
 		//types names are sorted by length (used to be required, as the type_subterm() function searched for par_op at not only the beginning of the name string)

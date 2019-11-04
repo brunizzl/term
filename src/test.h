@@ -158,12 +158,12 @@ void test_timing()
 
 void print_all_patterns()
 {
-	for (const auto& pattern : bmath::intern::Pattern::patterns) {
+	for (const auto& pattern : bmath::intern::Transformation::transformations) {
 		std::cout << pattern->print() << '\n';
 		std::cout << '\n';
-		std::cout << "original :" << ptr_to_tree(pattern->original.term_ptr, 12).erase(0, 10) << '\n';
+		std::cout << "input :" << ptr_to_tree(pattern->input.term_ptr, 12).erase(0, 10) << '\n';
 		std::cout << '\n';
-		std::cout << "changed  :" << ptr_to_tree(pattern->changed.term_ptr, 12).erase(0, 10) << '\n';
+		std::cout << "output  :" << ptr_to_tree(pattern->output.term_ptr, 12).erase(0, 10) << '\n';
 		std::cout << "__________________________________________________________\n";
 		std::cout << '\n';
 	}

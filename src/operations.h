@@ -62,6 +62,9 @@ namespace bmath {
 
 		class Sum : public Variadic_Operator<add, Type::sum, 0>
 		{
+		private:
+			friend Pattern_Term::~Pattern_Term();
+
 		public:
 			Sum();
 			Sum(std::string_view name_, std::size_t op);
@@ -76,6 +79,9 @@ namespace bmath {
 
 		class Product : public Variadic_Operator<mul, Type::product, 1>
 		{
+		private:
+			friend Pattern_Term::~Pattern_Term();
+
 		public:
 			Product();
 			Product(std::string_view name_, std::size_t op);
@@ -96,6 +102,7 @@ namespace bmath {
 			Basic_Term* base;
 
 			friend class bmath::Term;
+			friend Pattern_Term::~Pattern_Term();
 
 		public:
 			Exponentiation();
@@ -125,6 +132,8 @@ namespace bmath {
 		private:
 			Par_Op_Type op_type;
 			Basic_Term* argument;
+
+			friend Pattern_Term::~Pattern_Term();
 
 		public:
 			Par_Operator();

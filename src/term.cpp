@@ -140,13 +140,13 @@ std::list<std::string> bmath::Term::get_var_names() const
 	return names;
 }
 
-bool bmath::Term::match_and_transform(Pattern& pattern)
+bool bmath::Term::match_and_transform(Transformation& pattern)
 {
-	Basic_Term** const match = this->term_ptr->match_intern(pattern.original.term_ptr, pattern.var_adresses, &(this->term_ptr));
+	Basic_Term** const match = this->term_ptr->match_intern(pattern.input.term_ptr, pattern.var_adresses, &(this->term_ptr));
 	if (match != nullptr) {
-		Basic_Term* const transformed = pattern.changed.copy();
+		Basic_Term* const transformed = pattern.output.copy();
 		delete *match;
-		*match = transformed;	//here the pointer to pointer is needed, as we overwrite the original storage position with the new term.
+		*match = transformed;	//here the pointer to pointer is needed, as we overwrite the input storage position with the new term.
 		return true;
 	}
 	return false;
@@ -191,8 +191,8 @@ void bmath::Term::combine()
 	this->combine_values();
 	this->term_ptr->sort();
 
-	for (unsigned int i = 0; i < Pattern::patterns.size();) {
-		if (this->match_and_transform(*Pattern::patterns[i])) {
+	for (unsigned int i = 0; i < Transformation::transformations.size();) {
+		if (this->match_and_transform(*Transformation::transformations[i])) {
 			this->term_ptr->combine_layers(this->term_ptr);
 			this->combine_values();
 			this->term_ptr->sort();

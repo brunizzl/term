@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "pattern.h"
+#include "operations.h"
 #include "internal_functions.h"
 
 using namespace bmath::intern;
@@ -53,13 +54,13 @@ void bmath::intern::Pattern_Variable::combine_layers(Basic_Term*& storage_key)
 
 Vals_Combined Pattern_Variable::combine_values()
 {
-	assert(false); //patterns can not be evaluated
+	assert(false); //transformations can not be evaluated
 	return { false, 0 };
 }
 
 std::complex<double> Pattern_Variable::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
-	assert(false); //patterns can not be evaluated
+	assert(false); //transformations can not be evaluated
 	return 0;
 }
 
@@ -142,16 +143,16 @@ bool bmath::intern::Pattern_Variable::try_matching(Basic_Term* other, Basic_Term
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Pattern\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//Pattern_Term\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-Pattern::Pattern_Term::Pattern_Term()
+Pattern_Term::Pattern_Term()
 	:term_ptr(nullptr)
 {
 }
 
-void Pattern::Pattern_Term::build(std::string name, std::list<Pattern_Variable*>& var_adresses)
+void Pattern_Term::build(std::string name, std::list<Pattern_Variable*>& var_adresses)
 {
 	assert(term_ptr == nullptr);
 	preprocess_str(name);
@@ -160,46 +161,103 @@ void Pattern::Pattern_Term::build(std::string name, std::list<Pattern_Variable*>
 	this->term_ptr->sort();
 }
 
-Pattern::Pattern_Term::~Pattern_Term()
+Pattern_Term::~Pattern_Term()
 {
-	delete this->term_ptr;
+	//due to the fact, that Pattern_Term break the Tree structure (one pattern_variable might be owned by multiple parents) -
+	//we can not use the destructor of basic_term
+	std::list<Basic_Term*> subterms;
+	this->term_ptr->for_each([&](Basic_Term* this_ptr, Type this_type) { 
+		if (this_type != Type::pattern_variable) subterms.push_back(this_ptr);	//pattern_variables are not deleted by this destructor
+
+		switch (this_type) {
+		case Type::par_operator:
+			static_cast<Par_Operator*>(this_ptr)->argument = nullptr;
+		case Type::exponentiation:
+			static_cast<Exponentiation*>(this_ptr)->base = nullptr;
+			static_cast<Exponentiation*>(this_ptr)->expo = nullptr;
+		case Type::sum:
+			static_cast<Sum*>(this_ptr)->operands.clear();
+		case Type::product:
+			static_cast<Product*>(this_ptr)->operands.clear();
+		}
+	});
+	for (auto subterm : subterms) {
+		delete subterm;
+	}
 }
 
-Basic_Term* Pattern::Pattern_Term::copy()
+Basic_Term* Pattern_Term::copy()
 {
 	return copy_subterm(this->term_ptr);
 }
 
-Pattern::Pattern(const char * const original_, const char * const changed_)
-	:var_adresses(), original(), changed()
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Transformation\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+Transformation::Transformation(std::string input_, std::string output_)
+	:var_adresses(), input(), output()
 {
-	original.build({ original_ }, this->var_adresses);
-	changed.build({ changed_ }, this->var_adresses);
+	input.build(std::move(input_), this->var_adresses);
+	output.build(std::move(output_), this->var_adresses);
 }
 
-std::string Pattern::print() const
+bmath::intern::Transformation::~Transformation()
+{
+	for (auto it : this->var_adresses) {
+		delete it;
+	}
+}
+
+std::string Transformation::print() const
 {
 	std::string str;
-	this->original.term_ptr->to_str(str, operator_precedence(Type::undefined));
+	this->input.term_ptr->to_str(str, operator_precedence(Type::undefined));
 	str.append(" -> ");
-	this->changed.term_ptr->to_str(str, operator_precedence(Type::undefined));
+	this->output.term_ptr->to_str(str, operator_precedence(Type::undefined));
 	return str;
 }
 
 //rules to simplify terms (left string -> right string)
-const std::vector<Pattern*> Pattern::patterns = {
-	new Pattern("ln(a)+ln(b)", "ln(a*b)"),
-	new Pattern("ln(a)-ln(b)", "ln(a/b)"),
-	new Pattern("sin(x)^2+cos(x)^2", "1"),
-	new Pattern("(a^b)^c", "a^(b*c)"),
+const std::vector<Transformation*> Transformation::transformations = {
+	new Transformation("ln(a)+ln(b)", "ln(a*b)"),
+	new Transformation("ln(a)-ln(b)", "ln(a/b)"),
+	new Transformation("sin(x)^2+cos(x)^2", "1"),
+	new Transformation("(a^b)^c", "a^(b*c)"),
 
-	new Pattern("a*b+a*c", "a*(b+c)"),
-	new Pattern("b*a+b*c", "b*(a+c)"),
-	new Pattern("a*b+a", "a*(b+1)"),
-	new Pattern("a+a", "a*2"),
-	new Pattern("a^b*a^c", "a^(b+c)"),
-	new Pattern("a^b*a", "a^(b+1)"),
-	new Pattern("a*a", "a^2"),
+	new Transformation("a*b+a*c", "a*(b+c)"),
+	new Transformation("b*a+b*c", "b*(a+c)"),
+	new Transformation("a*b+a", "a*(b+1)"),
+	new Transformation("a+a", "a*2"),
+	new Transformation("a^b*a^c", "a^(b+c)"),
+	new Transformation("a^b*a", "a^(b+1)"),
+	new Transformation("a*a", "a^2"),
 };
 
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Pattern\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+bmath::intern::Pattern::Pattern(std::string name_)
+	:var_adresses(), term()
+{
+	term.build(std::move(name_), this->var_adresses);
+}
+
+bmath::intern::Pattern::~Pattern()
+{
+	for (auto it : this->var_adresses) {
+		delete it;
+	}
+}
+
+std::string bmath::intern::Pattern::print() const
+{
+	std::string str;
+	this->term.term_ptr->to_str(str, operator_precedence(Type::undefined));
+	return str;
+}

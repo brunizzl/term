@@ -47,45 +47,59 @@ namespace bmath {
 			//accesses matched_term to copy it, returns copy
 			Basic_Term* copy_matched_term() const;
 
-			//does the actual matching attempt. takes same parameters as equal_to_pattern, just with changed roles.
+			//does the actual matching attempt. takes same parameters as equal_to_pattern, just with output roles.
 			//to not cause any confusion, the functionality of try_matching() is not implemented in equal_to_pattern()
 			bool try_matching(Basic_Term* other, Basic_Term** other_storage_key);
-		};		
+		};	
 
 
-		class  Pattern {	//used to pattern match stuff that can then be simplified
+		class Pattern_Term
+		{ //like bmath::Term, but holds pattern_variables instead of variables.
+		public:
+			Basic_Term* term_ptr;
+
+			Pattern_Term();
+			void build(std::string name, std::list<Pattern_Variable*>& var_adresses);
+			~Pattern_Term();
+
+			Basic_Term* copy();	//returns copy of this, but the Pattern_Variables are replaced by the terms they matched
+
+			//Pattern_Terms should not be copied nor changed. they only help other terms to change.
+			Pattern_Term(const Pattern_Term& source) = delete;
+			Pattern_Term(Pattern_Term&& source) = delete;
+			Pattern_Term& operator=(const Pattern_Term& source) = delete;
+			Pattern_Term& operator=(Pattern_Term&& source) = delete;
+		};
+
+
+		class  Transformation {	//"template" to transform input to output
 		private:
-
-			class Pattern_Term { //like bmath::Term, but holds pattern_variables instead of variables.
-			public:
-				Basic_Term* term_ptr;
-
-				Pattern_Term();
-				void build(std::string name, std::list<Pattern_Variable*>& var_adresses);
-				~Pattern_Term();
-
-				Basic_Term* copy();
-
-				//patterns should not be copied nor changed. they only help other terms to change.
-				Pattern_Term(const Pattern_Term& source) = delete;
-				Pattern_Term(Pattern_Term&& source) = delete;
-				Pattern_Term& operator=(const Pattern_Term& source) = delete;
-				Pattern_Term& operator=(Pattern_Term&& source) = delete;
-			};
-
-			//private constructor -> only member "static const std::vector<Pattern*> patterns" can be build
-			Pattern(const char * const original_, const char * const changed_);
+			//private constructor -> only member "static const std::vector<Transformation*> transformations" can be build
+			Transformation(std::string input_, std::string output_);
 
 		public:
-			//members:
 			std::list<Pattern_Variable*> var_adresses;
-			Pattern_Term original;	//pattern to be compared to term opject
-			Pattern_Term changed;	//pattern to replace match in term object
+			Pattern_Term input;	//pattern to be compared to term opject
+			Pattern_Term output;	//pattern to replace match in term object
+
+			~Transformation();
 
 			std::string print() const;	//debugging
 
 			//only instances of pattern
-			static const std::vector<Pattern*> patterns;
+			static const std::vector<Transformation*> transformations;
+		};
+
+		class Pattern
+		{
+		public:
+			std::list<Pattern_Variable*> var_adresses;
+			Pattern_Term term;
+
+			Pattern(std::string name_);
+			~Pattern();
+
+			std::string print() const;	//debugging
 		};
 
 	} //namespace intern

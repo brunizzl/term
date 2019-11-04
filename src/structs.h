@@ -10,7 +10,7 @@ namespace bmath {
 
 		//specifies actual type of Basic_Term 
 		//types ordered after their uniqueness (more unique is smaller)
-		//this order is used to sort in an order that makes it easyer to match patterns
+		//this order is used to sort in an order that makes it easyer to match transformations
 		enum class Type 
 		{
 			//most unique	(likely different op_type and op_type is always given)

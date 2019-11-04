@@ -14,7 +14,7 @@ namespace bmath {
 	namespace intern {
 
 		class Pattern_Variable;
-		class Pattern;
+		class Transformation;
 
 		class Basic_Term
 		{
@@ -70,7 +70,7 @@ namespace bmath {
 			virtual bool operator==(const Basic_Term& other) const = 0;
 			bool operator!=(const Basic_Term& other) const;
 
-			//these last functions all utilize for_each() -
+			//these last functions utilize for_each() -
 			//to circumvent declaring each of them as virtual anf forcing to overload and implement each function in each term.
 
 			//needs to be run before == makes sense to be used (sorts sum and product lists)
@@ -89,9 +89,9 @@ namespace bmath {
 		intern::Basic_Term* term_ptr;		//start of actual term tree
 
 		//compares pattern_original to term. 
-		//if match was found, it is replaced by pattern.changed and (true) is returned.
+		//if match was found, it is replaced by pattern.output and (true) is returned.
 		//if no match is found, (false) is returned.
-		bool match_and_transform(intern::Pattern& pattern);
+		bool match_and_transform(intern::Transformation& pattern);
 
 		void combine_values();
 		

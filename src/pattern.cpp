@@ -163,7 +163,7 @@ void Pattern_Term::build(std::string name, std::list<Pattern_Variable*>& var_adr
 
 Pattern_Term::~Pattern_Term()
 {
-	//due to the fact, that Pattern_Term break the Tree structure (one pattern_variable might be owned by multiple parents) -
+	//due to the fact, that Pattern_Term breaks the Tree structure (one pattern_variable might be owned by multiple parents) -
 	//we can not use the destructor of basic_term
 	std::list<Basic_Term*> subterms;
 	this->term_ptr->for_each([&](Basic_Term* this_ptr, Type this_type) { 

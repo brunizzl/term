@@ -12,7 +12,7 @@ using namespace bmath::intern;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Pattern_Variable::Pattern_Variable(std::string_view name_)
-	:name(name_), matched_term(nullptr), responsible_parent(nullptr), matched_storage_key(nullptr)
+	:name(name_), matched_term(nullptr), matched_storage_key(nullptr)
 {
 }
 
@@ -79,7 +79,7 @@ Basic_Term** Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Patte
 	return nullptr;
 }
 
-bool bmath::intern::Pattern_Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
+bool bmath::intern::Pattern_Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
 {
 	assert(false);	//u should call try_matching, because otherwise u did something wrong.
 	return false;
@@ -125,11 +125,10 @@ Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term() const
 	}
 }
 
-bool bmath::intern::Pattern_Variable::try_matching(Basic_Term* other, Basic_Term* patterns_parent, Basic_Term** other_storage_key)
+bool bmath::intern::Pattern_Variable::try_matching(Basic_Term* other, Basic_Term** other_storage_key)
 {
 	if (this->matched_term == nullptr) {
 		this->matched_term = other;
-		this->responsible_parent = patterns_parent;
 		return true;
 	}
 	else {

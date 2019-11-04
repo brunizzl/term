@@ -337,7 +337,6 @@ void bmath::intern::reset_all_pattern_vars(std::list<Pattern_Variable*>& var_adr
 {
 	for (auto pattern_var : var_adresses) {
 		pattern_var->matched_term = nullptr;
-		pattern_var->responsible_parent = nullptr;
 	}
 }
 
@@ -370,7 +369,7 @@ std::optional<std::list<Basic_Term*>> bmath::intern::operands_contain_pattern(st
 
 		bool found_match = false;
 		for (auto test_it = test_ops.begin(); test_it != test_ops.end(); ++test_it) {
-			if ((*test_it)->equal_to_pattern(*pattern_it, pattern, &*test_it)) {
+			if ((*test_it)->equal_to_pattern(*pattern_it, &*test_it)) {
 				matched_operands.splice(matched_operands.end(), test_ops, test_it);
 				found_match = true;
 				break;

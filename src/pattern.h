@@ -18,9 +18,6 @@ namespace bmath {
 		{
 		private:
 			Basic_Term* matched_term;
-			//parent under whitch the match was found -
-			//and that is responsible for resetting the member matched_term, if overall no match was made
-			Basic_Term* responsible_parent;	
 			//actual storage position of matched_term (place in parent, where matched_term is stored)
 			Basic_Term** matched_storage_key;
 
@@ -41,7 +38,7 @@ namespace bmath {
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
 			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
-			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
+			bool equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 
@@ -50,7 +47,7 @@ namespace bmath {
 
 			//does the actual matching attempt. takes same parameters as equal_to_pattern, just with changed roles.
 			//to not cause any confusion, the functionality of try_matching() is not implemented in equal_to_pattern()
-			bool try_matching(Basic_Term* other, Basic_Term* patterns_parent, Basic_Term** other_storage_key);
+			bool try_matching(Basic_Term* other, Basic_Term** other_storage_key);
 		};		
 
 

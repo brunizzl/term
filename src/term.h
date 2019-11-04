@@ -61,11 +61,8 @@ namespace bmath {
 
 			//called by match_intern to test if this is equal to pattern.
 			//only differs from operator== in its ability to modify the matched pattern_variables
-			//patterns_parent is the term holding pattern, used to mark whitch term is responsible for matching.
-			//(used to set member responsible_parent in pattern_variable if a match was found)
-			//(if equal_to_pattern() descends one layer, pattern will become patterns_parent)
 			//storage_key is pointer to the space in the term owning this, that holds the pointer to this (as in the function above)
-			virtual bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) = 0;
+			virtual bool equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key) = 0;
 
 			//works as expected only on sorted terms
 			virtual bool operator<(const Basic_Term& other) const = 0;

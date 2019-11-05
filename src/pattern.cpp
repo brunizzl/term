@@ -26,6 +26,10 @@ void Pattern_Variable::to_str(std::string& str, int caller_operator_precedence) 
 {
 	str.push_back('{');
 	str.append(this->name);
+	if (this->type_restriction != Type::undefined) {
+		str.push_back('!');
+		str.append(name_of(this->type_restriction));
+	}
 	if (this->matched_term != nullptr) {
 		str.push_back(',');
 		this->matched_term->to_str(str, operator_precedence(Type::pattern_variable));
@@ -54,19 +58,19 @@ void bmath::intern::Pattern_Variable::combine_layers(Basic_Term*& storage_key)
 
 Vals_Combined Pattern_Variable::combine_values()
 {
-	assert(false); //transformations can not be evaluated
+	assert(false && "file: pattern.cpp   function: Pattern_Variable::combine_values"); //transformations can not be evaluated
 	return { false, 0 };
 }
 
 std::complex<double> Pattern_Variable::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
-	assert(false); //transformations can not be evaluated
+	assert(false && "file: pattern.cpp   function: Pattern_Variable::evaluate"); //transformations can not be evaluated
 	return 0;
 }
 
 void Pattern_Variable::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
-	assert(false);	//patternvariables should never become values. then the pattern would change.
+	assert(false && "file: pattern.cpp   function: Pattern_Variable::search_and_replace");	//patternvariables should never become values. then the pattern would change.
 }
 
 void bmath::intern::Pattern_Variable::for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func)
@@ -76,19 +80,27 @@ void bmath::intern::Pattern_Variable::for_each(std::function<void(Basic_Term* th
 
 Basic_Term** Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
-	assert(false);	//pattern never tries to match to pattern u dummie
+	assert(false && "file: pattern.cpp   function: Pattern_Variable::match_intern");	//pattern never tries to match to pattern u dummie
 	return nullptr;
 }
 
 bool bmath::intern::Pattern_Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
 {
-	assert(false);	//u should call try_matching, because otherwise u did something wrong.
+	assert(false && "file: pattern.cpp   function: Pattern_Variable::equal_to_pattern");	//u should call try_matching, because otherwise u did something wrong.
 	return false;
 }
 
 bool Pattern_Variable::operator<(const Basic_Term& other) const
 {
-	if (Type::pattern_variable != type_of(other)) {
+	if (this->type_restriction != Type::undefined) {
+		if (this->type_restriction != type_of(other)) {
+			return this->type_restriction < type_of(other);
+		}
+		else {
+			return false;
+		}
+	}
+	else if (Type::pattern_variable != type_of(other)) {
 		return Type::pattern_variable < type_of(other);
 	}
 	else {
@@ -109,14 +121,19 @@ bool Pattern_Variable::operator==(const Basic_Term& other) const
 {
 	if (type_of(other) == Type::pattern_variable) {
 		const Pattern_Variable* other_var = static_cast<const Pattern_Variable*>(&other);
-		return this->name == other_var->name;
+		if (this->type_restriction != other_var->type_restriction) {
+			return false;
+		}
+		else {
+			return this->name == other_var->name;
+		}
 	}
 	return false;
 }
 
 Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term() const
 {
-	assert(this->matched_term != nullptr);
+	assert(this->matched_term != nullptr && "file: pattern.cpp   function: Pattern_Variable::copy_matched_term");
 	if (this->matched_storage_key != nullptr) {
 		*(this->matched_storage_key) = nullptr;
 		return this->matched_term;
@@ -154,7 +171,7 @@ Pattern_Term::Pattern_Term()
 
 void Pattern_Term::build(std::string name, std::list<Pattern_Variable*>& var_adresses)
 {
-	assert(term_ptr == nullptr);
+	assert(term_ptr == nullptr && "file: pattern.cpp   function: Pattern_Term::build");
 	preprocess_str(name);
 	this->term_ptr = build_pattern_subterm({ name.data(), name.length() }, var_adresses);
 	this->term_ptr->combine_layers(this->term_ptr);
@@ -166,19 +183,23 @@ Pattern_Term::~Pattern_Term()
 	//due to the fact, that Pattern_Term breaks the Tree structure (one pattern_variable might be owned by multiple parents) -
 	//we can not use the destructor of basic_term
 	std::list<Basic_Term*> subterms;
-	this->term_ptr->for_each([&](Basic_Term* this_ptr, Type this_type) { 
+	this->term_ptr->for_each([&subterms](Basic_Term* this_ptr, Type this_type) { 
 		if (this_type != Type::pattern_variable) subterms.push_back(this_ptr);	//pattern_variables are not deleted by this destructor
 
 		switch (this_type) {
 		case Type::par_operator:
 			static_cast<Par_Operator*>(this_ptr)->argument = nullptr;
+			break;
 		case Type::exponentiation:
 			static_cast<Exponentiation*>(this_ptr)->base = nullptr;
 			static_cast<Exponentiation*>(this_ptr)->expo = nullptr;
+			break;
 		case Type::sum:
 			static_cast<Sum*>(this_ptr)->operands.clear();
+			break;
 		case Type::product:
 			static_cast<Product*>(this_ptr)->operands.clear();
+			break;
 		}
 	});
 	for (auto subterm : subterms) {
@@ -222,6 +243,8 @@ std::string Transformation::print() const
 
 //rules to simplify terms (left string -> right string)
 const std::vector<Transformation*> Transformation::transformations = {
+	new Transformation("a*a!variable", "a"),
+
 	new Transformation("ln(a)+ln(b)", "ln(a*b)"),
 	new Transformation("ln(a)-ln(b)", "ln(a/b)"),
 	new Transformation("sin(x)^2+cos(x)^2", "1"),

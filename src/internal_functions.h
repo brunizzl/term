@@ -4,6 +4,7 @@
 #include <string>
 #include <array>
 #include <optional>
+#include <string_view>
 
 #include "structs.h"
 #include "term.h"
@@ -66,6 +67,9 @@ namespace bmath {
 		//returns {} if no match was found, returns matched operands of test_ops if match was found
 		std::optional<std::list<Basic_Term*>> operands_contain_pattern(std::list<Basic_Term*>& test_ops, std::list<Basic_Term*>& pattern_ops, Basic_Term* pattern);
 
+		//returns, wether test has no imaginary part and whole positive number as real part
+		bool is_natural(std::complex<double> test);
+
 		//translates val to a string
 		//parent_operator_precedence is needed to determine, wheather to put parenteses around the string
 		//if inverse == true, -(val) will be printed
@@ -84,7 +88,7 @@ namespace bmath {
 		constexpr std::complex<double> value_of(Math_Constant constant);
 
 		//returns type written out as string_view
-		constexpr std::string_view name_of(Type type);
+		std::string_view name_of(Type type);
 
 		//functions used to complete template arguments of Variadic_Operator<> and to use as (*func) in struct Value_Manipulator
 		inline void add(std::complex<double>* const first, std::complex<double> second) { *first += second; }

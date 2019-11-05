@@ -63,9 +63,9 @@ void bmath::intern::preprocess_str(std::string& str)
 	if (par_diff != 0 || brac_diff != 0) {
 		throw XTermConstructionError("the parentheses or brackets of string do not obey the syntax rules");
 	}
-	const char* const allowed_chars = "1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()$_";	//reserving '#', '§', and braces for internal stuff
+	const char* const allowed_chars = "1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()!_";	//reserving '#', '$', and braces for internal stuff
 	if (str.find_first_not_of(allowed_chars) != std::string::npos) {
-		throw XTermConstructionError("string contains characters other than: 1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()$_");
+		throw XTermConstructionError("string contains characters other than: 1234567890.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^[]()!_");
 	}
 }
 
@@ -75,7 +75,7 @@ std::size_t bmath::intern::find_open_par(std::size_t clsd_par, const std::string
 	std::size_t nxt_par = clsd_par;
 	while (true) {
 		nxt_par = name.find_last_of("()", nxt_par - 1);
-		assert(nxt_par != std::string::npos);	//function preprocess_str() already guarantees valid parentheses.
+		assert(nxt_par != std::string::npos && "file: internal_functions.cpp   function: find_open_par");	//function preprocess_str() already guarantees valid parentheses.
 
 		switch (name[nxt_par]) {
 		case ')':
@@ -163,7 +163,7 @@ Basic_Term* bmath::intern::build_subterm(std::string_view subterm, Value_Manipul
 	if (is_computable(subterm)) {
 		const std::complex<double> result = compute(subterm);
 		if (manipulator.key != nullptr) {
-			assert(manipulator.func != nullptr);
+			assert(manipulator.func != nullptr && "file: internal_functions.cpp   function: build_subterm");
 			manipulator.func(manipulator.key, result);
 			return nullptr;
 		}
@@ -202,7 +202,7 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm, std::
 	if (is_computable(subterm)) {
 		const std::complex<double> result = compute(subterm);
 		if (manipulator.key != nullptr) {
-			assert(manipulator.func != nullptr);
+			assert(manipulator.func != nullptr && "file: internal_functions.cpp   function: build_pattern_subterm");
 			manipulator.func(manipulator.key, result);
 			return nullptr;
 		}
@@ -228,17 +228,17 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm, std::
 		case Type::variable:
 			{
 				Type restriction = Type::undefined;
-				const std::size_t dollar = subterm.find_first_of('$');
-				if (dollar != std::string::npos) {
-					//subterm is expected to be of format "name$type". type_name only views "type"
-					std::string_view type_name(subterm.data() + dollar + 1, subterm.size() - dollar - 1);
+				const std::size_t bang = subterm.find_first_of('!');
+				if (bang != std::string::npos) {
+					//subterm is expected to be of format "name!type". type_name only views "type"
+					std::string_view type_name(subterm.data() + bang + 1, subterm.size() - bang - 1);
 					for (Type type : all_types) {
 						if (name_of(type) == type_name) {
 							restriction = type;
 							break;
 						}
 					}
-					subterm.remove_suffix(subterm.size() - dollar);	//"name$type -> "name"
+					subterm.remove_suffix(subterm.size() - bang);	//"name!type -> "name"
 				}
 				for (auto& variable : variables) {
 					if (variable->name == subterm) {
@@ -370,8 +370,10 @@ std::list<Basic_Term*>::iterator bmath::intern::find_first_of(std::list<Basic_Te
 
 std::optional<std::list<Basic_Term*>> bmath::intern::operands_contain_pattern(std::list<Basic_Term*>& test_ops, std::list<Basic_Term*>& pattern_ops, Basic_Term* pattern)
 {
-	assert(std::is_sorted(test_ops.begin(), test_ops.end(), [](Basic_Term* a, Basic_Term* b) { return *a < *b; }));
-	assert(std::is_sorted(pattern_ops.begin(), pattern_ops.end(), [](Basic_Term* a, Basic_Term* b) {return *a < *b; }));
+	assert(std::is_sorted(test_ops.begin(), test_ops.end(), [](Basic_Term* a, Basic_Term* b) { return *a < *b; }) 
+		&& "file: internal_functions.cpp   function: operands_contain_pattern");
+	assert(std::is_sorted(pattern_ops.begin(), pattern_ops.end(), [](Basic_Term* a, Basic_Term* b) {return *a < *b; })
+		&& "file: internal_functions.cpp   function: operands_contain_pattern");
 
 	std::list<Basic_Term*> matched_operands;	//to not be matched multiple times, already matched operands need to be moved here.
 	bool already_matching_pattern_vars = false;	
@@ -400,6 +402,12 @@ std::optional<std::list<Basic_Term*>> bmath::intern::operands_contain_pattern(st
 		}
 	}
 	return std::move(matched_operands);
+}
+
+bool bmath::intern::is_natural(std::complex<double> test)
+{
+	const double real = test.real();
+	return (real >= 0) && (real - static_cast<int>(real) == 0) && (test.imag() == 0);
 }
 
 namespace bmath::intern {
@@ -486,7 +494,7 @@ constexpr std::string_view bmath::intern::name_of(Par_Op_Type op_type)
 	case Par_Op_Type::re:		return { "re(" };
 	case Par_Op_Type::im:		return { "im(" };
 	}
-	assert(false);
+	assert(false && "file: internal_functions.cpp   function: name_of(op_type)");
 	return {};
 }
 
@@ -514,7 +522,7 @@ constexpr std::complex<double> bmath::intern::value_of(std::complex<double> argu
 	case Par_Op_Type::re:		return std::real(argument);
 	case Par_Op_Type::im:		return std::imag(argument);
 	}
-	assert(false);
+	assert(false && "file: internal_functions.cpp   function: value_of(arg, op_type)");
 	return {};
 }
 
@@ -525,7 +533,7 @@ constexpr std::string_view bmath::intern::name_of(Math_Constant constant)
 	case Math_Constant::e:	return { "e" };
 	case Math_Constant::pi:	return { "pi" };
 	}
-	assert(false);
+	assert(false && "file: internal_functions.cpp   function: name_of(constant)");
 	return {};
 }
 
@@ -536,11 +544,11 @@ constexpr std::complex<double> bmath::intern::value_of(Math_Constant constant)
 	case Math_Constant::e:	return { 2.718281828459045, 0 };
 	case Math_Constant::pi:	return { 3.141592653589793, 0 };
 	}
-	assert(false);
+	assert(false && "file: internal_functions.cpp   function: value_of(constant)");
 	return {};
 }
 
-constexpr std::string_view bmath::intern::name_of(Type type)
+std::string_view bmath::intern::name_of(Type type)
 {
 	switch (type) {
 	case Type::par_operator:		return { "par_operator" };
@@ -552,7 +560,7 @@ constexpr std::string_view bmath::intern::name_of(Type type)
 	case Type::pattern_variable:	return { "pattern_variable" };
 	case Type::undefined:			return { "undefined" };
 	}
-	assert(false);
+	assert(false && "file: internal_functions.cpp   function: name_of(type)");
 	return {};
 }
 

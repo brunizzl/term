@@ -92,15 +92,7 @@ bool bmath::intern::Pattern_Variable::equal_to_pattern(Basic_Term* pattern, Basi
 
 bool Pattern_Variable::operator<(const Basic_Term& other) const
 {
-	if (this->type_restriction != Type::undefined) {
-		if (this->type_restriction != type_of(other)) {
-			return this->type_restriction < type_of(other);
-		}
-		else {
-			return false;
-		}
-	}
-	else if (Type::pattern_variable != type_of(other)) {
+	if (Type::pattern_variable != type_of(other)) {
 		return Type::pattern_variable < type_of(other);
 	}
 	else {
@@ -109,7 +101,13 @@ bool Pattern_Variable::operator<(const Basic_Term& other) const
 			return *(this->matched_term) < *(other_var->matched_term);
 		}
 		else if (!this->matched_term && !other_var->matched_term) {
-			return this->name < other_var->name;
+			if ((this->type_restriction != Type::undefined || other_var->type_restriction != Type::undefined) 
+				&& this->type_restriction != other_var->type_restriction) {
+				return this->type_restriction < other_var->type_restriction;
+			}
+			else {
+				return this->name < other_var->name;
+			}
 		}
 		else {
 			return this->matched_term > other_var->matched_term;	//pattern_variables with match are sorted before ones without
@@ -243,8 +241,6 @@ std::string Transformation::print() const
 
 //rules to simplify terms (left string -> right string)
 const std::vector<Transformation*> Transformation::transformations = {
-	new Transformation("a*a!variable", "a"),
-
 	new Transformation("ln(a)+ln(b)", "ln(a*b)"),
 	new Transformation("ln(a)-ln(b)", "ln(a/b)"),
 	new Transformation("sin(x)^2+cos(x)^2", "1"),
@@ -254,6 +250,7 @@ const std::vector<Transformation*> Transformation::transformations = {
 	new Transformation("b*a+b*c", "b*(a+c)"),
 	new Transformation("a*b+a", "a*(b+1)"),
 	new Transformation("a+a", "a*2"),
+
 	new Transformation("a^b*a^c", "a^(b+c)"),
 	new Transformation("a^b*a", "a^(b+1)"),
 	new Transformation("a*a", "a^2"),

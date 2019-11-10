@@ -100,10 +100,7 @@ bool bmath::intern::Value::equal_to_pattern(Basic_Term* pattern, Basic_Term** st
 
 bool Value::operator<(const Basic_Term& other) const
 {
-	if (type_of(other) == Type::pattern_variable) {
-		return !(other < *this);	//as this type is not pattern_varable, other and this can not be equal.
-	}
-	else if (Type::value != type_of(other)) {
+	if (Type::value != type_of(other)) {
 		return Type::value < type_of(other);
 	}
 	else {
@@ -237,10 +234,7 @@ bool bmath::intern::Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term**
 
 bool Variable::operator<(const Basic_Term& other) const
 {
-	if (type_of(other) == Type::pattern_variable) {
-		return !(other < *this);	//as this type is not pattern_varable, other and this can not be equal.
-	}
-	else if (Type::variable != type_of(other)) {
+	if (Type::variable != type_of(other)) {
 		return Type::variable < type_of(other);
 	}
 	else {

@@ -465,10 +465,7 @@ bool bmath::intern::Exponentiation::equal_to_pattern(Basic_Term* pattern, Basic_
 
 bool Exponentiation::operator<(const Basic_Term& other) const
 {
-	if (type_of(other) == Type::pattern_variable) {
-		return !(other < *this);	//as this type is not pattern_varable, other and this can not be equal.
-	}
-	else if (Type::exponentiation != type_of(other)) {
+	if (Type::exponentiation != type_of(other)) {
 		return Type::exponentiation < type_of(other);
 	}
 	else {
@@ -621,10 +618,7 @@ bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Te
 
 bool Par_Operator::operator<(const Basic_Term& other) const
 {
-	if (type_of(other) == Type::pattern_variable) {
-		return !(other < *this);	//as this type is not pattern_varable, other and this can not be equal.
-	}
-	else if (Type::par_operator != type_of(other)) {
+	if (Type::par_operator != type_of(other)) {
 		return Type::par_operator < type_of(other);
 	}
 	else {

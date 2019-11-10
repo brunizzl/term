@@ -328,10 +328,7 @@ namespace bmath {
 		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline bool Variadic_Operator<operate, this_type, neutral_val>::operator<(const Basic_Term& other) const
 		{
-			if (type_of(other) == Type::pattern_variable) {
-				return !(other < *this);	//as this type is not pattern_varable, other and this can not be equal.
-			}
-			else if (this_type != type_of(other)) {
+			if (this_type != type_of(other)) {
 				return this_type < type_of(other);
 			}
 			else {

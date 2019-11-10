@@ -75,7 +75,7 @@ std::size_t bmath::intern::find_open_par(std::size_t clsd_par, const std::string
 	std::size_t nxt_par = clsd_par;
 	while (true) {
 		nxt_par = name.find_last_of("()", nxt_par - 1);
-		assert(nxt_par != std::string::npos && "file: internal_functions.cpp   function: find_open_par");	//function preprocess_str() already guarantees valid parentheses.
+		assert(nxt_par != std::string::npos);	//function preprocess_str() already guarantees valid parentheses.
 
 		switch (name[nxt_par]) {
 		case ')':
@@ -163,7 +163,7 @@ Basic_Term* bmath::intern::build_subterm(std::string_view subterm, Value_Manipul
 	if (is_computable(subterm)) {
 		const std::complex<double> result = compute(subterm);
 		if (manipulator.key != nullptr) {
-			assert(manipulator.func != nullptr && "file: internal_functions.cpp   function: build_subterm");
+			assert(manipulator.func != nullptr);
 			manipulator.func(manipulator.key, result);
 			return nullptr;
 		}
@@ -202,7 +202,7 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm, std::
 	if (is_computable(subterm)) {
 		const std::complex<double> result = compute(subterm);
 		if (manipulator.key != nullptr) {
-			assert(manipulator.func != nullptr && "file: internal_functions.cpp   function: build_pattern_subterm");
+			assert(manipulator.func != nullptr);
 			manipulator.func(manipulator.key, result);
 			return nullptr;
 		}
@@ -367,18 +367,19 @@ std::list<Basic_Term*>::iterator bmath::intern::find_first_of(std::list<Basic_Te
 	}
 	return search.end();
 }
-
+#include <thread>
 std::optional<std::list<Basic_Term*>> bmath::intern::operands_contain_pattern(std::list<Basic_Term*>& test_ops, std::list<Basic_Term*>& pattern_ops, Basic_Term* pattern)
 {
-	assert(std::is_sorted(test_ops.begin(), test_ops.end(), [](Basic_Term* a, Basic_Term* b) { return *a < *b; }) 
-		&& "file: internal_functions.cpp   function: operands_contain_pattern");
-	assert(std::is_sorted(pattern_ops.begin(), pattern_ops.end(), [](Basic_Term* a, Basic_Term* b) {return *a < *b; })
-		&& "file: internal_functions.cpp   function: operands_contain_pattern");
+	assert(std::is_sorted(test_ops.begin(), test_ops.end(), [](Basic_Term* a, Basic_Term* b) { return *a < *b; }));
+	pattern_ops.sort([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; }); //due to the possibility of pattern variables beeing matched by other functions called by match_intern, this step is neccessary.
 
 	std::list<Basic_Term*> matched_operands;	//to not be matched multiple times, already matched operands need to be moved here.
+	std::vector<std::list<Basic_Term*>::iterator> match_positions;	//remembers position of each matched_operand
+	match_positions.reserve(pattern_ops.size());
 	bool already_matching_pattern_vars = false;	
+	std::list<Basic_Term*>::iterator next_search_begin = test_ops.begin();	//no operand before this will be checked by current pattern_it
 
-	for (auto pattern_it = pattern_ops.begin(); pattern_it != pattern_ops.end(); ++pattern_it) {
+	for (auto pattern_it = pattern_ops.begin(); pattern_it != pattern_ops.end();) {
 
 		//once we start to compare to pattern_variables, we need to make sure, already matched ones are compared first. (hence we sort)
 		if (!already_matching_pattern_vars && type_of(*pattern_it) == Type::pattern_variable) {
@@ -388,17 +389,39 @@ std::optional<std::list<Basic_Term*>> bmath::intern::operands_contain_pattern(st
 		}
 
 		bool found_match = false;
-		for (auto test_it = test_ops.begin(); test_it != test_ops.end(); ++test_it) {
-			if ((*test_it)->equal_to_pattern(*pattern_it, &*test_it)) {
+		for (auto test_it = next_search_begin; test_it != test_ops.end(); ++test_it) {
+			if ((*test_it)->equal_to_pattern(*pattern_it, pattern, &*test_it)) {
+				match_positions.emplace_back(std::next(test_it));
 				matched_operands.splice(matched_operands.end(), test_ops, test_it);
 				found_match = true;
 				break;
 			}
+			else {
+				(*pattern_it)->reset_own_matches(pattern);
+			}
 		}
-		if (!found_match) {	//cleanup
-			test_ops.splice(test_ops.end(), matched_operands);
-			test_ops.sort([](Basic_Term* a, Basic_Term* b) { return *a < *b; });
-			return {};
+		if (!found_match) {
+			if (matched_operands.size()) {	//going back one operand in pattern and try to rematch
+				test_ops.splice(match_positions.back(), matched_operands, std::prev(matched_operands.end()));
+				next_search_begin = match_positions.back();
+				match_positions.pop_back();
+				--pattern_it;
+				--pattern;	//pattern is exclusively used to mark what exactly matched the pattern_variables. to distinguish different pattern_ops, we need to give every match a different "parent"
+				(*pattern_it)->reset_own_matches(pattern);
+				if (already_matching_pattern_vars && type_of(*pattern_it) != Type::pattern_variable) {
+					already_matching_pattern_vars = false;
+				}
+			}
+			else {	//cleanup
+				test_ops.splice(test_ops.end(), matched_operands);
+				test_ops.sort([](Basic_Term* a, Basic_Term* b) { return *a < *b; });
+				return {};
+			}
+		}
+		else {
+			++pattern_it;
+			++pattern;
+			next_search_begin = test_ops.begin();
 		}
 	}
 	return std::move(matched_operands);
@@ -494,7 +517,7 @@ constexpr std::string_view bmath::intern::name_of(Par_Op_Type op_type)
 	case Par_Op_Type::re:		return { "re(" };
 	case Par_Op_Type::im:		return { "im(" };
 	}
-	assert(false && "file: internal_functions.cpp   function: name_of(op_type)");
+	assert(false);
 	return {};
 }
 
@@ -522,7 +545,7 @@ constexpr std::complex<double> bmath::intern::value_of(std::complex<double> argu
 	case Par_Op_Type::re:		return std::real(argument);
 	case Par_Op_Type::im:		return std::imag(argument);
 	}
-	assert(false && "file: internal_functions.cpp   function: value_of(arg, op_type)");
+	assert(false);
 	return {};
 }
 
@@ -533,7 +556,7 @@ constexpr std::string_view bmath::intern::name_of(Math_Constant constant)
 	case Math_Constant::e:	return { "e" };
 	case Math_Constant::pi:	return { "pi" };
 	}
-	assert(false && "file: internal_functions.cpp   function: name_of(constant)");
+	assert(false);
 	return {};
 }
 
@@ -544,7 +567,7 @@ constexpr std::complex<double> bmath::intern::value_of(Math_Constant constant)
 	case Math_Constant::e:	return { 2.718281828459045, 0 };
 	case Math_Constant::pi:	return { 3.141592653589793, 0 };
 	}
-	assert(false && "file: internal_functions.cpp   function: value_of(constant)");
+	assert(false);
 	return {};
 }
 
@@ -560,7 +583,7 @@ std::string_view bmath::intern::name_of(Type type)
 	case Type::pattern_variable:	return { "pattern_variable" };
 	case Type::undefined:			return { "undefined" };
 	}
-	assert(false && "file: internal_functions.cpp   function: name_of(type)");
+	assert(false);
 	return {};
 }
 

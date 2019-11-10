@@ -13,7 +13,7 @@ using namespace bmath::intern;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Pattern_Variable::Pattern_Variable(std::string_view name_, Type type_)
-	:name(name_), matched_term(nullptr), matched_storage_key(nullptr), type_restriction(type_)
+	:name(name_), matched_term(nullptr), responsible_parent(nullptr), matched_storage_key(nullptr), type_restriction(type_)
 {
 }
 
@@ -58,19 +58,19 @@ void bmath::intern::Pattern_Variable::combine_layers(Basic_Term*& storage_key)
 
 Vals_Combined Pattern_Variable::combine_values()
 {
-	assert(false && "file: pattern.cpp   function: Pattern_Variable::combine_values"); //transformations can not be evaluated
+	assert(false); //transformations can not be evaluated
 	return { false, 0 };
 }
 
 std::complex<double> Pattern_Variable::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
-	assert(false && "file: pattern.cpp   function: Pattern_Variable::evaluate"); //transformations can not be evaluated
+	assert(false); //transformations can not be evaluated
 	return 0;
 }
 
 void Pattern_Variable::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
-	assert(false && "file: pattern.cpp   function: Pattern_Variable::search_and_replace");	//patternvariables should never become values. then the pattern would change.
+	assert(false);	//patternvariables should never become values. then the pattern would change.
 }
 
 void bmath::intern::Pattern_Variable::for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func)
@@ -80,14 +80,23 @@ void bmath::intern::Pattern_Variable::for_each(std::function<void(Basic_Term* th
 
 Basic_Term** Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
 {
-	assert(false && "file: pattern.cpp   function: Pattern_Variable::match_intern");	//pattern never tries to match to pattern u dummie
+	assert(false);	//pattern never tries to match to pattern u dummie
 	return nullptr;
 }
 
-bool bmath::intern::Pattern_Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+bool bmath::intern::Pattern_Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
 {
-	assert(false && "file: pattern.cpp   function: Pattern_Variable::equal_to_pattern");	//u should call try_matching, because otherwise u did something wrong.
+	assert(false);	//u should call try_matching, because otherwise u did something wrong.
 	return false;
+}
+
+void bmath::intern::Pattern_Variable::reset_own_matches(Basic_Term* parent)
+{
+	if (parent == this->responsible_parent) {
+		this->matched_term = nullptr;
+		this->responsible_parent = nullptr;
+		this->matched_storage_key = nullptr;
+	}
 }
 
 bool Pattern_Variable::operator<(const Basic_Term& other) const
@@ -131,7 +140,7 @@ bool Pattern_Variable::operator==(const Basic_Term& other) const
 
 Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term() const
 {
-	assert(this->matched_term != nullptr && "file: pattern.cpp   function: Pattern_Variable::copy_matched_term");
+	assert(this->matched_term != nullptr);
 	if (this->matched_storage_key != nullptr) {
 		*(this->matched_storage_key) = nullptr;
 		return this->matched_term;
@@ -141,10 +150,12 @@ Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term() const
 	}
 }
 
-bool bmath::intern::Pattern_Variable::try_matching(Basic_Term* other, Basic_Term** other_storage_key)
+bool bmath::intern::Pattern_Variable::try_matching(Basic_Term* other, Basic_Term* patterns_parent, Basic_Term** other_storage_key)
 {
 	if (this->matched_term == nullptr) {
 		this->matched_term = other;
+		this->responsible_parent = patterns_parent;
+		this->matched_storage_key = other_storage_key;
 		return true;
 	}
 	else {
@@ -154,6 +165,11 @@ bool bmath::intern::Pattern_Variable::try_matching(Basic_Term* other, Basic_Term
 		}
 		return false;
 	}
+}
+
+bool bmath::intern::Pattern_Variable::is_unmatched() const
+{
+	return matched_term == nullptr;
 }
 
 
@@ -169,7 +185,7 @@ Pattern_Term::Pattern_Term()
 
 void Pattern_Term::build(std::string name, std::list<Pattern_Variable*>& var_adresses)
 {
-	assert(term_ptr == nullptr && "file: pattern.cpp   function: Pattern_Term::build");
+	assert(term_ptr == nullptr);
 	preprocess_str(name);
 	this->term_ptr = build_pattern_subterm({ name.data(), name.length() }, var_adresses);
 	this->term_ptr->combine_layers(this->term_ptr);
@@ -249,6 +265,7 @@ const std::vector<Transformation*> Transformation::transformations = {
 	new Transformation("a*b+a*c", "a*(b+c)"),
 	new Transformation("b*a+b*c", "b*(a+c)"),
 	new Transformation("a*b+a", "a*(b+1)"),
+	new Transformation("a*b+b", "b*(a+1)"),
 	new Transformation("a+a", "a*2"),
 
 	new Transformation("a^b*a^c", "a^(b+c)"),

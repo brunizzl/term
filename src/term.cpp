@@ -37,20 +37,11 @@ void bmath::intern::Basic_Term::sort()
 std::list<Basic_Term*> bmath::intern::Basic_Term::list_subterms(Type requested_type)
 {
 	std::list<Basic_Term*> erg_list;
-
-	struct
-	{
-		std::list<Basic_Term*>& list;
-		Type search_type;
-		void operator()(Basic_Term* this_ptr, Type this_type)
-		{
-			if (this_type == search_type) {
-				list.push_back(this_ptr);
-			}
+	this->for_each([&erg_list, requested_type](Basic_Term* this_ptr, Type this_type) {
+		if (this_type == requested_type) {
+			erg_list.push_back(this_ptr);
 		}
-	} term_collector = { erg_list, requested_type };
-
-	this->for_each(term_collector);
+	});
 	return erg_list;
 }
 
@@ -124,19 +115,12 @@ std::string bmath::Term::to_tree(std::size_t offset) const
 std::list<std::string> bmath::Term::get_var_names() const
 {
 	std::list<std::string> names;
-	struct
-	{
-		std::list<std::string>& list;
-		void operator()(Basic_Term* this_ptr, Type this_type)
-		{
-			if (this_type == Type::variable) {
-				const Variable* const var_ptr = static_cast<const Variable*>(this_ptr);
-				list.push_back(var_ptr->name);
-			}
+	this->term_ptr->for_each([&names](Basic_Term* this_ptr, Type this_type) {
+		if (this_type == Type::variable) {
+			const Variable* const var_ptr = static_cast<const Variable*>(this_ptr);
+			names.push_back(var_ptr->name);
 		}
-	} name_collector = { names };
-
-	this->term_ptr->for_each(name_collector);
+	});
 	return names;
 }
 

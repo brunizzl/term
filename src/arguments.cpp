@@ -74,7 +74,7 @@ Basic_Term** Value::match_intern(Basic_Term* pattern, std::list<Pattern_Variable
 {
 	reset_all_pattern_vars(pattern_var_adresses);
 	this->sort();
-	if (this->equal_to_pattern(pattern, storage_key)) {
+	if (this->equal_to_pattern(pattern, nullptr, storage_key)) {
 		return storage_key;
 	}
 	else {
@@ -82,7 +82,7 @@ Basic_Term** Value::match_intern(Basic_Term* pattern, std::list<Pattern_Variable
 	}
 }
 
-bool bmath::intern::Value::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+bool bmath::intern::Value::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
 {
 	const Type pattern_type = type_of(pattern);
 	if (pattern_type == Type::value) {
@@ -91,11 +91,15 @@ bool bmath::intern::Value::equal_to_pattern(Basic_Term* pattern, Basic_Term** st
 	}
 	else if (pattern_type == Type::pattern_variable) {
 		Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
-		return pattern_var->try_matching(this, storage_key);
+		return pattern_var->try_matching(this, patterns_parent, storage_key);
 	}
 	else {
 		return false;
 	}
+}
+
+void bmath::intern::Value::reset_own_matches(Basic_Term* parent)
+{
 }
 
 bool Value::operator<(const Basic_Term& other) const
@@ -208,7 +212,7 @@ Basic_Term** Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Varia
 {
 	reset_all_pattern_vars(pattern_var_adresses);
 	this->sort();
-	if (this->equal_to_pattern(pattern, storage_key )) {
+	if (this->equal_to_pattern(pattern, nullptr, storage_key )) {
 		return storage_key;
 	}
 	else {
@@ -216,7 +220,7 @@ Basic_Term** Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Varia
 	}
 }
 
-bool bmath::intern::Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+bool bmath::intern::Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
 {
 	const Type pattern_type = type_of(pattern);
 	if (pattern_type == Type::variable) {
@@ -225,11 +229,16 @@ bool bmath::intern::Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term**
 	}
 	else if (pattern_type == Type::pattern_variable) {
 		Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
-		return pattern_var->try_matching(this, storage_key );
+		return pattern_var->try_matching(this, patterns_parent, storage_key);
 	}
 	else {
 		return false;
 	}
+}
+
+void bmath::intern::Variable::reset_own_matches(Basic_Term* parent)
+{
+	assert(false);	//reset_own_matches should be called exclusively in a pattern. patterns don't hold normal variables
 }
 
 bool Variable::operator<(const Basic_Term& other) const

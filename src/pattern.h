@@ -19,6 +19,8 @@ namespace bmath {
 		private:
 			Basic_Term* matched_term;			//term this variable gets compared to (if nullptr, current comparison is true and variable is set)
 			Basic_Term** matched_storage_key;	//actual storage position of matched_term (place in parent, where matched_term is stored)
+			//WARNING: responsible_parent may not point to a Basic_Term. this member is only a marker.
+			void* responsible_parent;			//parent unter which matched_term is set, and which is responsible for resetting matched_term
 			Type type_restriction;				//if variable != Type::undefined, this can only match terms of same type
 
 			friend void reset_all_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
@@ -40,7 +42,8 @@ namespace bmath {
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
 			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
-			bool equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key) override;
+			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
+			void reset_own_matches(Basic_Term* parent) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 
@@ -49,7 +52,9 @@ namespace bmath {
 
 			//does the actual matching attempt. takes same parameters as equal_to_pattern, just with output roles.
 			//to not cause any confusion, the functionality of try_matching() is not implemented in equal_to_pattern()
-			bool try_matching(Basic_Term* other, Basic_Term** other_storage_key);
+			bool try_matching(Basic_Term* other, Basic_Term* patterns_parent, Basic_Term** other_storage_key);
+
+			bool is_unmatched() const;
 		};	
 
 
@@ -86,7 +91,7 @@ namespace bmath {
 
 			std::string print() const;	//debugging
 
-			//only instances of pattern
+			//only instances of transformation
 			static const std::vector<Transformation*> transformations;
 		};
 

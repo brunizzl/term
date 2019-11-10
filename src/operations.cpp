@@ -423,7 +423,7 @@ Basic_Term** Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern
 {
 	reset_all_pattern_vars(pattern_var_adresses);
 	this->sort();
-	if (this->equal_to_pattern(pattern, storage_key)) {
+	if (this->equal_to_pattern(pattern, nullptr, storage_key)) {
 		return storage_key;
 	}
 	else {
@@ -441,26 +441,32 @@ Basic_Term** Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern
 	}
 }
 
-bool bmath::intern::Exponentiation::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+bool bmath::intern::Exponentiation::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
 {
 	const Type pattern_type = type_of(pattern);
 	if (pattern_type == Type::exponentiation) {
 		const Exponentiation* pattern_exp = static_cast<const Exponentiation*>(pattern);
-		if (!this->base->equal_to_pattern(pattern_exp->base, &this->base)) {
+		if (!this->base->equal_to_pattern(pattern_exp->base, pattern, &this->base)) {
 			return false;
 		}
-		if (!this->expo->equal_to_pattern(pattern_exp->expo, &this->expo)) {
+		if (!this->expo->equal_to_pattern(pattern_exp->expo, pattern, &this->expo)) {
 			return false;
 		}
 		return true;
 	}
 	else if (pattern_type == Type::pattern_variable) {
 		Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
-		return pattern_var->try_matching(this, storage_key );
+		return pattern_var->try_matching(this, patterns_parent, storage_key);
 	}
 	else {
 		return false;
 	}
+}
+
+void bmath::intern::Exponentiation::reset_own_matches(Basic_Term* parent)
+{
+	this->expo->reset_own_matches(this);
+	this->base->reset_own_matches(this);
 }
 
 bool Exponentiation::operator<(const Basic_Term& other) const
@@ -584,7 +590,7 @@ Basic_Term** Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_V
 {
 	reset_all_pattern_vars(pattern_var_adresses);
 	this->sort();
-	if (this->equal_to_pattern(pattern, storage_key)) {
+	if (this->equal_to_pattern(pattern, nullptr, storage_key)) {
 		return storage_key;
 	}
 	else {
@@ -597,7 +603,7 @@ Basic_Term** Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_V
 	}
 }
 
-bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
 {
 	const Type pattern_type = type_of(pattern);
 	if (pattern_type == Type::par_operator) {
@@ -605,15 +611,20 @@ bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Te
 		if (this->op_type != pattern_par_op->op_type) {
 			return false;
 		}
-		return this->argument->equal_to_pattern(pattern_par_op->argument, &this->argument);
+		return this->argument->equal_to_pattern(pattern_par_op->argument, pattern, &this->argument);
 	}
 	else if (pattern_type == Type::pattern_variable) {
 		Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
-		return pattern_var->try_matching(this, storage_key );
+		return pattern_var->try_matching(this, patterns_parent, storage_key);
 	}
 	else {
 		return false;
 	}
+}
+
+void bmath::intern::Par_Operator::reset_own_matches(Basic_Term* parent)
+{
+	this->argument->reset_own_matches(this);
 }
 
 bool Par_Operator::operator<(const Basic_Term& other) const

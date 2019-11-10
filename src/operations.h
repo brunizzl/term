@@ -41,7 +41,8 @@ namespace bmath {
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
 			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
-			bool equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key) override;
+			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
+			void reset_own_matches(Basic_Term* parent) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 
@@ -51,7 +52,7 @@ namespace bmath {
 			//other operands may still call equal_to_pattern() and may not need behaving different if pattern is of type variadic_operator<>.
 			//if parts of this operands match pattern, a new variadic_operator<> will be constructed, with the matched -
 			//operands moved there. the new variadic_operator<> will be returned. otherwise nullptr is returned.
-			Basic_Term** part_equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key);
+			Basic_Term** part_equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key);
 
 			//pushes term_ptr back into operands
 			void push_back(Basic_Term* const term_ptr);
@@ -121,7 +122,8 @@ namespace bmath {
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
 			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
-			bool equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key) override;
+			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
+			void reset_own_matches(Basic_Term* parent) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -151,7 +153,8 @@ namespace bmath {
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
 			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
-			bool equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key) override;
+			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
+			void reset_own_matches(Basic_Term* parent) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
 		};
@@ -281,7 +284,7 @@ namespace bmath {
 		{
 			reset_all_pattern_vars(pattern_var_adresses);
 			this->sort();
-			Basic_Term** const found_part = this->part_equal_to_pattern(pattern, storage_key);
+			Basic_Term** const found_part = this->part_equal_to_pattern(pattern, nullptr, storage_key);
 			if (found_part) {
 				return found_part;
 			}
@@ -299,7 +302,7 @@ namespace bmath {
 		}
 
 		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
-		inline bool Variadic_Operator<operate, this_type, neutral_val>::equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+		inline bool Variadic_Operator<operate, this_type, neutral_val>::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
 		{
 			const Type pattern_type = type_of(pattern);
 			if (pattern_type == this_type) {
@@ -318,10 +321,18 @@ namespace bmath {
 			}
 			else if (pattern_type == Type::pattern_variable) {
 				Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
-				return pattern_var->try_matching(this, storage_key);
+				return pattern_var->try_matching(this, patterns_parent, storage_key);
 			}
 			else {
 				return false;
+			}
+		}
+
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
+		inline void Variadic_Operator<operate, this_type, neutral_val>::reset_own_matches(Basic_Term* parent)
+		{
+			for (auto it : this->operands) {
+				it->reset_own_matches(this);
 			}
 		}
 
@@ -373,7 +384,7 @@ namespace bmath {
 		}
 
 		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
-		inline Basic_Term** Variadic_Operator<operate, this_type, neutral_val>::part_equal_to_pattern(Basic_Term* pattern, Basic_Term** storage_key)
+		inline Basic_Term** Variadic_Operator<operate, this_type, neutral_val>::part_equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
 		{
 			const Type pattern_type = type_of(pattern);
 			if (pattern_type == this_type) {
@@ -395,7 +406,7 @@ namespace bmath {
 							return &(this->operands.back());
 						}
 						else {
-							assert(false && "file: operations.h   function: Var_Op::part_equal_to_pattern");	//the only (currently implemented) variadic_operands are sum and product.
+							assert(false);	//the only (currently implemented) variadic_operands are sum and product.
 						}
 					}
 					else {
@@ -409,7 +420,7 @@ namespace bmath {
 			}
 			else if (pattern_type == Type::pattern_variable) {
 				Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
-				if (pattern_var->try_matching(this, storage_key )) {
+				if (pattern_var->try_matching(this, patterns_parent, storage_key)) {
 					return storage_key;
 				}
 			}

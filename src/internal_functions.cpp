@@ -279,7 +279,7 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source)
 	case Type::pattern_variable: {
 		//as copy subterm is called, when a pattern has succesfully been matched and should be transformed, 
 		//we do not want to actually copy the pattern_variable, but the subterm held by it.
-		Pattern_Variable* const pattern_variable = static_cast<Pattern_Variable*>(const_cast<Basic_Term*>(source));
+		const Pattern_Variable* const pattern_variable = static_cast<const Pattern_Variable*>(source);
 		return pattern_variable->copy_matched_term();
 	}
 	}

@@ -138,12 +138,11 @@ bool Pattern_Variable::operator==(const Basic_Term& other) const
 	return false;
 }
 
-Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term()
+Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term() const
 {
 	assert(this->matched_term != nullptr);
-	if (this->matched_storage_key != nullptr) {
+	if (*(this->matched_storage_key) != nullptr) {
 		*(this->matched_storage_key) = nullptr;	//setting owner of matched_term to nullptr
-		this->matched_storage_key = nullptr;	//setting adress to owner to nullptr
 		return this->matched_term;
 	}
 	else {
@@ -262,6 +261,8 @@ const std::vector<Transformation*> Transformation::transformations = {
 	new Transformation("ln(a)-ln(b)", "ln(a/b)"),
 	new Transformation("sin(x)^2+cos(x)^2", "1"),
 	new Transformation("(a^b)^c", "a^(b*c)"),
+	//new Transformation("a*x^n+b*x", "x*(a*x^(n-1)+b)"),
+	//new Transformation("a*x^n+x", "x*(a*x^(n-1)+1)"),
 
 	new Transformation("a*b+a*c", "a*(b+c)"),
 	new Transformation("b*a+b*c", "b*(a+c)"),

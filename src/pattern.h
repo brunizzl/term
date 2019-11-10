@@ -48,7 +48,7 @@ namespace bmath {
 			bool operator==(const Basic_Term& other) const override;
 
 			//accesses matched_term to copy it, returns copy
-			Basic_Term* copy_matched_term();
+			Basic_Term* copy_matched_term() const;
 
 			//does the actual matching attempt. takes same parameters as equal_to_pattern, just with output roles.
 			//to not cause any confusion, the functionality of try_matching() is not implemented in equal_to_pattern()

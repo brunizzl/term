@@ -35,7 +35,7 @@ namespace bmath {
 			//if one sum/product holds a pointer to another sum/product, both get combined into one,
 			//redundant layers are removed (exponentiation with exponent == 1, sum with only one summand...)
 			//storage key refers to the actual memory holding the pointer to this. 
-			//(aka if you wanna remove the current layer, this is where to reconnect the layers above and below you.)
+			//(aka if you wanna remove the current layer, storage_key is where to reconnect the layers above and below you.)
 			virtual void combine_layers(Basic_Term*& storage_key) = 0;
 
 			//values are added, multiplied, etc.

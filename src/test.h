@@ -42,22 +42,17 @@ void test_strings()
 	const std::vector<std::string> teststrs = {
 		"(3*x-2*y)/5",
 		"(1*[2i^(-2)*3*(4*(a^5))])",
-		"-i+300*a/(a*b)",
-		"1-2*3",
 		"(10/5)^3",
 		"5+pi+7/(5-a+ln[2])^3",
 		"auto^herbert*3+auto^(-32*a)-4",
-		"6/7/8*a/4",
-		"-4*q/s^2",
-		"re(3+4i)*im(2-3i)",
 		"a+ln(b^2)+ln(c)+2-b^2-c*a",
 		"3*(sin(a+b+c)^2+cos(a+b+c)^2+4)+i",
 		"(3^(x^2))^(x)",
 		"sin(-a*b)",
-		"atanh(3+sqrt(-2i))+1*5-12*cos(2i-3)",
 		"sin(x)*b+3*b",
 		"sin(x)*3^a+b*3^a",
 		"a*d+a*b*c",
+		"4*x^4+3*x^3+2*x^2+x+5",
 	};
 	baue_teststrs(teststrs);
 }

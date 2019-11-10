@@ -279,7 +279,7 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source)
 	case Type::pattern_variable: {
 		//as copy subterm is called, when a pattern has succesfully been matched and should be transformed, 
 		//we do not want to actually copy the pattern_variable, but the subterm held by it.
-		const Pattern_Variable* pattern_variable = static_cast<const Pattern_Variable*>(source);
+		Pattern_Variable* const pattern_variable = static_cast<Pattern_Variable*>(const_cast<Basic_Term*>(source));
 		return pattern_variable->copy_matched_term();
 	}
 	}
@@ -366,65 +366,6 @@ std::list<Basic_Term*>::iterator bmath::intern::find_first_of(std::list<Basic_Te
 		}
 	}
 	return search.end();
-}
-#include <thread>
-std::optional<std::list<Basic_Term*>> bmath::intern::operands_contain_pattern(std::list<Basic_Term*>& test_ops, std::list<Basic_Term*>& pattern_ops, Basic_Term* pattern)
-{
-	assert(std::is_sorted(test_ops.begin(), test_ops.end(), [](Basic_Term* a, Basic_Term* b) { return *a < *b; }));
-	pattern_ops.sort([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; }); //due to the possibility of pattern variables beeing matched by other functions called by match_intern, this step is neccessary.
-
-	std::list<Basic_Term*> matched_operands;	//to not be matched multiple times, already matched operands need to be moved here.
-	std::vector<std::list<Basic_Term*>::iterator> match_positions;	//remembers position of each matched_operand
-	match_positions.reserve(pattern_ops.size());
-	bool already_matching_pattern_vars = false;	
-	std::list<Basic_Term*>::iterator next_search_begin = test_ops.begin();	//no operand before this will be checked by current pattern_it
-
-	for (auto pattern_it = pattern_ops.begin(); pattern_it != pattern_ops.end();) {
-
-		//once we start to compare to pattern_variables, we need to make sure, already matched ones are compared first. (hence we sort)
-		if (!already_matching_pattern_vars && type_of(*pattern_it) == Type::pattern_variable) {
-			already_matching_pattern_vars = true;
-			pattern_ops.sort([](Basic_Term* a, Basic_Term* b) {return *a < *b; });
-			pattern_it = find_first_of(pattern_ops, Type::pattern_variable);
-		}
-
-		bool found_match = false;
-		for (auto test_it = next_search_begin; test_it != test_ops.end(); ++test_it) {
-			if ((*test_it)->equal_to_pattern(*pattern_it, pattern, &*test_it)) {
-				match_positions.emplace_back(std::next(test_it));
-				matched_operands.splice(matched_operands.end(), test_ops, test_it);
-				found_match = true;
-				break;
-			}
-			else {
-				(*pattern_it)->reset_own_matches(pattern);
-			}
-		}
-		if (!found_match) {
-			if (matched_operands.size()) {	//going back one operand in pattern and try to rematch
-				test_ops.splice(match_positions.back(), matched_operands, std::prev(matched_operands.end()));
-				next_search_begin = match_positions.back();
-				match_positions.pop_back();
-				--pattern_it;
-				--pattern;	//pattern is exclusively used to mark what exactly matched the pattern_variables. to distinguish different pattern_ops, we need to give every match a different "parent"
-				(*pattern_it)->reset_own_matches(pattern);
-				if (already_matching_pattern_vars && type_of(*pattern_it) != Type::pattern_variable) {
-					already_matching_pattern_vars = false;
-				}
-			}
-			else {	//cleanup
-				test_ops.splice(test_ops.end(), matched_operands);
-				test_ops.sort([](Basic_Term* a, Basic_Term* b) { return *a < *b; });
-				return {};
-			}
-		}
-		else {
-			++pattern_it;
-			++pattern;
-			next_search_begin = test_ops.begin();
-		}
-	}
-	return std::move(matched_operands);
 }
 
 bool bmath::intern::is_natural(std::complex<double> test)

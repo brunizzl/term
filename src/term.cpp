@@ -187,6 +187,7 @@ void bmath::Term::combine()
 		}
 	}
 	this->term_ptr->combine_layers(this->term_ptr);
+	this->combine_values();
 }
 
 void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)

@@ -138,11 +138,12 @@ bool Pattern_Variable::operator==(const Basic_Term& other) const
 	return false;
 }
 
-Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term() const
+Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term()
 {
 	assert(this->matched_term != nullptr);
 	if (this->matched_storage_key != nullptr) {
-		*(this->matched_storage_key) = nullptr;
+		*(this->matched_storage_key) = nullptr;	//setting owner of matched_term to nullptr
+		this->matched_storage_key = nullptr;	//setting adress to owner to nullptr
 		return this->matched_term;
 	}
 	else {

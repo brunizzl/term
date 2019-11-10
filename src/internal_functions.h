@@ -63,10 +63,6 @@ namespace bmath {
 		//returns first iterator of matching type in search, if none is found returns search.end()
 		std::list<Basic_Term*>::iterator find_first_of(std::list<Basic_Term*>& search, Type type);
 
-		//used in variadic_operator. returns, whether test_ops has a match for every element in pattern_ops pattern is owner of pattern_ops
-		//returns {} if no match was found, returns matched operands of test_ops if match was found
-		std::optional<std::list<Basic_Term*>> operands_contain_pattern(std::list<Basic_Term*>& test_ops, std::list<Basic_Term*>& pattern_ops, Basic_Term* pattern);
-
 		//returns, wether test has no imaginary part and whole positive number as real part
 		bool is_natural(std::complex<double> test);
 

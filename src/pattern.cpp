@@ -276,6 +276,19 @@ const std::vector<Transformation*> Transformation::transformations = {
 };
 
 
+const std::vector<Transformation*> Transformation::new_transforms = {
+	new Transformation("ln(a)+ln(b)", "ln(a*b)"),
+	new Transformation("ln(a)-ln(b)", "ln(a/b)"),
+	new Transformation("sin(x)^2+cos(x)^2", "1"),
+
+	new Transformation("a*b+a*c", "a*(b+c)"),
+	new Transformation("b*a+b*c", "b*(a+c)"),
+	new Transformation("a*b+a", "a*(b+1)"),
+	new Transformation("a*b+b", "b*(a+1)"),
+	new Transformation("a+a", "a*2"),
+};
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Pattern\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

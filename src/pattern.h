@@ -78,21 +78,19 @@ namespace bmath {
 
 
 		class  Transformation {	//"template" to transform input to output
-		private:
-			//private constructor -> only member "static const std::vector<Transformation*> transformations" can be build
-			Transformation(std::string input_, std::string output_);
-
 		public:
 			std::list<Pattern_Variable*> var_adresses;
 			Pattern_Term input;	//pattern to be compared to term opject
 			Pattern_Term output;	//pattern to replace match in term object
 
+			Transformation(std::string input_, std::string output_);
 			~Transformation();
 
 			std::string print() const;	//debugging
 
 			//only instances of transformation
 			static const std::vector<Transformation*> transformations;
+			static const std::vector<Transformation*> new_transforms;	//so far only for debugging
 		};
 
 		class Pattern

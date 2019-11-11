@@ -131,6 +131,35 @@ void Sum::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_ro
 	}
 }
 
+bool bmath::intern::Sum::factoring()
+{
+	//assume this sum has form "a*b+a*c+d+..."
+	for (auto product_it = find_first_of(this->operands, Type::product); product_it != this->operands.end() && type_of(*product_it) == Type::product; ++product_it) {
+		std::list<Basic_Term*>& first_factors = static_cast<Product*>(*product_it)->operands;
+		for (auto first_factor = first_factors.begin(); first_factor != first_factors.end(); ++first_factor) {
+			for (auto next_product_it = std::next(product_it); next_product_it != this->operands.end() && type_of(*next_product_it) == Type::product; ++next_product_it) {
+				std::list<Basic_Term*>& next_factors = static_cast<Product*>(*next_product_it)->operands;
+				for (auto next_factor = next_factors.begin(); next_factor != next_factors.end(); ++next_factor) {
+					if ((*first_factor) == (*next_factor)) { //both are "a"
+						next_factors.erase(next_factor);	//now this sum has form "a*b+1*c+d+..."
+						Product* outer_product = new Product;
+						outer_product->operands.splice(outer_product->operands.end(), first_factors, first_factor);	//now this sum has form "1*b+1*c+d+..."
+						Sum* inner_sum = new Sum;
+						inner_sum->operands.splice(inner_sum->operands.end(), this->operands, product_it);	//this sum has form "1*c+d+..."
+						inner_sum->operands.splice(inner_sum->operands.end(), this->operands, next_product_it); //this sum has form "d+..."
+						Basic_Term* storage_key = inner_sum;	//somehow needs this indirection
+						inner_sum->combine_layers(storage_key);	//inner_sum goes from "1*b+1*c" to "b+c"
+						outer_product->operands.push_back(storage_key);	//outher_product has form "a*(b+c)"
+						this->operands.push_back(outer_product);	//this sum has form "a*(b+c)+d+..."
+						return true;
+					}
+				}
+			}
+		}
+	}
+	return false;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Product\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

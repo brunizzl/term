@@ -82,6 +82,10 @@ namespace bmath {
 
 			void to_str(std::string& str, int caller_operator_precedence) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
+
+			//as finding common factors in summands turns out to be quite hard, this is not done via pattern matching, but via this function
+			//something was found and combined -> returns true, else return false
+			bool factoring();
 		};
 
 
@@ -89,6 +93,7 @@ namespace bmath {
 		{
 		private:
 			friend Pattern_Term::~Pattern_Term();
+			friend bool Sum::factoring();
 
 		public:
 			Product();

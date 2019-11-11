@@ -263,12 +263,12 @@ std::string Transformation::print() const
 
 Basic_Term* bmath::intern::Transformation::input_ptr() const
 {
-	return this->input->term_ptr;
+	return this->input.term_ptr;
 }
 
 Basic_Term* bmath::intern::Transformation::output_ptr() const
 {
-	return this->output->term_ptr;
+	return this->output.term_ptr;
 }
 
 //rules to simplify terms (left string -> right string)

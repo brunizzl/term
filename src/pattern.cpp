@@ -84,9 +84,15 @@ Basic_Term** Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Patte
 	return nullptr;
 }
 
+bool bmath::intern::Pattern_Variable::transform(std::vector<Transformation*>& transforms, Basic_Term** storage_key)
+{
+	assert(false);	//no pattern shall be transformed by other patterns.
+	return false;
+}
+
 bool bmath::intern::Pattern_Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
 {
-	assert(false);	//u should call try_matching, because otherwise u did something wrong.
+	assert(false);	//patterns should not be compared to patterns.
 	return false;
 }
 

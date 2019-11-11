@@ -192,23 +192,31 @@ void bmath::Term::combine()
 
 void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 {
-	std::list<Basic_Term*> values = this->term_ptr->list_subterms(Type::value);
-	double quadratic_sum = 0;	//real and imaginary part are added seperatly
-	for (auto &it : values) {
-		quadratic_sum += std::abs(static_cast<const Value*>(it)->val().real()) * std::abs(static_cast<const Value*>(it)->val().real());
-		quadratic_sum += std::abs(static_cast<const Value*>(it)->val().imag()) * std::abs(static_cast<const Value*>(it)->val().imag());
-	}
-	if (quadratic_sum != 0) {
-		const double quadratic_average = std::sqrt(quadratic_sum / values.size() / 2);	//equal to standard deviation from 0
-		const double limit_to_0 = quadratic_average * std::pow(10, -pow_of_10_diff_to_set_0);
-		for (auto &it : values) {
-			if (std::abs(static_cast<const Value*>(it)->val().real()) < limit_to_0) {
-				const_cast<Value*>(static_cast<const Value*>(it))->val().real(0);
-			}
-			if (std::abs(static_cast<const Value*>(it)->val().imag()) < limit_to_0) {
-				const_cast<Value*>(static_cast<const Value*>(it))->val().imag(0);
+	double quadratic_sum = 0;	//only considers real part of vaues
+	std::size_t number_summands = 0;
+	this->term_ptr->for_each([&](Basic_Term* this_ptr, Type this_type) {
+		if (this_type == Type::value) {
+			double real_part = static_cast<Value*>(this_ptr)->val().real();
+			if (abs(real_part) != 1.0) {	//exponent of -1 and factor of -1 should not interfer
+				quadratic_sum += real_part * real_part;
+				number_summands++;
 			}
 		}
+	});
+	if (quadratic_sum != 0) {
+		const double quadratic_average = std::sqrt(quadratic_sum / number_summands);	//equal to standard deviation from 0
+		const double limit_to_0 = quadratic_average * std::pow(10, -pow_of_10_diff_to_set_0);
+		this->term_ptr->for_each([=](Basic_Term* this_ptr, Type this_type) {
+			if (this_type == Type::value) {
+				std::complex<double>& val = static_cast<Value*>(this_ptr)->val();
+				if (abs(val.real()) < limit_to_0) {
+					val.real(0);
+				}
+				if (abs(val.imag()) < limit_to_0) {
+					val.imag(0);
+				}
+			}
+		});
 	}
 }
 

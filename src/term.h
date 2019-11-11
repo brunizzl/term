@@ -61,7 +61,7 @@ namespace bmath {
 
 			//returns true if transformation in transforms was applied, false if none matched
 			//storage_key points to memory owning this (this is guaranteed to be in heap, held by a pointer. storage key refers to that pointer)
-			//virtual bool transform(std::vector<Transformation*>& transforms, Basic_Term** storage_key) = 0;
+			virtual bool transform(std::vector<Transformation*>& transforms, Basic_Term** storage_key) = 0;
 
 			//called by match_intern to test if this is equal to pattern.
 			//only differs from operator== in its ability to modify the matched pattern_variables

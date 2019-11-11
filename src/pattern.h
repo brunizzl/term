@@ -42,7 +42,7 @@ namespace bmath {
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
 			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
-			bool transform(std::vector<Transformation*>& transforms, Basic_Term** storage_key) override;
+			bool transform(Basic_Term** storage_key, bool only_shallow) override;
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
 			void reset_own_matches(Basic_Term* parent) override;
 			bool operator<(const Basic_Term& other) const override;
@@ -88,10 +88,11 @@ namespace bmath {
 			~Transformation();
 
 			std::string print() const;	//debugging
+			Basic_Term* input_ptr() const;
+			Basic_Term* output_ptr() const;
 
 			//only instances of transformation
 			static const std::vector<Transformation*> transformations;
-			static const std::vector<Transformation*> new_transforms;	//so far only for debugging
 		};
 
 		class Pattern

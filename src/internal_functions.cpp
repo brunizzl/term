@@ -286,6 +286,36 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source)
 	throw XTermConstructionError("function copy_subterm expected known type to copy");
 }
 
+std::vector<Transformation*> bmath::intern::transforms_of(Type requested_type)
+{
+	static std::vector<Transformation*> transformations = {	//////////////////all transformations should be declared here///////////////////////////
+		new Transformation("ln(a)+ln(b)", "ln(a*b)"),
+		new Transformation("ln(a)-ln(b)", "ln(a/b)"),
+		new Transformation("sin(x)^2+cos(x)^2", "1"),
+		new Transformation("(a^b)^c", "a^(b*c)"),
+
+		new Transformation("a+a", "2*a"),
+		
+		new Transformation("a^b*a^c", "a^(b+c)"),
+		new Transformation("a^b*a", "a^(b+1)"),
+		new Transformation("a*a", "a^2"),
+	};
+	std::vector<Transformation*> requested_transforms;
+	for (auto trans : transformations) {
+		if (type_of(trans->input.term_ptr) == requested_type) {
+			requested_transforms.push_back(trans);
+		}
+	}
+	return requested_transforms;
+}
+
+void bmath::intern::replace(Basic_Term** storage_key, Transformation* trans)
+{
+	Basic_Term* const replacement = trans->output.copy();
+	delete* storage_key;
+	*storage_key = replacement;
+}
+
 int bmath::intern::operator_precedence(Type operator_type)
 {
 	switch (operator_type) {

@@ -84,7 +84,7 @@ Basic_Term** Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Patte
 	return nullptr;
 }
 
-bool bmath::intern::Pattern_Variable::transform(std::vector<Transformation*>& transforms, Basic_Term** storage_key)
+bool bmath::intern::Pattern_Variable::transform(Basic_Term** storage_key, bool only_shallow)
 {
 	assert(false);	//no pattern shall be transformed by other patterns.
 	return false;
@@ -201,10 +201,10 @@ void Pattern_Term::build(std::string name, std::list<Pattern_Variable*>& var_adr
 Pattern_Term::~Pattern_Term()
 {
 	//due to the fact, that Pattern_Term breaks the Tree structure (one pattern_variable might be owned by multiple parents) -
-	//we can not use the destructor of basic_term
+	//we can not use the destructor of Basic_Term
 	std::list<Basic_Term*> subterms;
 	this->term_ptr->for_each([&subterms](Basic_Term* this_ptr, Type this_type) { 
-		if (this_type != Type::pattern_variable) subterms.push_back(this_ptr);	//pattern_variables are not deleted by this destructor
+		if (this_type != Type::pattern_variable) subterms.push_back(this_ptr);	//pattern_variables are not deleted by this destructor (but by owner of Pattern_Term)
 
 		switch (this_type) {
 		case Type::par_operator:
@@ -261,6 +261,16 @@ std::string Transformation::print() const
 	return str;
 }
 
+Basic_Term* bmath::intern::Transformation::input_ptr() const
+{
+	return this->input->term_ptr;
+}
+
+Basic_Term* bmath::intern::Transformation::output_ptr() const
+{
+	return this->output->term_ptr;
+}
+
 //rules to simplify terms (left string -> right string)
 const std::vector<Transformation*> Transformation::transformations = {
 	new Transformation("ln(a)+ln(b)", "ln(a*b)"),
@@ -279,19 +289,6 @@ const std::vector<Transformation*> Transformation::transformations = {
 	new Transformation("a^b*a^c", "a^(b+c)"),
 	new Transformation("a^b*a", "a^(b+1)"),
 	new Transformation("a*a", "a^2"),
-};
-
-
-const std::vector<Transformation*> Transformation::new_transforms = {
-	new Transformation("ln(a)+ln(b)", "ln(a*b)"),
-	new Transformation("ln(a)-ln(b)", "ln(a/b)"),
-	new Transformation("sin(x)^2+cos(x)^2", "1"),
-
-	new Transformation("a*b+a*c", "a*(b+c)"),
-	new Transformation("b*a+b*c", "b*(a+c)"),
-	new Transformation("a*b+a", "a*(b+1)"),
-	new Transformation("a*b+b", "b*(a+1)"),
-	new Transformation("a+a", "a*2"),
 };
 
 

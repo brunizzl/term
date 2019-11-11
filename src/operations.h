@@ -41,7 +41,6 @@ namespace bmath {
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
 			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
-			bool transform(std::vector<Transformation*>& transforms, Basic_Term** storage_key) override;
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
 			void reset_own_matches(Basic_Term* parent) override;
 			bool operator<(const Basic_Term& other) const override;
@@ -49,7 +48,7 @@ namespace bmath {
 
 			//this function is called in match_intern() of Variadic_Operator<>. 
 			//match_intern() always tries to match from the highest level (match intern is called -> caller knows he sees full pattern). 
-			//that allows to only match some of operands with the pattern, as long, as all of the pattern is matched.
+			//that allows to only match some of this operands with the pattern, as long, as all of the pattern is matched.
 			//other operands may still call equal_to_pattern() and may not need behaving different if pattern is of type variadic_operator<>.
 			//if parts of this operands match pattern, a new variadic_operator<> will be constructed, with the matched -
 			//operands moved there. the new variadic_operator<> will be returned. otherwise nullptr is returned.
@@ -72,6 +71,7 @@ namespace bmath {
 		class Sum : public Variadic_Operator<add, Type::sum, 0>
 		{
 		private:
+			const static std::vector<Transformation*> sum_transforms;
 			friend Pattern_Term::~Pattern_Term();
 
 		public:
@@ -83,6 +83,7 @@ namespace bmath {
 
 			void to_str(std::string& str, int caller_operator_precedence) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
+			bool transform(Basic_Term** storage_key, bool only_shallow) override;
 
 			//as finding common factors in summands turns out to be quite hard, this is not done via pattern matching, but via this function
 			//something was found and combined -> returns true, else return false
@@ -93,6 +94,7 @@ namespace bmath {
 		class Product : public Variadic_Operator<mul, Type::product, 1>
 		{
 		private:
+			const static std::vector<Transformation*> product_transforms;
 			friend Pattern_Term::~Pattern_Term();
 			friend bool Sum::factoring();
 
@@ -106,6 +108,7 @@ namespace bmath {
 
 			void to_str(std::string& str, int caller_operator_precedence) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
+			bool transform(Basic_Term** storage_key, bool only_shallow) override;
 		};
 
 
@@ -114,6 +117,7 @@ namespace bmath {
 		private:
 			Basic_Term* expo;
 			Basic_Term* base;
+			const static std::vector<Transformation*> exp_transforms;
 
 			friend class bmath::Term;
 			friend Pattern_Term::~Pattern_Term();
@@ -135,7 +139,7 @@ namespace bmath {
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
 			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
-			bool transform(std::vector<Transformation*>& transforms, Basic_Term** storage_key) override;
+			bool transform(Basic_Term** storage_key, bool only_shallow) override;
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
 			void reset_own_matches(Basic_Term* parent) override;
 			bool operator<(const Basic_Term& other) const override;
@@ -148,6 +152,7 @@ namespace bmath {
 		private:
 			Par_Op_Type op_type;
 			Basic_Term* argument;
+			const static std::vector<Transformation*> parop_transforms;
 
 			friend Pattern_Term::~Pattern_Term();
 
@@ -167,8 +172,8 @@ namespace bmath {
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
 			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
 			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
+			bool transform(Basic_Term** storage_key, bool only_shallow) override;
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
-			bool transform(std::vector<Transformation*>& transforms, Basic_Term** storage_key) override;
 			void reset_own_matches(Basic_Term* parent) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;

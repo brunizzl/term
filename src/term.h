@@ -59,9 +59,11 @@ namespace bmath {
 			//first tries to match this to pattern, then tries to match subterms
 			virtual Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) = 0;
 
-			//returns true if transformation in transforms was applied, false if none matched
+			//first tries to transform terms held by this, then tries to transform itself
+			//returns true if transformation in transforms was applied, false if none matched on this level
 			//storage_key points to memory owning this (this is guaranteed to be in heap, held by a pointer. storage key refers to that pointer)
-			virtual bool transform(std::vector<Transformation*>& transforms, Basic_Term** storage_key) = 0;
+			//if only_shallow, transform will not first try to transform its subterms, otherwise it will.
+			virtual bool transform(Basic_Term** storage_key, bool only_shallow) = 0;
 
 			//called by match_intern to test if this is equal to pattern.
 			//only differs from operator== in its ability to modify the matched pattern_variables

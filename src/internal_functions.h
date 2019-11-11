@@ -43,6 +43,13 @@ namespace bmath {
 		//returns pointer to newly build term of right type (u now have ownership of object)
 		Basic_Term* copy_subterm(const Basic_Term* source);
 
+		//used in initialisation of the static members of derivates of Basic_Term
+		std::vector<Transformation*> transforms_of(Type requested_type);
+
+		//replaces term in storage_key with copy of trans.output
+		//WARNING term originally stored in storage_key is no longer valid!
+		void replace(Basic_Term** storage_key, Transformation* trans);
+
 		//beautifier of Basic_Term->get_type()
 		inline Type type_of(const Basic_Term& obj) { return obj.type(); };
 		inline Type type_of(const Basic_Term* const obj) { return obj->type(); };

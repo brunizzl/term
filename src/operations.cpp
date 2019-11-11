@@ -131,12 +131,35 @@ void Sum::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_ro
 	}
 }
 
+bool bmath::intern::Sum::transform(Basic_Term** storage_key, bool only_shallow)
+{
+	if (!only_shallow) {
+		for (auto& summand : this->operands) {
+			bool something_changed = false;
+			while (summand->transform(&summand, something_changed)) {
+				something_changed = true;
+			}
+		}
+	}
+
+	for (auto trans : sum_transforms) {
+		reset_all_pattern_vars(trans->var_adresses);
+		Basic_Term** const found_part = this->part_equal_to_pattern(trans->input_ptr(), nullptr, storage_key);
+		if (found_part) {
+			replace(found_part, trans);
+		}
+		return true;
+	}
+
+	return this->factoring();
+}
+
 bool bmath::intern::Sum::factoring()
 {
-	//assume this sum has form "a*b+a*c+d+..."
 	for (auto product_it = find_first_of(this->operands, Type::product); product_it != this->operands.end() && type_of(*product_it) == Type::product; ++product_it) {
 		std::list<Basic_Term*>& first_factors = static_cast<Product*>(*product_it)->operands;
 		for (auto first_factor = first_factors.begin(); first_factor != first_factors.end(); ++first_factor) {
+			//assume this sum has form "a*b+a*c+d+..."
 			for (auto next_product_it = std::next(product_it); next_product_it != this->operands.end() && type_of(*next_product_it) == Type::product; ++next_product_it) {
 				std::list<Basic_Term*>& next_factors = static_cast<Product*>(*next_product_it)->operands;
 				for (auto next_factor = next_factors.begin(); next_factor != next_factors.end(); ++next_factor) {
@@ -150,15 +173,33 @@ bool bmath::intern::Sum::factoring()
 						Basic_Term* storage_key = inner_sum;	//somehow needs this indirection
 						inner_sum->combine_layers(storage_key);	//inner_sum goes from "1*b+1*c" to "b+c"
 						outer_product->operands.push_back(storage_key);	//outher_product has form "a*(b+c)"
-						this->operands.push_back(outer_product);	//this sum has form "a*(b+c)+d+..."
+						this->operands.push_back(outer_product);	//this sum has final form "a*(b+c)+d+..."
 						return true;
 					}
+				}
+			}
+			//assume this sum to be of form "a*b+a+d+..."
+			for (auto next_summand = find_first_of(this->operands, type_of(*first_factor)); next_summand != this->operands.end() && type_of(*next_summand) == type_of(*first_factor); ++next_summand) {
+				if ((*first_factor) == (*next_summand)) {	//both are "a"
+					Product* outer_product = new Product;
+					outer_product->operands.splice(outer_product->operands.end(), first_factors, first_factor); //now this sum has form "1*b+a+d+..."
+					Sum* inner_sum = new Sum;
+					inner_sum->operands.splice(inner_sum->operands.end(), this->operands, product_it);	//this sum has form "a+d+..."
+					inner_sum->push_back(new Value(1.0));
+					Basic_Term* storage_key = inner_sum;
+					inner_sum->combine_layers(storage_key);
+					outer_product->push_back(storage_key);
+					this->operands.erase(next_summand);		//this sum now has form "d+..."
+					this->operands.push_back(outer_product); // this sum has final form "a*(b+1)+d+..."
 				}
 			}
 		}
 	}
 	return false;
 }
+
+const std::vector<Transformation*> Sum::sum_transforms = transforms_of(Type::sum);
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Product\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -293,6 +334,30 @@ void Product::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dis
 		factor->to_tree_str(tree_lines, dist_root + 1, '*');
 	}
 }
+
+bool bmath::intern::Product::transform(Basic_Term** storage_key, bool only_shallow)
+{
+	if (!only_shallow) {
+		for (auto& factor : this->operands) {
+			bool something_changed = false;
+			while (factor->transform(&factor, something_changed)) {
+				something_changed = true;
+			}
+		}
+	}
+
+	for (auto trans : product_transforms) {
+		reset_all_pattern_vars(trans->var_adresses);
+		Basic_Term** const found_part = this->part_equal_to_pattern(trans->input_ptr(), nullptr, storage_key);
+		if (found_part) {
+			replace(found_part, trans);
+		}
+		return true;
+	}
+	return false;
+}
+
+const std::vector<Transformation*> Product::product_transforms = transforms_of(Type::product);
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -470,6 +535,29 @@ Basic_Term** Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern
 	}
 }
 
+bool bmath::intern::Exponentiation::transform(Basic_Term** storage_key, bool only_shallow)
+{
+	if (!only_shallow) {
+		bool base_changed = false;
+		while (this->base->transform(&this->base, base_changed)) {
+			base_changed = true;
+		}
+		bool expo_changed = false;
+		while (this->expo->transform(&this->expo, expo_changed)) {
+			expo_changed = true;
+		}
+	}
+
+	for (auto trans : exp_transforms) {
+		reset_all_pattern_vars(trans->var_adresses);
+		if (this->equal_to_pattern(trans->input_ptr(), nullptr, storage_key)) {
+			replace(storage_key, trans);
+			return true;
+		}
+	}
+	return false;
+}
+
 bool bmath::intern::Exponentiation::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
 {
 	const Type pattern_type = type_of(pattern);
@@ -526,6 +614,8 @@ bool Exponentiation::operator==(const Basic_Term& other) const
 	}
 	return false;
 }
+
+const std::vector<Transformation*> Exponentiation::exp_transforms = transforms_of(Type::exponentiation);
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -632,6 +722,25 @@ Basic_Term** Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_V
 	}
 }
 
+bool bmath::intern::Par_Operator::transform(Basic_Term** storage_key, bool only_shallow)
+{
+	if (!only_shallow) {
+		bool changed = false;
+		while (this->argument->transform(&this->argument, changed)) {
+			changed = true;
+		}
+	}
+
+	for (auto trans : parop_transforms) {
+		reset_all_pattern_vars(trans->var_adresses);
+		if (this->equal_to_pattern(trans->input_ptr(), nullptr, storage_key)) {
+			replace(storage_key, trans);
+			return true;
+		}
+	}
+	return false;
+}
+
 bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
 {
 	const Type pattern_type = type_of(pattern);
@@ -681,3 +790,5 @@ bool Par_Operator::operator==(const Basic_Term& other) const
 	}
 	return false;
 }
+
+const std::vector<Transformation*> Par_Operator::parop_transforms = transforms_of(Type::par_operator);

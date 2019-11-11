@@ -18,8 +18,8 @@ namespace bmath {
 			//second most unique	(base is always base, exponent always exponent)
 			exponentiation,
 			//third most unique		(operands can vary in the positioning relative to each other)
-			sum,
 			product,
+			sum,	//sum after product to simplify function factoring() of Sum
 			//fourth most unique	(name or val can take nearly infinite states)
 			variable,
 			value,				

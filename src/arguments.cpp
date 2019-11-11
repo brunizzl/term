@@ -82,6 +82,11 @@ Basic_Term** Value::match_intern(Basic_Term* pattern, std::list<Pattern_Variable
 	}
 }
 
+bool bmath::intern::Value::transform(Basic_Term** storage_key, bool only_shallow)
+{
+	return false;
+}
+
 bool bmath::intern::Value::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
 {
 	const Type pattern_type = type_of(pattern);
@@ -218,6 +223,11 @@ Basic_Term** Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Varia
 	else {
 		return nullptr;
 	}
+}
+
+bool bmath::intern::Variable::transform(Basic_Term** storage_key, bool only_shallow)
+{
+	return false;
 }
 
 bool bmath::intern::Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)

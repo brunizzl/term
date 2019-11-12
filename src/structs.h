@@ -22,7 +22,7 @@ namespace bmath {
 			sum,
 			//fourth most unique	(name or val can take nearly infinite states)
 			variable,
-			value,				
+			value,
 			//least unique			(pattern variable can be representative for all categories)
 			pattern_variable,
 			//not really part of order, as a term is guaranteed to not be undefined.

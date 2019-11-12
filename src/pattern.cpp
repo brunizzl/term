@@ -78,15 +78,9 @@ void bmath::intern::Pattern_Variable::for_each(std::function<void(Basic_Term* th
 	func(this, Type::pattern_variable);
 }
 
-Basic_Term** Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
-{
-	assert(false);	//pattern never tries to match to pattern u dummie
-	return nullptr;
-}
-
 bool bmath::intern::Pattern_Variable::transform(Basic_Term** storage_key)
 {
-	assert(false);	//no pattern shall be transformed by other patterns.
+	assert(false);	//no pattern shall be transformed by other patterns. (yet)
 	return false;
 }
 
@@ -271,48 +265,3 @@ Basic_Term* bmath::intern::Transformation::output_ptr() const
 	return this->output.term_ptr;
 }
 
-//rules to simplify terms (left string -> right string)
-const std::vector<Transformation*> Transformation::transformations = {
-	new Transformation("ln(a)+ln(b)", "ln(a*b)"),
-	new Transformation("ln(a)-ln(b)", "ln(a/b)"),
-	new Transformation("sin(x)^2+cos(x)^2", "1"),
-	new Transformation("(a^b)^c", "a^(b*c)"),
-	//new Transformation("a*x^n+b*x", "x*(a*x^(n-1)+b)"),
-	//new Transformation("a*x^n+x", "x*(a*x^(n-1)+1)"),
-
-	new Transformation("a*b+a*c", "a*(b+c)"),
-	new Transformation("b*a+b*c", "b*(a+c)"),
-	new Transformation("a*b+a", "a*(b+1)"),
-	new Transformation("a*b+b", "b*(a+1)"),
-	new Transformation("a+a", "a*2"),
-
-	new Transformation("a^b*a^c", "a^(b+c)"),
-	new Transformation("a^b*a", "a^(b+1)"),
-	new Transformation("a*a", "a^2"),
-};
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Pattern\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-bmath::intern::Pattern::Pattern(std::string name_)
-	:var_adresses(), term()
-{
-	term.build(std::move(name_), this->var_adresses);
-}
-
-bmath::intern::Pattern::~Pattern()
-{
-	for (auto it : this->var_adresses) {
-		delete it;
-	}
-}
-
-std::string bmath::intern::Pattern::print() const
-{
-	std::string str;
-	this->term.term_ptr->to_str(str, operator_precedence(Type::undefined));
-	return str;
-}

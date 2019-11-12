@@ -70,18 +70,6 @@ void bmath::intern::Value::for_each(std::function<void(Basic_Term* this_ptr, Typ
 	func(this, Type::value);
 }
 
-Basic_Term** Value::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
-{
-	reset_all_pattern_vars(pattern_var_adresses);
-	this->sort();
-	if (this->equal_to_pattern(pattern, nullptr, storage_key)) {
-		return storage_key;
-	}
-	else {
-		return nullptr;
-	}
-}
-
 bool bmath::intern::Value::transform(Basic_Term** storage_key)
 {
 	return false;
@@ -211,18 +199,6 @@ void Variable::search_and_replace(const std::string& name_, const Basic_Term* va
 void bmath::intern::Variable::for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func)
 {
 	func(this, Type::variable);
-}
-
-Basic_Term** Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
-{
-	reset_all_pattern_vars(pattern_var_adresses);
-	this->sort();
-	if (this->equal_to_pattern(pattern, nullptr, storage_key )) {
-		return storage_key;
-	}
-	else {
-		return nullptr;
-	}
 }
 
 bool bmath::intern::Variable::transform(Basic_Term** storage_key)

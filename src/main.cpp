@@ -9,7 +9,7 @@
 int main()
 {
 	try {
-		test_strings();
+		//test_strings();
 		//print_all_patterns();
 		//test_vergleich();
 		test_rechner();

@@ -124,18 +124,6 @@ std::list<std::string> bmath::Term::get_var_names() const
 	return names;
 }
 
-bool bmath::Term::match_and_transform(Transformation& pattern)
-{
-	Basic_Term** const match = this->term_ptr->match_intern(pattern.input.term_ptr, pattern.var_adresses, &(this->term_ptr));
-	if (match != nullptr) {
-		Basic_Term* const transformed = pattern.output.copy();
-		delete *match;
-		*match = transformed;	//here the pointer to pointer is needed, as we overwrite the input storage position with the new term.
-		return true;
-	}
-	return false;
-}
-
 void bmath::Term::combine_values()
 {
 	if (type_of(this->term_ptr) != Type::value) {
@@ -167,27 +155,6 @@ void bmath::Term::search_and_replace(const std::string& name_, std::complex<doub
 void bmath::Term::search_and_replace(const std::string& name_, const bmath::Term& value_)
 {
 	this->term_ptr->search_and_replace(name_, value_.term_ptr, this->term_ptr);
-}
-
-void bmath::Term::combine()
-{
-	this->term_ptr->combine_layers(this->term_ptr);
-	this->combine_values();
-	this->term_ptr->sort();
-
-	for (unsigned int i = 0; i < Transformation::transformations.size();) {
-		if (this->match_and_transform(*Transformation::transformations[i])) {
-			this->term_ptr->combine_layers(this->term_ptr);
-			this->combine_values();
-			this->term_ptr->sort();
-			i = 0;	//if match was successfull, pattern search starts again.
-		}
-		else {
-			i++;
-		}
-	}
-	this->term_ptr->combine_layers(this->term_ptr);
-	this->combine_values();
 }
 
 void bmath::Term::simplify()
@@ -239,7 +206,7 @@ bmath::Term& bmath::Term::operator+=(const Term& operand2)
 		sum->push_back(this->term_ptr);
 		sum->push_back(copy_subterm(operand2.term_ptr));
 		this->term_ptr = sum;
-		this->combine();
+		this->simplify();
 	}
 	return *this;
 }
@@ -259,7 +226,7 @@ bmath::Term& bmath::Term::operator-=(const Term& operand2)
 
 		sum->push_back(subtractor);
 		this->term_ptr = sum;
-		this->combine();
+		this->simplify();
 	}
 	return *this;
 }
@@ -274,7 +241,7 @@ bmath::Term& bmath::Term::operator*=(const Term& operand2)
 		product->push_back(this->term_ptr);
 		product->push_back(copy_subterm(operand2.term_ptr));
 		this->term_ptr = product;
-		this->combine();
+		this->simplify();
 	}
 	return *this;
 }
@@ -294,7 +261,7 @@ bmath::Term& bmath::Term::operator/=(const Term& operand2)
 
 		product->push_back(divisor);
 		this->term_ptr = product;
-		this->combine();
+		this->simplify();
 	}
 	return *this;
 }

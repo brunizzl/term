@@ -192,6 +192,14 @@ bool bmath::intern::Sum::factoring()
 	return false;
 }
 
+bool bmath::intern::Sum::factor_polinomial(Basic_Term** storage_key)
+{
+	//static Pattern monom("a!value*x^n!value");
+	//jetzt irgendwie auch direkten zugriff auf nur x und nur x^n erlauben
+	//idee: habe nicht pattern, sondern pattern_term und manage a, x und x^n direkt.
+	return false;
+}
+
 const std::vector<Transformation*> Sum::sum_transforms = transforms_of(Type::sum);
 
 
@@ -504,28 +512,6 @@ void bmath::intern::Exponentiation::for_each(std::function<void(Basic_Term* this
 	func(this, Type::exponentiation);
 }
 
-Basic_Term** Exponentiation::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
-{
-	reset_all_pattern_vars(pattern_var_adresses);
-	this->sort();
-	if (this->equal_to_pattern(pattern, nullptr, storage_key)) {
-		return storage_key;
-	}
-	else {
-		reset_all_pattern_vars(pattern_var_adresses);
-		Basic_Term** argument_match = base->match_intern(pattern, pattern_var_adresses, &base);
-		if (argument_match) {
-			return argument_match;
-		}
-		reset_all_pattern_vars(pattern_var_adresses);
-		argument_match = expo->match_intern(pattern, pattern_var_adresses, &expo);
-		if (argument_match) {
-			return argument_match;
-		}
-		return nullptr;
-	}
-}
-
 bool bmath::intern::Exponentiation::transform(Basic_Term** storage_key)
 {
 	if (this->base->transform(&this->base)) {
@@ -690,23 +676,6 @@ void bmath::intern::Par_Operator::for_each(std::function<void(Basic_Term* this_p
 {
 	this->argument->for_each(func);
 	func(this, Type::par_operator);
-}
-
-Basic_Term** Par_Operator::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
-{
-	reset_all_pattern_vars(pattern_var_adresses);
-	this->sort();
-	if (this->equal_to_pattern(pattern, nullptr, storage_key)) {
-		return storage_key;
-	}
-	else {
-		reset_all_pattern_vars(pattern_var_adresses);
-		Basic_Term** argument_match = argument->match_intern(pattern, pattern_var_adresses, &argument);
-		if (argument_match) {
-			return argument_match;
-		}
-		return nullptr;
-	}
 }
 
 bool bmath::intern::Par_Operator::transform(Basic_Term** storage_key)

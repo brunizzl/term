@@ -54,11 +54,6 @@ namespace bmath {
 			//func takes this of caller and the type of therm of caller
 			virtual void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) = 0;
 
-			//returns storage position of subterm matching pattern or returns nullptr
-			//storage_key is pointer to the pointer to "this" in the object that owns "this" (also return value if match was found)
-			//first tries to match this to pattern, then tries to match subterms
-			virtual Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) = 0;
-
 			//first tries to transform terms held by this, then tries to transform itself
 			//returns true if eighter the transform of one subterm was true or, if the function could apply a transformation to iself
 			//storage_key points to memory owning this (this is guaranteed to be in heap, held by a pointer. storage key refers to that pointer)
@@ -97,11 +92,6 @@ namespace bmath {
 	private:
 		intern::Basic_Term* term_ptr;		//start of actual term tree
 
-		//compares pattern_original to term. 
-		//if match was found, it is replaced by pattern.output and (true) is returned.
-		//if no match is found, (false) is returned.
-		bool match_and_transform(intern::Transformation& pattern);
-
 		void combine_values();
 		
 	public:
@@ -123,8 +113,6 @@ namespace bmath {
 
 		//performs equivalent transfomations to combine subterms and simplify
 		//tries to match every pattern among other things.
-		void combine();
-
 		void simplify();
 
 		//sets every number to 0 if it is smaller than 10^(pow_of_10_diff_to_set_0) times the quadratic average of all numbers

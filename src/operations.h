@@ -40,7 +40,6 @@ namespace bmath {
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
 			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
-			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
 			void reset_own_matches(Basic_Term* parent) override;
 			bool operator<(const Basic_Term& other) const override;
@@ -88,6 +87,10 @@ namespace bmath {
 			//as finding common factors in summands turns out to be quite hard, this is not done via pattern matching, but via this function
 			//something was found and combined -> returns true, else return false
 			bool factoring();
+
+			//tests if this is a polinomial. if so, it will find its roots and transform the polinomial into the product of its roots.
+			//returns true if changed, false if no polinomial was found. storage_key is pointer to where the pointer to this is held.
+			bool factor_polinomial(Basic_Term** storage_key);
 		};
 
 
@@ -138,7 +141,6 @@ namespace bmath {
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
 			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
-			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool transform(Basic_Term** storage_key) override;
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
 			void reset_own_matches(Basic_Term* parent) override;
@@ -171,7 +173,6 @@ namespace bmath {
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
 			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
-			Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) override;
 			bool transform(Basic_Term** storage_key) override;
 			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
 			void reset_own_matches(Basic_Term* parent) override;
@@ -297,28 +298,6 @@ namespace bmath {
 				it->for_each(func);
 			}
 			func(this, this_type);
-		}
-
-		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
-		inline Basic_Term** Variadic_Operator<operate, this_type, neutral_val>::match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key)
-		{
-			reset_all_pattern_vars(pattern_var_adresses);
-			this->sort();
-			Basic_Term** const found_part = this->part_equal_to_pattern(pattern, nullptr, storage_key);
-			if (found_part) {
-				return found_part;
-			}
-			else {
-				Basic_Term** argument_match;
-				for (auto& it : this->operands) {	//references are important, because we want to return the position of it.
-					reset_all_pattern_vars(pattern_var_adresses);
-					argument_match = it->match_intern(pattern, pattern_var_adresses, &it);
-					if (argument_match) {
-						return argument_match;
-					}
-				}
-			}
-			return nullptr;
 		}
 
 		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>

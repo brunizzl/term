@@ -58,19 +58,6 @@ void test_strings()
 	baue_teststrs(teststrs);
 }
 
-void print_all_patterns()
-{
-	for (const auto& pattern : bmath::intern::Transformation::transformations) {
-		std::cout << pattern->print() << '\n';
-		std::cout << '\n';
-		std::cout << "input :" << ptr_to_tree(pattern->input.term_ptr, 12).erase(0, 10) << '\n';
-		std::cout << '\n';
-		std::cout << "output  :" << ptr_to_tree(pattern->output.term_ptr, 12).erase(0, 10) << '\n';
-		std::cout << "__________________________________________________________\n";
-		std::cout << '\n';
-	}
-}
-
 void test_rechner() 
 {
 	while (true) {
@@ -79,7 +66,7 @@ void test_rechner()
 		try {
 			bmath::Term test(name); 
 			std::cout << "baum:" << test.to_tree(7).erase(0, 5) << '\n';
-			test.combine();
+			test.simplify();
 			test.cut_rounding_error();
 			std::cout << "-> " << test << "\n\n";
 			//print_all_patterns();

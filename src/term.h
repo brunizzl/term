@@ -60,10 +60,9 @@ namespace bmath {
 			virtual Basic_Term** match_intern(Basic_Term* pattern, std::list<Pattern_Variable*>& pattern_var_adresses, Basic_Term** storage_key) = 0;
 
 			//first tries to transform terms held by this, then tries to transform itself
-			//returns true if transformation in transforms was applied, false if none matched on this level
+			//returns true if eighter the transform of one subterm was true or, if the function could apply a transformation to iself
 			//storage_key points to memory owning this (this is guaranteed to be in heap, held by a pointer. storage key refers to that pointer)
-			//if only_shallow, transform will not first try to transform its subterms, otherwise it will.
-			virtual bool transform(Basic_Term** storage_key, bool only_shallow) = 0;
+			virtual bool transform(Basic_Term** storage_key) = 0;
 
 			//called by match_intern to test if this is equal to pattern.
 			//only differs from operator== in its ability to modify the matched pattern_variables
@@ -125,6 +124,8 @@ namespace bmath {
 		//performs equivalent transfomations to combine subterms and simplify
 		//tries to match every pattern among other things.
 		void combine();
+
+		void simplify();
 
 		//sets every number to 0 if it is smaller than 10^(pow_of_10_diff_to_set_0) times the quadratic average of all numbers
 		//warning: may not round as expected, as there are some more values 1 and -1, as one sees in the printed string. (use to_tree() to check where)

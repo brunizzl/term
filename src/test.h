@@ -28,7 +28,7 @@ void baue_teststrs(const std::vector<std::string>& teststrs)
 		std::cout << "raw print:  \t" << test << '\n';
 		std::cout << "raw tree:" << test.to_tree(16).erase(0, 9) << '\n';
 		std::cout << '\n';
-		test.combine();
+		test.simplify();
 		test.cut_rounding_error();
 		std::cout << "combined print:\t" << test << '\n';
 		std::cout << "combined tree:" << test.to_tree(16).erase(0, 14) << '\n';
@@ -40,6 +40,7 @@ void baue_teststrs(const std::vector<std::string>& teststrs)
 void test_strings() 
 {
 	const std::vector<std::string> teststrs = {
+		"12*herbert+herbert+4",
 		"(3*x-2*y)/5",
 		"(1*[2i^(-2)*3*(4*(a^5))])",
 		"(10/5)^3",

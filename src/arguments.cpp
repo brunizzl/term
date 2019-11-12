@@ -82,7 +82,7 @@ Basic_Term** Value::match_intern(Basic_Term* pattern, std::list<Pattern_Variable
 	}
 }
 
-bool bmath::intern::Value::transform(Basic_Term** storage_key, bool only_shallow)
+bool bmath::intern::Value::transform(Basic_Term** storage_key)
 {
 	return false;
 }
@@ -225,7 +225,7 @@ Basic_Term** Variable::match_intern(Basic_Term* pattern, std::list<Pattern_Varia
 	}
 }
 
-bool bmath::intern::Variable::transform(Basic_Term** storage_key, bool only_shallow)
+bool bmath::intern::Variable::transform(Basic_Term** storage_key)
 {
 	return false;
 }

@@ -84,7 +84,7 @@ Basic_Term** Pattern_Variable::match_intern(Basic_Term* pattern, std::list<Patte
 	return nullptr;
 }
 
-bool bmath::intern::Pattern_Variable::transform(Basic_Term** storage_key, bool only_shallow)
+bool bmath::intern::Pattern_Variable::transform(Basic_Term** storage_key)
 {
 	assert(false);	//no pattern shall be transformed by other patterns.
 	return false;

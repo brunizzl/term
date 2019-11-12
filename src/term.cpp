@@ -190,6 +190,15 @@ void bmath::Term::combine()
 	this->combine_values();
 }
 
+void bmath::Term::simplify()
+{
+	do {
+		this->term_ptr->combine_layers(this->term_ptr);
+		this->combine_values();
+		this->term_ptr->sort();
+	} while (this->term_ptr->transform(&this->term_ptr));
+}
+
 void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)
 {
 	double quadratic_sum = 0;	//only considers real part of vaues

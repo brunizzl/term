@@ -19,7 +19,7 @@ namespace bmath {
 			exponentiation,
 			//third most unique		(operands can vary in the positioning relative to each other)
 			product,
-			sum,	//sum after product to simplify function factoring() of Sum
+			sum,
 			//fourth most unique	(name or val can take nearly infinite states)
 			variable,
 			value,				

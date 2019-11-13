@@ -70,12 +70,12 @@ void bmath::intern::Value::for_each(std::function<void(Basic_Term* this_ptr, Typ
 	func(this, Type::value);
 }
 
-bool bmath::intern::Value::transform(Basic_Term** storage_key)
+bool bmath::intern::Value::transform(Basic_Term *& storage_key)
 {
 	return false;
 }
 
-bool bmath::intern::Value::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
+bool bmath::intern::Value::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term *& storage_key)
 {
 	const Type pattern_type = type_of(pattern);
 	if (pattern_type == Type::value) {
@@ -201,12 +201,12 @@ void bmath::intern::Variable::for_each(std::function<void(Basic_Term* this_ptr, 
 	func(this, Type::variable);
 }
 
-bool bmath::intern::Variable::transform(Basic_Term** storage_key)
+bool bmath::intern::Variable::transform(Basic_Term *& storage_key)
 {
 	return false;
 }
 
-bool bmath::intern::Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
+bool bmath::intern::Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term *& storage_key)
 {
 	const Type pattern_type = type_of(pattern);
 	if (pattern_type == Type::variable) {

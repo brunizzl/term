@@ -41,8 +41,8 @@ namespace bmath {
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
 			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
-			bool transform(Basic_Term** storage_key) override;
-			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
+			bool transform(Basic_Term *& storage_key) override;
+			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term *& storage_key) override;
 			void reset_own_matches(Basic_Term* parent) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
@@ -52,43 +52,23 @@ namespace bmath {
 
 			//does the actual matching attempt. takes same parameters as equal_to_pattern, just with output roles.
 			//to not cause any confusion, the functionality of try_matching() is not implemented in equal_to_pattern()
-			bool try_matching(Basic_Term* other, Basic_Term* patterns_parent, Basic_Term** other_storage_key);
+			bool try_matching(Basic_Term* other, Basic_Term* patterns_parent, Basic_Term *& other_storage_key);
 
 			bool is_unmatched() const;
 		};	
 
 
-		class Pattern_Term
-		{ //like bmath::Term, but holds pattern_variables instead of variables.
-		public:
-			Basic_Term* term_ptr;
-
-			Pattern_Term();
-			void build(std::string name, std::list<Pattern_Variable*>& var_adresses);
-			~Pattern_Term();
-
-			Basic_Term* copy();	//returns copy of this, but the Pattern_Variables are replaced by the terms they matched
-
-			//Pattern_Terms should not be copied nor changed. they only help other terms to change.
-			Pattern_Term(const Pattern_Term& source) = delete;
-			Pattern_Term(Pattern_Term&& source) = delete;
-			Pattern_Term& operator=(const Pattern_Term& source) = delete;
-			Pattern_Term& operator=(Pattern_Term&& source) = delete;
-		};
-
-
 		class  Transformation {	//"template" to transform input to output
 		public:
 			std::list<Pattern_Variable*> var_adresses;
-			Pattern_Term input;	//pattern to be compared to term opject
-			Pattern_Term output;	//pattern to replace match in term object
+			Basic_Term* input;	//pattern to be compared to term opject
+			Basic_Term* output;	//pattern to replace match in term object
 
 			Transformation(std::string input_, std::string output_);
 			~Transformation();
 
 			std::string print() const;	//debugging
-			Basic_Term* input_ptr() const;
-			Basic_Term* output_ptr() const;
+			Basic_Term* copy(); //returns copy of this, but the Pattern_Variables are replaced by the terms they matched
 		};
 
 	} //namespace intern

@@ -163,7 +163,7 @@ void bmath::Term::simplify()
 		this->term_ptr->combine_layers(this->term_ptr);
 		this->combine_values();
 		this->term_ptr->sort();
-	} while (this->term_ptr->transform(&this->term_ptr));
+	} while (this->term_ptr->transform(this->term_ptr));
 }
 
 void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)

@@ -40,7 +40,7 @@ namespace bmath {
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
 			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
-			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
+			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term *& storage_key) override;
 			void reset_own_matches(Basic_Term* parent) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
@@ -51,7 +51,7 @@ namespace bmath {
 			//other operands may still call equal_to_pattern() and may not need behaving different if pattern is of type variadic_operator<>.
 			//if parts of this operands match pattern, a new variadic_operator<> will be constructed, with the matched -
 			//operands moved there. the new variadic_operator<> will be returned. otherwise nullptr is returned.
-			Basic_Term** part_equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key);
+			Basic_Term** part_equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term *& storage_key);
 
 			//pushes term_ptr back into operands
 			void push_back(Basic_Term* const term_ptr);
@@ -71,7 +71,7 @@ namespace bmath {
 		{
 		private:
 			const static std::vector<Transformation*> sum_transforms;
-			friend Pattern_Term::~Pattern_Term();
+			friend void delete_pattern(Basic_Term* pattern);
 
 		public:
 			Sum();
@@ -82,7 +82,7 @@ namespace bmath {
 
 			void to_str(std::string& str, int caller_operator_precedence) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
-			bool transform(Basic_Term** storage_key) override;
+			bool transform(Basic_Term *& storage_key) override;
 
 			//as finding common factors in summands turns out to be quite hard, this is not done via pattern matching, but via this function
 			//something was found and combined -> returns true, else return false
@@ -98,7 +98,7 @@ namespace bmath {
 		{
 		private:
 			const static std::vector<Transformation*> product_transforms;
-			friend Pattern_Term::~Pattern_Term();
+			friend void delete_pattern(Basic_Term* pattern);
 			friend bool Sum::factoring();
 
 		public:
@@ -111,7 +111,7 @@ namespace bmath {
 
 			void to_str(std::string& str, int caller_operator_precedence) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
-			bool transform(Basic_Term** storage_key) override;
+			bool transform(Basic_Term *& storage_key) override;
 		};
 
 
@@ -123,7 +123,7 @@ namespace bmath {
 			const static std::vector<Transformation*> exp_transforms;
 
 			friend class bmath::Term;
-			friend Pattern_Term::~Pattern_Term();
+			friend void delete_pattern(Basic_Term* pattern);
 
 		public:
 			Exponentiation();
@@ -141,8 +141,8 @@ namespace bmath {
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
 			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
-			bool transform(Basic_Term** storage_key) override;
-			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
+			bool transform(Basic_Term *& storage_key) override;
+			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term *& storage_key) override;
 			void reset_own_matches(Basic_Term* parent) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
@@ -156,7 +156,7 @@ namespace bmath {
 			Basic_Term* argument;
 			const static std::vector<Transformation*> parop_transforms;
 
-			friend Pattern_Term::~Pattern_Term();
+			friend void delete_pattern(Basic_Term* pattern);
 
 		public:
 			Par_Operator();
@@ -173,8 +173,8 @@ namespace bmath {
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
 			void for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func) override;
-			bool transform(Basic_Term** storage_key) override;
-			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) override;
+			bool transform(Basic_Term *& storage_key) override;
+			bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term *& storage_key) override;
 			void reset_own_matches(Basic_Term* parent) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
@@ -301,7 +301,7 @@ namespace bmath {
 		}
 
 		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
-		inline bool Variadic_Operator<operate, this_type, neutral_val>::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
+		inline bool Variadic_Operator<operate, this_type, neutral_val>::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term *& storage_key)
 		{
 			const Type pattern_type = type_of(pattern);
 			if (pattern_type == this_type) {
@@ -383,7 +383,7 @@ namespace bmath {
 		}
 
 		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
-		inline Basic_Term** Variadic_Operator<operate, this_type, neutral_val>::part_equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
+		inline Basic_Term** Variadic_Operator<operate, this_type, neutral_val>::part_equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term *& storage_key)
 		{
 			const Type pattern_type = type_of(pattern);
 			if (pattern_type == this_type) {
@@ -399,17 +399,17 @@ namespace bmath {
 					}
 					else {
 						this->operands.splice(this->operands.end(), *matched_operands);
-						return storage_key;
+						return &storage_key;
 					}
 				}
 				else {
-					return false;
+					return nullptr;
 				}
 			}
 			else if (pattern_type == Type::pattern_variable) {
 				Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);
 				if (pattern_var->try_matching(this, patterns_parent, storage_key)) {
-					return storage_key;
+					return &storage_key;
 				}
 			}
 			return nullptr;
@@ -465,7 +465,7 @@ namespace bmath {
 
 				bool found_match = false;
 				for (auto test_it = next_search_begin; test_it != test_ops.end(); ++test_it) {
-					if ((*test_it)->equal_to_pattern(*pattern_it, pattern, &*test_it)) {
+					if ((*test_it)->equal_to_pattern(*pattern_it, pattern, *test_it)) {
 						match_positions.emplace_back(std::next(test_it));
 						matched_operands.splice(matched_operands.end(), test_ops, test_it);
 						found_match = true;

@@ -56,13 +56,13 @@ namespace bmath {
 
 			//first tries to transform terms held by this, then tries to transform itself
 			//returns true if eighter the transform of one subterm was true or, if the function could apply a transformation to iself
-			//storage_key points to memory owning this (this is guaranteed to be in heap, held by a pointer. storage key refers to that pointer)
-			virtual bool transform(Basic_Term** storage_key) = 0;
+			//storage_key refers to memory owning this (this is guaranteed to be in heap, held by a pointer. storage key refers to that pointer)
+			virtual bool transform(Basic_Term *& storage_key) = 0;
 
 			//called by match_intern to test if this is equal to pattern.
 			//only differs from operator== in its ability to modify the matched pattern_variables
-			//storage_key is pointer to the space in the term owning this, that holds the pointer to this (as in the function above)
-			virtual bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key) = 0;
+			//storage_key refers to the space in the term owning this, that holds the pointer to this (as in the function above)
+			virtual bool equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term *& storage_key) = 0;
 
 			//called by terms part of a pattern to reset the pattern subterms held by this paticualar part or its subterms
 			//returns, whether reset was successful (true) or whether there was another option to match and this is now set (false)

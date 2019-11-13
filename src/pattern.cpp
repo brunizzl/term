@@ -78,13 +78,13 @@ void bmath::intern::Pattern_Variable::for_each(std::function<void(Basic_Term* th
 	func(this, Type::pattern_variable);
 }
 
-bool bmath::intern::Pattern_Variable::transform(Basic_Term** storage_key)
+bool bmath::intern::Pattern_Variable::transform(Basic_Term *& storage_key)
 {
 	assert(false);	//no pattern shall be transformed by other patterns. (yet)
 	return false;
 }
 
-bool bmath::intern::Pattern_Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
+bool bmath::intern::Pattern_Variable::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term *& storage_key)
 {
 	assert(false);	//patterns should not be compared to patterns.
 	return false;
@@ -150,12 +150,12 @@ Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term() const
 	}
 }
 
-bool bmath::intern::Pattern_Variable::try_matching(Basic_Term* other, Basic_Term* patterns_parent, Basic_Term** other_storage_key)
+bool bmath::intern::Pattern_Variable::try_matching(Basic_Term* other, Basic_Term* patterns_parent, Basic_Term *& other_storage_key)
 {
 	if (this->matched_term == nullptr) {
 		this->matched_term = other;
 		this->responsible_parent = patterns_parent;
-		this->matched_storage_key = other_storage_key;
+		this->matched_storage_key = &other_storage_key;
 		return true;
 	}
 	else {
@@ -174,60 +174,6 @@ bool bmath::intern::Pattern_Variable::is_unmatched() const
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Pattern_Term\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-Pattern_Term::Pattern_Term()
-	:term_ptr(nullptr)
-{
-}
-
-void Pattern_Term::build(std::string name, std::list<Pattern_Variable*>& var_adresses)
-{
-	assert(term_ptr == nullptr);
-	preprocess_str(name);
-	this->term_ptr = build_pattern_subterm({ name.data(), name.length() }, var_adresses);
-	this->term_ptr->combine_layers(this->term_ptr);
-	this->term_ptr->sort();
-}
-
-Pattern_Term::~Pattern_Term()
-{
-	//due to the fact, that Pattern_Term breaks the Tree structure (one pattern_variable might be owned by multiple parents) -
-	//we can not use the destructor of Basic_Term
-	std::list<Basic_Term*> subterms;
-	this->term_ptr->for_each([&subterms](Basic_Term* this_ptr, Type this_type) { 
-		if (this_type != Type::pattern_variable) subterms.push_back(this_ptr);	//pattern_variables are not deleted by this destructor (but by owner of Pattern_Term)
-
-		switch (this_type) {
-		case Type::par_operator:
-			static_cast<Par_Operator*>(this_ptr)->argument = nullptr;
-			break;
-		case Type::exponentiation:
-			static_cast<Exponentiation*>(this_ptr)->base = nullptr;
-			static_cast<Exponentiation*>(this_ptr)->expo = nullptr;
-			break;
-		case Type::sum:
-			static_cast<Sum*>(this_ptr)->operands.clear();
-			break;
-		case Type::product:
-			static_cast<Product*>(this_ptr)->operands.clear();
-			break;
-		}
-	});
-	for (auto subterm : subterms) {
-		delete subterm;
-	}
-}
-
-Basic_Term* Pattern_Term::copy()
-{
-	return copy_subterm(this->term_ptr);
-}
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Transformation\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -235,12 +181,20 @@ Basic_Term* Pattern_Term::copy()
 Transformation::Transformation(std::string input_, std::string output_)
 	:var_adresses(), input(), output()
 {
-	input.build(std::move(input_), this->var_adresses);
-	output.build(std::move(output_), this->var_adresses);
+	preprocess_str(input_);
+	preprocess_str(output_);
+	input = build_pattern_subterm({ input_.data(), input_.length() }, this->var_adresses);
+	output = build_pattern_subterm({ output_.data(), output_.length() }, this->var_adresses);
+	input->combine_layers(input);
+	output->combine_layers(output);
+	input->sort();
+	output->sort();
 }
 
 bmath::intern::Transformation::~Transformation()
 {
+	delete_pattern(input);
+	delete_pattern(output);
 	for (auto it : this->var_adresses) {
 		delete it;
 	}
@@ -249,19 +203,14 @@ bmath::intern::Transformation::~Transformation()
 std::string Transformation::print() const
 {
 	std::string str;
-	this->input.term_ptr->to_str(str, operator_precedence(Type::undefined));
+	this->input->to_str(str, operator_precedence(Type::undefined));
 	str.append(" -> ");
-	this->output.term_ptr->to_str(str, operator_precedence(Type::undefined));
+	this->output->to_str(str, operator_precedence(Type::undefined));
 	return str;
 }
 
-Basic_Term* bmath::intern::Transformation::input_ptr() const
+Basic_Term* bmath::intern::Transformation::copy()
 {
-	return this->input.term_ptr;
-}
-
-Basic_Term* bmath::intern::Transformation::output_ptr() const
-{
-	return this->output.term_ptr;
+	return copy_subterm(this->output);
 }
 

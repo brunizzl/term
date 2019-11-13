@@ -131,17 +131,17 @@ void Sum::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_ro
 	}
 }
 
-bool bmath::intern::Sum::transform(Basic_Term** storage_key)
+bool bmath::intern::Sum::transform(Basic_Term *& storage_key)
 {
 	for (auto& summand : this->operands) {
-		if (summand->transform(&summand)) {
+		if (summand->transform(summand)) {
 			return true;
 		}
 	}
 
 	for (auto trans : sum_transforms) {
 		reset_all_pattern_vars(trans->var_adresses);
-		Basic_Term** const found_part = this->part_equal_to_pattern(trans->input_ptr(), nullptr, storage_key);
+		Basic_Term** const found_part = this->part_equal_to_pattern(trans->input, nullptr, storage_key);
 		if (found_part) {
 			replace(found_part, trans);
 			return true;
@@ -337,17 +337,17 @@ void Product::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dis
 	}
 }
 
-bool bmath::intern::Product::transform(Basic_Term** storage_key)
+bool bmath::intern::Product::transform(Basic_Term *& storage_key)
 {
 	for (auto& factor : this->operands) {
-		if (factor->transform(&factor)) {
+		if (factor->transform(factor)) {
 			return true;
 		}
 	}
 
 	for (auto trans : product_transforms) {
 		reset_all_pattern_vars(trans->var_adresses);
-		Basic_Term** const found_part = this->part_equal_to_pattern(trans->input_ptr(), nullptr, storage_key);
+		Basic_Term** const found_part = this->part_equal_to_pattern(trans->input, nullptr, storage_key);
 		if (found_part) {
 			replace(found_part, trans);
 			return true;
@@ -512,34 +512,34 @@ void bmath::intern::Exponentiation::for_each(std::function<void(Basic_Term* this
 	func(this, Type::exponentiation);
 }
 
-bool bmath::intern::Exponentiation::transform(Basic_Term** storage_key)
+bool bmath::intern::Exponentiation::transform(Basic_Term *& storage_key)
 {
-	if (this->base->transform(&this->base)) {
+	if (this->base->transform(this->base)) {
 		return true;
 	}
-	if (this->expo->transform(&this->expo)) {
+	if (this->expo->transform(this->expo)) {
 		return true;
 	}
 
 	for (auto trans : exp_transforms) {
 		reset_all_pattern_vars(trans->var_adresses);
-		if (this->equal_to_pattern(trans->input_ptr(), nullptr, storage_key)) {
-			replace(storage_key, trans);
+		if (this->equal_to_pattern(trans->input, nullptr, storage_key)) {
+			replace(&storage_key, trans);
 			return true;
 		}
 	}
 	return false;
 }
 
-bool bmath::intern::Exponentiation::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
+bool bmath::intern::Exponentiation::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term *& storage_key)
 {
 	const Type pattern_type = type_of(pattern);
 	if (pattern_type == Type::exponentiation) {
 		const Exponentiation* pattern_exp = static_cast<const Exponentiation*>(pattern);
-		if (!this->base->equal_to_pattern(pattern_exp->base, pattern, &this->base)) {
+		if (!this->base->equal_to_pattern(pattern_exp->base, pattern, this->base)) {
 			return false;
 		}
-		if (!this->expo->equal_to_pattern(pattern_exp->expo, pattern, &this->expo)) {
+		if (!this->expo->equal_to_pattern(pattern_exp->expo, pattern, this->expo)) {
 			return false;
 		}
 		return true;
@@ -678,23 +678,23 @@ void bmath::intern::Par_Operator::for_each(std::function<void(Basic_Term* this_p
 	func(this, Type::par_operator);
 }
 
-bool bmath::intern::Par_Operator::transform(Basic_Term** storage_key)
+bool bmath::intern::Par_Operator::transform(Basic_Term *& storage_key)
 {
-	if (this->argument->transform(&this->argument)) {
+	if (this->argument->transform(this->argument)) {
 		return true;
 	}
 
 	for (auto trans : parop_transforms) {
 		reset_all_pattern_vars(trans->var_adresses);
-		if (this->equal_to_pattern(trans->input_ptr(), nullptr, storage_key)) {
-			replace(storage_key, trans);
+		if (this->equal_to_pattern(trans->input, nullptr, storage_key)) {
+			replace(&storage_key, trans);
 			return true;
 		}
 	}
 	return false;
 }
 
-bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term** storage_key)
+bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term *& storage_key)
 {
 	const Type pattern_type = type_of(pattern);
 	if (pattern_type == Type::par_operator) {
@@ -702,7 +702,7 @@ bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Te
 		if (this->op_type != pattern_par_op->op_type) {
 			return false;
 		}
-		return this->argument->equal_to_pattern(pattern_par_op->argument, pattern, &this->argument);
+		return this->argument->equal_to_pattern(pattern_par_op->argument, pattern, this->argument);
 	}
 	else if (pattern_type == Type::pattern_variable) {
 		Pattern_Variable* pattern_var = static_cast<Pattern_Variable*>(pattern);

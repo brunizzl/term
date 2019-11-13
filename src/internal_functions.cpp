@@ -286,6 +286,35 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source)
 	throw XTermConstructionError("function copy_subterm expected known type to copy");
 }
 
+void bmath::intern::delete_pattern(Basic_Term* pattern)
+{
+	//due to the fact, that Pattern_Term breaks the Tree structure (one pattern_variable might be owned by multiple parents) -
+	//we can not use the destructor of Basic_Term
+	std::list<Basic_Term*> subterms;
+	pattern->for_each([&subterms](Basic_Term* this_ptr, Type this_type) {
+		if (this_type != Type::pattern_variable) subterms.push_back(this_ptr);	//pattern_variables are not deleted by this destructor (but by owner of Pattern_Term)
+
+		switch (this_type) {
+		case Type::par_operator:
+			static_cast<Par_Operator*>(this_ptr)->argument = nullptr;
+			break;
+		case Type::exponentiation:
+			static_cast<Exponentiation*>(this_ptr)->base = nullptr;
+			static_cast<Exponentiation*>(this_ptr)->expo = nullptr;
+			break;
+		case Type::sum:
+			static_cast<Sum*>(this_ptr)->operands.clear();
+			break;
+		case Type::product:
+			static_cast<Product*>(this_ptr)->operands.clear();
+			break;
+		}
+		});
+	for (auto subterm : subterms) {
+		delete subterm;
+	}
+}
+
 std::vector<Transformation*> bmath::intern::transforms_of(Type requested_type)
 {
 	static std::vector<Transformation*> transformations = {	//////////////////all transformations should be declared here///////////////////////////
@@ -302,17 +331,17 @@ std::vector<Transformation*> bmath::intern::transforms_of(Type requested_type)
 	};
 	std::vector<Transformation*> requested_transforms;
 	for (auto trans : transformations) {
-		if (type_of(trans->input.term_ptr) == requested_type) {
+		if (type_of(trans->input) == requested_type) {
 			requested_transforms.push_back(trans);
 		}
 	}
 	return requested_transforms;
 }
 
-void bmath::intern::replace(Basic_Term** storage_key, Transformation* trans)
+void bmath::intern::replace(Basic_Term ** storage_key, Transformation* trans)
 {
-	Basic_Term* const replacement = trans->output.copy();
-	delete* storage_key;
+	Basic_Term* const replacement = trans->copy();	//order is relevant, as copy may steal some of the original subterms
+	delete *storage_key;
 	*storage_key = replacement;
 }
 

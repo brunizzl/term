@@ -698,7 +698,7 @@ bool bmath::intern::Par_Operator::equal_to_pattern(Basic_Term* pattern, Basic_Te
 {
 	const Type pattern_type = type_of(pattern);
 	if (pattern_type == Type::par_operator) {
-		const Par_Operator* pattern_par_op = static_cast<const Par_Operator*>(pattern);
+		const Par_Operator* const pattern_par_op = static_cast<const Par_Operator*>(pattern);
 		if (this->op_type != pattern_par_op->op_type) {
 			return false;
 		}

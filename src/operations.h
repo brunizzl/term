@@ -464,7 +464,7 @@ namespace bmath {
 				}
 
 				bool found_match = false;
-				for (auto test_it = next_search_begin; test_it != test_ops.end(); ++test_it) {
+				for (auto& test_it = next_search_begin; test_it != test_ops.end(); ++test_it) {
 					if ((*test_it)->equal_to_pattern(*pattern_it, pattern, *test_it)) {
 						match_positions.emplace_back(std::next(test_it));
 						matched_operands.splice(matched_operands.end(), test_ops, test_it);
@@ -497,6 +497,10 @@ namespace bmath {
 				else {
 					++pattern_it;
 					++pattern;
+					//the modification of the pattern pointer is a hack and only workes 100%, 
+					//as long as no two variadic operators appear ony different levels in a pattern (no variadic should be subterm of another)
+					//this is because reset_pattern_vars() relies the pattern pointer to free a pattern_var, which is lost if this 
+					//function here is called recursively (equal_to_pattern calls this function and vice versa)
 					next_search_begin = test_ops.begin();
 				}
 			}

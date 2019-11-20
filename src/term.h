@@ -29,6 +29,8 @@ namespace bmath {
 			//line prefix is meant to be set in front of content of this eg. '+' if calling term is sum
 			virtual void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const = 0;
 
+			std::string debug_print() const;
+
 			//returns true type of term (sum, product, value, etc.)
 			virtual Type type() const = 0;
 

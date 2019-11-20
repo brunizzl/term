@@ -103,7 +103,7 @@ Sum::Sum(const Sum& source)
 
 void Sum::to_str(std::string& str, int caller_operator_precedence) const
 {
-	const bool pars = caller_operator_precedence > operator_precedence(Type::sum);
+	const bool pars = caller_operator_precedence >= operator_precedence(Type::sum);
 	if (pars) {
 		str.push_back('(');
 	}
@@ -309,7 +309,7 @@ Product::Product(const Product& source)
 
 void Product::to_str(std::string& str, int caller_operator_precedence) const
 {
-	const bool pars = caller_operator_precedence > operator_precedence(Type::product);
+	const bool pars = caller_operator_precedence >= operator_precedence(Type::product);
 	if (pars) {
 		str.push_back('(');
 	}

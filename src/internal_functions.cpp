@@ -324,6 +324,7 @@ std::vector<Transformation*> bmath::intern::transforms_of(Type requested_type)
 		new Transformation("(a^b)^c", "a^(b*c)"),
 
 		new Transformation("a+a", "2*a"),
+		//new Transformation("a*b+a", "a*(b+1)"),
 		
 		new Transformation("a^b*a^c", "a^(b+c)"),
 		new Transformation("a^b*a", "a^(b+1)"),

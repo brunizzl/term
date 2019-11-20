@@ -17,6 +17,11 @@ Pattern_Variable::Pattern_Variable(std::string_view name_, Type type_)
 {
 }
 
+void bmath::intern::Pattern_Variable::set_parent(Basic_Term* new_parent)
+{
+	this->responsible_parent = new_parent;
+}
+
 Pattern_Variable::~Pattern_Variable()
 {
 	//pattern_value is not owner -> nothing has to be deleted

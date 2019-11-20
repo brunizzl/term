@@ -15,6 +15,13 @@ Basic_Term::~Basic_Term()
 	//cleaning up the tree is done in derived classes
 }
 
+std::string bmath::intern::Basic_Term::debug_print() const
+{
+	std::string str;
+	this->to_str(str, 0);
+	return str;
+}
+
 bool Basic_Term::operator!=(const Basic_Term& other) const
 {
 	return !(*this == other);

@@ -447,6 +447,7 @@ namespace bmath {
 			bool already_matching_pattern_vars = false;
 			auto next_search_begin = test_ops.begin();	//no operand before this will be checked by current pattern_it
 			auto pattern_it = pattern_ops.begin();
+			Basic_Term* match_counter = pattern;		//used to differentiate between matches of same parent term.
 
 			while (pattern_it != pattern_ops.end()) {
 
@@ -458,21 +459,21 @@ namespace bmath {
 				}
 
 				//if we reached the last pattern_var and this last pattern_var has not been matched yet, it now matches the whole rest of test_ops, as the rest is packaged into one single operand.
-				if (already_matching_pattern_vars && static_cast<Pattern_Variable*>(*pattern_it)->is_unmatched() && std::next(pattern_it) == pattern_ops.end()) {
+				if (already_matching_pattern_vars && static_cast<Pattern_Variable*>(*pattern_it)->is_unmatched() && std::next(pattern_it) == pattern_ops.end() && test_ops.size() > 1) {
 					test_ops.push_back(new_instance(std::move(test_ops)));
 					next_search_begin = test_ops.begin();
 				}
 
 				bool found_match = false;
 				for (auto& test_it = next_search_begin; test_it != test_ops.end(); ++test_it) {
-					if ((*test_it)->equal_to_pattern(*pattern_it, pattern, *test_it)) {
+					if ((*test_it)->equal_to_pattern(*pattern_it, match_counter, *test_it)) {
 						match_positions.emplace_back(std::next(test_it));
 						matched_operands.splice(matched_operands.end(), test_ops, test_it);
 						found_match = true;
 						break;
 					}
 					else {
-						(*pattern_it)->reset_own_matches(pattern);
+						(*pattern_it)->reset_own_matches(match_counter);
 					}
 				}
 
@@ -482,8 +483,8 @@ namespace bmath {
 						next_search_begin = match_positions.back();
 						match_positions.pop_back();
 						--pattern_it;
-						--pattern;	//pattern is exclusively used to mark what exactly matched the pattern_variables. to distinguish different pattern_ops, we need to give every match a different "parent"
-						(*pattern_it)->reset_own_matches(pattern);
+						--match_counter;
+						(*pattern_it)->reset_own_matches(match_counter);
 						if (already_matching_pattern_vars && type_of(*pattern_it) != Type::pattern_variable) {
 							already_matching_pattern_vars = false;
 						}
@@ -496,12 +497,23 @@ namespace bmath {
 				}
 				else {
 					++pattern_it;
-					++pattern;
-					//the modification of the pattern pointer is a hack and only workes 100%, 
-					//as long as no two variadic operators appear ony different levels in a pattern (no variadic should be subterm of another)
-					//this is because reset_pattern_vars() relies the pattern pointer to free a pattern_var, which is lost if this 
+					++match_counter;
+					//the modification of the match_counter pointer is a hack and only workes, as long as no 
+					//two variadic operators appear ony different levels in a pattern (no variadic should be subterm of another, not direct nor indirect)
+					//this is because reset_own_matches() relies on the pattern pointer to free a pattern_var, however the pointer is lost if this 
 					//function here is called recursively (equal_to_pattern calls this function and vice versa)
+					//example: pattern "a*b+a" would not reset the "b" pattern_var correctly, as it was set with next(product's pointer), but product
+					//tries to reset with its pointer directly, not with the adresses following it. if the (just reset) "a" now matches and the whole match
+					//succedes, a term not equivalent to the original is produced. e.g. matching ("a*b+a" -> "a*(b+1)") with "c*d+g*f+g" would result in 
+					//"g*(d+1)+c*d", instead of the expected "c*d+g*(f+1)". this is very bad.
 					next_search_begin = test_ops.begin();
+				}
+			}
+			//hacky solution to problem: correct all adresses after the fact.
+			for (auto operand : pattern_ops) {
+				if (type_of(operand) == Type::pattern_variable) {
+					Pattern_Variable* const pattern_var = static_cast<Pattern_Variable*>(operand);
+					pattern_var->set_parent(pattern);
 				}
 			}
 			return std::move(matched_operands);

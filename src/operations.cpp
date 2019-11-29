@@ -135,7 +135,7 @@ void Sum::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_ro
 	append_last_line(tree_lines, line_prefix);
 
 	for (auto summand : this->operands) {
-		summand->to_tree_str(tree_lines, dist_root + 1, '+');
+		summand->to_tree_str(tree_lines, dist_root + 1, '\0');
 	}
 }
 
@@ -392,7 +392,7 @@ void Product::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dis
 	append_last_line(tree_lines, line_prefix);
 
 	for (const auto factor : this->operands) {
-		factor->to_tree_str(tree_lines, dist_root + 1, '*');
+		factor->to_tree_str(tree_lines, dist_root + 1, '\0');
 	}
 }
 
@@ -612,7 +612,7 @@ bool bmath::intern::Power::transform(Basic_Term *& storage_key)
 		return true;
 	}
 
-	for (auto trans : exp_transforms) {
+	for (auto trans : pow_transforms) {
 		reset_all_pattern_vars(trans->var_adresses);
 		if (this->equal_to_pattern(trans->input, nullptr, storage_key)) {
 			replace(&storage_key, trans);
@@ -679,7 +679,7 @@ bool Power::operator==(const Basic_Term& other) const
 	return false;
 }
 
-const std::vector<Transformation*> Power::exp_transforms = transforms_of(Type::power);
+const std::vector<Transformation*> Power::pow_transforms = transforms_of(Type::power);
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

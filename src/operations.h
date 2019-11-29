@@ -127,7 +127,7 @@ namespace bmath {
 		private:
 			Basic_Term* expo;
 			Basic_Term* base;
-			const static std::vector<Transformation*> exp_transforms;
+			const static std::vector<Transformation*> pow_transforms;
 
 			friend class bmath::Term;
 			friend void delete_pattern(Basic_Term* pattern);

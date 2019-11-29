@@ -347,18 +347,18 @@ void Product::to_str(std::string& str, int caller_operator_precedence) const
 	for (const auto it : backwards(this->operands)) {
 
 		if (type_of(it) == Type::power) {	//cancerous part to beautify 
-			const Power* exp_it = static_cast<const Power*>(it);
-			if (complies_with(exp_it->expo, Restriction::negative)) {
+			const Power* pow_it = static_cast<const Power*>(it);
+			if (complies_with(pow_it->expo, Restriction::negative)) {
 				if (!std::exchange(nothing_printed_yet, false)) {
 					str.push_back('/');
 				}
 				else {
 					str.append("1/");
 				}
-				exp_it->base->to_str(str, operator_precedence(Type::power));
-				if (complies_with(exp_it->expo, Restriction::not_minus_one)) {
+				pow_it->base->to_str(str, operator_precedence(Type::power));
+				if (complies_with(pow_it->expo, Restriction::not_minus_one)) {
 					str.push_back('^');
-					const Value* const exponent_val = static_cast<const Value*>(exp_it->expo);
+					const Value* const exponent_val = static_cast<const Value*>(pow_it->expo);
 					str.append(to_string(exponent_val->val(), operator_precedence(Type::power), true));
 				}
 				continue;
@@ -367,6 +367,10 @@ void Product::to_str(std::string& str, int caller_operator_precedence) const
 
 		if (complies_with(it, Restriction::minus_one) && this->operands.size() > 1) {
 			str.push_back('-');
+		}
+		else if (complies_with(it, Restriction::negative) && caller_operator_precedence == operator_precedence(Type::sum)) {	//still cancerous :(
+			it->to_str(str, operator_precedence(Type::sum));
+			nothing_printed_yet = false;
 		}
 		else {
 			if (!std::exchange(nothing_printed_yet, false)) {
@@ -413,17 +417,17 @@ bool bmath::intern::Product::transform(Basic_Term *& storage_key)
 
 bool bmath::intern::Product::unpack_division()
 {
-	for (auto exp_it = find_first_of(this->operands, Type::power); exp_it != this->operands.end() && type_of(*exp_it) == Type::power; ++exp_it) {
-		Power* const power = static_cast<Power*>(*exp_it);
+	for (auto pow_it = find_first_of(this->operands, Type::power); pow_it != this->operands.end() && type_of(*pow_it) == Type::power; ++pow_it) {
+		Power* const power = static_cast<Power*>(*pow_it);
 		if (complies_with(power->expo, Restriction::minus_one) && type_of(power->base) == Type::product) {
-			//we now know exp_it to be of form "(a*b*...)^(-1)" and want to convert exp_it's base to factors in this: "a^(-1)*b^(-1)..."
+			//we now know pow_it to be of form "(a*b*...)^(-1)" and want to convert pow_it's base to factors in this: "a^(-1)*b^(-1)..."
 			Product* const base_product = static_cast<Product*>(power->base);
 			for (auto factor : base_product->operands) {
 				this->operands.push_back(new Power(factor, -1.0));
 			}
 			base_product->operands.clear();
 			delete power;
-			this->operands.erase(exp_it);
+			this->operands.erase(pow_it);
 			return true;
 		}
 	}

@@ -200,7 +200,7 @@ bool bmath::intern::Sum::unpack_minus()
 	for (auto product_it = find_first_of(this->operands, Type::product); product_it != this->operands.end() && type_of(*product_it) == Type::product; ++product_it) {
 		std::list<Basic_Term*>& factors = static_cast<Product*>(*product_it)->operands;	//operands is sorted with sums in front of values
 		if (factors.size() == 2 && type_of(factors.front()) == Type::sum && fullfills_restr(factors.back(), Restriction::minus_one)) {
-			//we now know product_it to be of form "(a+b+...)*(-1)" and want to convert product_it to "a(-1)+b*(-1)..."
+			//we now know product_it to be of form "(a+b+...)*(-1)" and want to convert product_it's factors to summands in this: "a*(-1)+b*(-1)..."
 			Sum* negative_sum = static_cast<Sum*>(factors.front());
 			for (auto summand : negative_sum->operands) {
 				this->operands.push_back(new Product(summand, -1.0));
@@ -383,6 +383,7 @@ bool bmath::intern::Product::unpack_division()
 	for (auto exp_it = find_first_of(this->operands, Type::exponentiation); exp_it != this->operands.end() && type_of(*exp_it) == Type::exponentiation; ++exp_it) {
 		Exponentiation* const exponentiation = static_cast<Exponentiation*>(*exp_it);
 		if (fullfills_restr(exponentiation->expo, Restriction::minus_one) && type_of(exponentiation->base) == Type::product) {
+			//we now know exp_it to be of form "(a*b*...)^(-1)" and want to convert exp_it's base to factors in this: "a^(-1)*b^(-1)..."
 			Product* const base_product = static_cast<Product*>(exponentiation->base);
 			for (auto factor : base_product->operands) {
 				this->operands.push_back(new Exponentiation(factor, -1.0));

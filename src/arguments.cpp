@@ -234,7 +234,7 @@ bool Variable::operator<(const Basic_Term& other) const
 	}
 	else {
 		const Variable* other_var = static_cast<const Variable*>(&other);
-		return this->name < other_var->name;
+		return this->name > other_var->name;
 	}
 }
 

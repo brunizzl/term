@@ -2,8 +2,6 @@
 #include "operations.h"
 #include "internal_functions.h"
 
-//#include <sstream>
-
 
 using namespace bmath::intern;
 

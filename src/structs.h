@@ -32,6 +32,20 @@ namespace bmath {
 		static const Type all_types[] = { Type::par_operator, Type::exponentiation, Type::sum, Type::product, 
 										  Type::variable, Type::value, Type::pattern_variable, Type::undefined };
 
+		//used to restrict pattern_variable to only match basic_terms complying with restriction
+		enum class Restriction
+		{
+			value,
+			real,
+			integer,
+			natural,
+			not_minus_one,
+			none,
+		};
+
+		static const Restriction all_restrictions[] = { Restriction::value, Restriction::real, Restriction::integer, Restriction::natural, 
+														Restriction::not_minus_one, Restriction::none };
+
 		//used in Par_Operator class to specify whitch operator is actually used 
 		//(comments are corresponding std::complex functions)
 		//types names are sorted by length (used to be required, as the type_subterm() function searched for par_op at not only the beginning of the name string)

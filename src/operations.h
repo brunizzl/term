@@ -88,6 +88,9 @@ namespace bmath {
 			//something was found and combined -> returns true, else return false
 			bool factoring();
 
+			//converts "a-(b+c)" to "a-b-c" returns true if something changed
+			bool unpack_minus();
+
 			//tests if this is a polinomial. if so, it will find its roots and transform the polinomial into the product of its roots.
 			//returns true if changed, false if no polinomial was found. storage_key is pointer to where the pointer to this is held.
 			bool factor_polinomial(Basic_Term** storage_key);
@@ -98,8 +101,10 @@ namespace bmath {
 		{
 		private:
 			const static std::vector<Transformation*> product_transforms;
+
 			friend void delete_pattern(Basic_Term* pattern);
 			friend bool Sum::factoring();
+			friend bool Sum::unpack_minus();
 
 		public:
 			Product();
@@ -112,6 +117,9 @@ namespace bmath {
 			void to_str(std::string& str, int caller_operator_precedence) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			bool transform(Basic_Term *& storage_key) override;
+
+			//converts "a/(b*c)" to "a/b/c" returns true if something changed
+			bool unpack_division();
 		};
 
 
@@ -124,6 +132,7 @@ namespace bmath {
 
 			friend class bmath::Term;
 			friend void delete_pattern(Basic_Term* pattern);
+			friend bool Product::unpack_division();
 
 		public:
 			Exponentiation();

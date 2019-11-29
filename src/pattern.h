@@ -21,12 +21,12 @@ namespace bmath {
 			Basic_Term** matched_storage_key;	//actual storage position of matched_term (place in parent, where matched_term is stored)
 			//WARNING: responsible_parent may not point to a Basic_Term. this member is only a marker.
 			void* responsible_parent;			//parent unter which matched_term is set, and which is responsible for resetting matched_term
-			Type type_restriction;				//if variable != Type::undefined, this can only match terms of same type
+			Restriction restriction;			//unrestricted if == Restriction::none
 
 			friend void reset_all_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
 			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator);
 
-			Pattern_Variable(std::string_view name_, Type type_);
+			Pattern_Variable(std::string_view name_, Restriction restriction_);
 
 		public:
 			const std::string name;

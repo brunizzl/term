@@ -12,8 +12,8 @@ using namespace bmath::intern;
 //Pattern_Variable\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Pattern_Variable::Pattern_Variable(std::string_view name_, Type type_)
-	:name(name_), matched_term(nullptr), responsible_parent(nullptr), matched_storage_key(nullptr), type_restriction(type_)
+Pattern_Variable::Pattern_Variable(std::string_view name_, Restriction restriction_)
+	:name(name_), matched_term(nullptr), responsible_parent(nullptr), matched_storage_key(nullptr), restriction(restriction_)
 {
 }
 
@@ -31,9 +31,9 @@ void Pattern_Variable::to_str(std::string& str, int caller_operator_precedence) 
 {
 	str.push_back('{');
 	str.append(this->name);
-	if (this->type_restriction != Type::undefined) {
+	if (this->restriction != Restriction::none) {
 		str.push_back('!');
-		str.append(name_of(this->type_restriction));
+		str.append(name_of(this->restriction));
 	}
 	if (this->matched_term != nullptr) {
 		str.push_back(',');
@@ -115,9 +115,9 @@ bool Pattern_Variable::operator<(const Basic_Term& other) const
 			return *(this->matched_term) < *(other_var->matched_term);
 		}
 		else if (!this->matched_term && !other_var->matched_term) {
-			if ((this->type_restriction != Type::undefined || other_var->type_restriction != Type::undefined) 
-				&& this->type_restriction != other_var->type_restriction) {
-				return this->type_restriction < other_var->type_restriction;
+			if ((this->restriction != Restriction::none || other_var->restriction != Restriction::none) 
+				&& this->restriction != other_var->restriction) {
+				return this->restriction < other_var->restriction;
 			}
 			else {
 				return this->name < other_var->name;
@@ -133,7 +133,7 @@ bool Pattern_Variable::operator==(const Basic_Term& other) const
 {
 	if (type_of(other) == Type::pattern_variable) {
 		const Pattern_Variable* other_var = static_cast<const Pattern_Variable*>(&other);
-		if (this->type_restriction != other_var->type_restriction) {
+		if (this->restriction != other_var->restriction) {
 			return false;
 		}
 		else {
@@ -158,10 +158,13 @@ Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term() const
 bool bmath::intern::Pattern_Variable::try_matching(Basic_Term* other, Basic_Term* patterns_parent, Basic_Term *& other_storage_key)
 {
 	if (this->matched_term == nullptr) {
-		this->matched_term = other;
-		this->responsible_parent = patterns_parent;
-		this->matched_storage_key = &other_storage_key;
-		return true;
+		if (this->restriction == Restriction::none || fullfills_restr(other, this->restriction)) {
+			this->matched_term = other;
+			this->responsible_parent = patterns_parent;
+			this->matched_storage_key = &other_storage_key;
+			return true;
+		}
+		return false;
 	}
 	else {
 		if (*(this->matched_term) == *other) {

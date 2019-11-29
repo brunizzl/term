@@ -35,16 +35,17 @@ namespace bmath {
 		//used to restrict pattern_variable to only match basic_terms complying with restriction
 		enum class Restriction
 		{
-			value,
-			real,
-			integer,
 			natural,
+			integer,
+			real,
+			value,
 			not_minus_one,
+			minus_one,
 			none,
 		};
 
-		static const Restriction all_restrictions[] = { Restriction::value, Restriction::real, Restriction::integer, Restriction::natural, 
-														Restriction::not_minus_one, Restriction::none };
+		static const Restriction all_restrictions[] = { Restriction::natural, Restriction::integer, Restriction::real, Restriction::value, 
+														Restriction::not_minus_one, Restriction::minus_one, Restriction::none };
 
 		//used in Par_Operator class to specify whitch operator is actually used 
 		//(comments are corresponding std::complex functions)

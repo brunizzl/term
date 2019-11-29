@@ -148,7 +148,7 @@ bool bmath::intern::Sum::transform(Basic_Term *& storage_key)
 		}
 	}
 
-	return this->factoring();
+	return this->factoring() || this->unpack_minus();
 }
 
 bool bmath::intern::Sum::factoring()
@@ -156,6 +156,9 @@ bool bmath::intern::Sum::factoring()
 	for (auto product_it = find_first_of(this->operands, Type::product); product_it != this->operands.end() && type_of(*product_it) == Type::product; ++product_it) {
 		std::list<Basic_Term*>& first_factors = static_cast<Product*>(*product_it)->operands;
 		for (auto first_factor = first_factors.begin(); first_factor != first_factors.end(); ++first_factor) {
+			if (fullfills_restr(*first_factor, Restriction::minus_one)) {	//meaning first_factor == -1.0
+				continue;	//dont want to pack "a-b-c" to "a-(b+c)", as this would make it harder to detect cases like "a-(a+b)" (easier to detect as "a-a-b")
+			}
 			//assume this sum has form "a*b+a*c+d+..."
 			for (auto next_product_it = std::next(product_it); next_product_it != this->operands.end() && type_of(*next_product_it) == Type::product; ++next_product_it) {
 				std::list<Basic_Term*>& next_factors = static_cast<Product*>(*next_product_it)->operands;
@@ -187,6 +190,25 @@ bool bmath::intern::Sum::factoring()
 					return true;
 				}
 			}
+		}
+	}
+	return false;
+}
+
+bool bmath::intern::Sum::unpack_minus()
+{
+	for (auto product_it = find_first_of(this->operands, Type::product); product_it != this->operands.end() && type_of(*product_it) == Type::product; ++product_it) {
+		std::list<Basic_Term*>& factors = static_cast<Product*>(*product_it)->operands;	//operands is sorted with sums in front of values
+		if (factors.size() == 2 && type_of(factors.front()) == Type::sum && fullfills_restr(factors.back(), Restriction::minus_one)) {
+			//we now know product_it to be of form "(a+b+...)*(-1)" and want to convert product_it to "a(-1)+b*(-1)..."
+			Sum* negative_sum = static_cast<Sum*>(factors.front());
+			for (auto summand : negative_sum->operands) {
+				this->operands.push_back(new Product(summand, -1.0));
+			}
+			negative_sum->operands.clear();	//product_it now of form "()*-1"
+			delete* product_it;
+			this->operands.erase(product_it);
+			return true;
 		}
 	}
 	return false;
@@ -350,6 +372,24 @@ bool bmath::intern::Product::transform(Basic_Term *& storage_key)
 		Basic_Term** const found_part = this->part_equal_to_pattern(trans->input, nullptr, storage_key);
 		if (found_part) {
 			replace(found_part, trans);
+			return true;
+		}
+	}
+	return this->unpack_division();
+}
+
+bool bmath::intern::Product::unpack_division()
+{
+	for (auto exp_it = find_first_of(this->operands, Type::exponentiation); exp_it != this->operands.end() && type_of(*exp_it) == Type::exponentiation; ++exp_it) {
+		Exponentiation* const exponentiation = static_cast<Exponentiation*>(*exp_it);
+		if (fullfills_restr(exponentiation->expo, Restriction::minus_one) && type_of(exponentiation->base) == Type::product) {
+			Product* const base_product = static_cast<Product*>(exponentiation->base);
+			for (auto factor : base_product->operands) {
+				this->operands.push_back(new Exponentiation(factor, -1.0));
+			}
+			base_product->operands.clear();
+			delete exponentiation;
+			this->operands.erase(exp_it);
 			return true;
 		}
 	}

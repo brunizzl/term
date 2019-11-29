@@ -73,8 +73,8 @@ namespace bmath {
 		//returns first iterator of matching type in search, if none is found returns search.end()
 		std::list<Basic_Term*>::iterator find_first_of(std::list<Basic_Term*>& search, Type type);
 
-		//returns, wether test has no imaginary part and whole positive number as real part
-		bool is_natural(std::complex<double> test);
+		//returns whether term complies with restr
+		bool fullfills_restr(const Basic_Term*  term, Restriction restr);
 
 		//translates val to a string
 		//parent_operator_precedence is needed to determine, wheather to put parenteses around the string
@@ -94,7 +94,7 @@ namespace bmath {
 		constexpr std::complex<double> value_of(Math_Constant constant);
 
 		//returns type written out as string_view
-		std::string_view name_of(Type type);
+		std::string_view name_of(Restriction restr);
 
 		//functions used to complete template arguments of Variadic_Operator<> and to use as (*func) in struct Value_Manipulator
 		inline void add(std::complex<double>* const first, std::complex<double> second) { *first += second; }

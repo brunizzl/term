@@ -227,14 +227,14 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm, std::
 			return new Par_Operator(subterm, par_op_type, variables);
 		case Type::variable:
 			{
-				Type restriction = Type::undefined;
+				Restriction restriction = Restriction::none;
 				const std::size_t bang = subterm.find_first_of('!');
 				if (bang != std::string::npos) {
-					//subterm is expected to be of format "name!type". type_name only views "type"
-					std::string_view type_name(subterm.data() + bang + 1, subterm.size() - bang - 1);
-					for (Type type : all_types) {
-						if (name_of(type) == type_name) {
-							restriction = type;
+					//subterm is expected to be of format "name!restriction". type_name only views "type"
+					std::string_view restr_name(subterm.data() + bang + 1, subterm.size() - bang - 1);
+					for (Restriction restr_it : all_restrictions) {
+						if (name_of(restr_it) == restr_name) {
+							restriction = restr_it;
 							break;
 						}
 					}
@@ -242,8 +242,8 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm, std::
 				}
 				for (auto& variable : variables) {
 					if (variable->name == subterm) {
-						if (variable->type_restriction == Type::undefined) {
-							variable->type_restriction = restriction;
+						if (variable->restriction == Restriction::none) {
+							variable->restriction = restriction;
 						}
 						return variable;
 					}
@@ -318,13 +318,14 @@ void bmath::intern::delete_pattern(Basic_Term* pattern)
 std::vector<Transformation*> bmath::intern::transforms_of(Type requested_type)
 {
 	static std::vector<Transformation*> transformations = {	//////////////////all transformations should be declared here///////////////////////////
-		new Transformation("ln(a)+ln(b)", "ln(a*b)"),
-		new Transformation("ln(a)-ln(b)", "ln(a/b)"),
+		new Transformation("ln(a!real)+ln(b!real)", "ln(a*b)"),
+		new Transformation("ln(a!real)-ln(b!real)", "ln(a/b)"),
 		new Transformation("sin(x)^2+cos(x)^2", "1"),
+
 		new Transformation("(a^b)^c", "a^(b*c)"),
+		new Transformation("a^x!not_minus_one*b^x", "(a*b)^x"),
 
 		new Transformation("a+a", "2*a"),
-		//new Transformation("a*b+a", "a*(b+1)"),
 		
 		new Transformation("a^b*a^c", "a^(b+c)"),
 		new Transformation("a^b*a", "a^(b+1)"),
@@ -341,7 +342,7 @@ std::vector<Transformation*> bmath::intern::transforms_of(Type requested_type)
 
 void bmath::intern::replace(Basic_Term ** storage_key, Transformation* trans)
 {
-	Basic_Term* const replacement = trans->copy();	//order is relevant, as copy may steal some of the original subterms
+	Basic_Term* const replacement = trans->copy();	//order is relevant, as copy may take some of the original subterms
 	delete *storage_key;
 	*storage_key = replacement;
 }
@@ -428,10 +429,24 @@ std::list<Basic_Term*>::iterator bmath::intern::find_first_of(std::list<Basic_Te
 	return search.end();
 }
 
-bool bmath::intern::is_natural(std::complex<double> test)
+bool bmath::intern::fullfills_restr(const Basic_Term* term, Restriction restr)
 {
-	const double real = test.real();
-	return (real >= 0) && (real - static_cast<int>(real) == 0) && (test.imag() == 0);
+	const std::complex<double> val = type_of(term) == Type::value ? static_cast<const Value*>(term)->val() : 0.0;
+	bool meets_restr = true;	//natural is also integer, integer also real, real also value -> testing all together 
+
+	switch (restr) {
+	case Restriction::natural:			meets_restr &= val.real() > 0.0;
+	case Restriction::integer:			meets_restr &= val.real() - static_cast<int>(val.real()) == 0.0;
+	case Restriction::real:				meets_restr &= val.imag() == 0.0;
+	case Restriction::value:			meets_restr &= type_of(term) == Type::value;
+		return meets_restr;
+
+	case Restriction::not_minus_one:	return val != -1.0;
+	case Restriction::minus_one:		return val == -1.0;
+	case Restriction::none:				return true;
+	}
+	assert(false);
+	return false;
 }
 
 namespace bmath::intern {
@@ -572,17 +587,16 @@ constexpr std::complex<double> bmath::intern::value_of(Math_Constant constant)
 	return {};
 }
 
-std::string_view bmath::intern::name_of(Type type)
+std::string_view bmath::intern::name_of(Restriction restr)
 {
-	switch (type) {
-	case Type::par_operator:		return { "par_operator" };
-	case Type::exponentiation:		return { "expo" };
-	case Type::sum:					return { "sum" };
-	case Type::product:				return { "product" };
-	case Type::variable:			return { "variable" };
-	case Type::value:				return { "value" };
-	case Type::pattern_variable:	return { "pattern_variable" };
-	case Type::undefined:			return { "undefined" };
+	switch (restr) {
+	case Restriction::value:			return { "value" };
+	case Restriction::real:				return { "real" };
+	case Restriction::integer:			return { "integer" };
+	case Restriction::natural:			return { "natural" };
+	case Restriction::not_minus_one:	return { "not_minus_one" };
+	case Restriction::minus_one:		return { "minus_one" };
+	case Restriction::none:				return { "none" };
 	}
 	assert(false);
 	return {};

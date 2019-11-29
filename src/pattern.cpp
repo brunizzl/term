@@ -158,7 +158,7 @@ Basic_Term* bmath::intern::Pattern_Variable::copy_matched_term() const
 bool bmath::intern::Pattern_Variable::try_matching(Basic_Term* other, Basic_Term* patterns_parent, Basic_Term *& other_storage_key)
 {
 	if (this->matched_term == nullptr) {
-		if (this->restriction == Restriction::none || fullfills_restr(other, this->restriction)) {
+		if (this->restriction == Restriction::none || complies_with(other, this->restriction)) {
 			this->matched_term = other;
 			this->responsible_parent = patterns_parent;
 			this->matched_storage_key = &other_storage_key;

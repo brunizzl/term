@@ -139,7 +139,7 @@ Type bmath::intern::type_subterm(const std::string_view name, std::size_t& op, P
 	}
 	op = find_last_of_skip_pars(name, '^');
 	if (op != std::string::npos) {
-		return Type::exponentiation;
+		return Type::power;
 	}
 	//searching for parenthesis operators 
 	for (Par_Op_Type op_type : all_par_op_types) {
@@ -178,8 +178,8 @@ Basic_Term* bmath::intern::build_subterm(std::string_view subterm, Value_Manipul
 		Type type = type_subterm(subterm, op, par_op_type);
 
 		switch (type) {
-		case Type::exponentiation:
-			return new Exponentiation(subterm, op);
+		case Type::power:
+			return new Power(subterm, op);
 		case Type::product:
 			return new Product(subterm, op);
 		case Type::sum:
@@ -217,8 +217,8 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm, std::
 		Type type = type_subterm(subterm, op, par_op_type);
 
 		switch (type) {
-		case Type::exponentiation:
-			return new Exponentiation(subterm, op, variables);
+		case Type::power:
+			return new Power(subterm, op, variables);
 		case Type::product:
 			return new Product(subterm, op, variables);
 		case Type::sum:
@@ -274,8 +274,8 @@ Basic_Term* bmath::intern::copy_subterm(const Basic_Term* source)
 		return new Sum(*(static_cast<const Sum*>(source)));
 	case Type::product:
 		return new Product(*(static_cast<const Product*>(source)));
-	case Type::exponentiation:
-		return new Exponentiation(*(static_cast<const Exponentiation*>(source)));
+	case Type::power:
+		return new Power(*(static_cast<const Power*>(source)));
 	case Type::pattern_variable: {
 		//as copy subterm is called, when a pattern has succesfully been matched and should be transformed, 
 		//we do not want to actually copy the pattern_variable, but the subterm held by it.
@@ -298,9 +298,9 @@ void bmath::intern::delete_pattern(Basic_Term* pattern)
 		case Type::par_operator:
 			static_cast<Par_Operator*>(this_ptr)->argument = nullptr;
 			break;
-		case Type::exponentiation:
-			static_cast<Exponentiation*>(this_ptr)->base = nullptr;
-			static_cast<Exponentiation*>(this_ptr)->expo = nullptr;
+		case Type::power:
+			static_cast<Power*>(this_ptr)->base = nullptr;
+			static_cast<Power*>(this_ptr)->expo = nullptr;
 			break;
 		case Type::sum:
 			static_cast<Sum*>(this_ptr)->operands.clear();
@@ -355,7 +355,7 @@ int bmath::intern::operator_precedence(Type operator_type)
 	case Type::value:				return 3;	//complex number in carthesian coordinates itself is sum -> we don't want parenthesis around a sum of complex numbers
 	case Type::variable:			return 3;	
 	case Type::product:				return 4;
-	case Type::exponentiation:		return 5;
+	case Type::power:		return 5;
 	case Type::pattern_variable:	return 0;	//brings its own curly braces in to_str() -> lowest precedence
 	default:						return 0;
 	}
@@ -429,7 +429,7 @@ std::list<Basic_Term*>::iterator bmath::intern::find_first_of(std::list<Basic_Te
 	return search.end();
 }
 
-bool bmath::intern::fullfills_restr(const Basic_Term* term, Restriction restr)
+bool bmath::intern::complies_with(const Basic_Term* term, Restriction restr)
 {
 	const std::complex<double> val = type_of(term) == Type::value ? static_cast<const Value*>(term)->val() : 0.0;
 	bool meets_restr = true;	//natural is also integer, integer also real, real also value -> testing all together 
@@ -443,6 +443,7 @@ bool bmath::intern::fullfills_restr(const Basic_Term* term, Restriction restr)
 
 	case Restriction::not_minus_one:	return val != -1.0;
 	case Restriction::minus_one:		return val == -1.0;
+	case Restriction::negative:			return val.real() < 0.0 && val.imag() == 0.0;
 	case Restriction::none:				return true;
 	}
 	assert(false);
@@ -596,6 +597,7 @@ std::string_view bmath::intern::name_of(Restriction restr)
 	case Restriction::natural:			return { "natural" };
 	case Restriction::not_minus_one:	return { "not_minus_one" };
 	case Restriction::minus_one:		return { "minus_one" };
+	case Restriction::negative:			return { "negative" };
 	case Restriction::none:				return { "none" };
 	}
 	assert(false);

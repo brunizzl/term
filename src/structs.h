@@ -16,7 +16,7 @@ namespace bmath {
 			//most unique	(likely different op_type and op_type is always given)
 			par_operator,
 			//second most unique	(base is always base, exponent always exponent)
-			exponentiation,
+			power,
 			//third most unique		(operands can vary in the positioning relative to each other)
 			product,
 			sum,
@@ -29,9 +29,6 @@ namespace bmath {
 			undefined,
 		};
 
-		static const Type all_types[] = { Type::par_operator, Type::exponentiation, Type::sum, Type::product, 
-										  Type::variable, Type::value, Type::pattern_variable, Type::undefined };
-
 		//used to restrict pattern_variable to only match basic_terms complying with restriction
 		enum class Restriction
 		{
@@ -41,11 +38,13 @@ namespace bmath {
 			value,
 			not_minus_one,
 			minus_one,
+			negative,	//implies real
 			none,
 		};
 
 		static const Restriction all_restrictions[] = { Restriction::natural, Restriction::integer, Restriction::real, Restriction::value, 
-														Restriction::not_minus_one, Restriction::minus_one, Restriction::none };
+														Restriction::not_minus_one, Restriction::minus_one, Restriction::negative, 
+														Restriction::none };
 
 		//used in Par_Operator class to specify whitch operator is actually used 
 		//(comments are corresponding std::complex functions)
@@ -110,6 +109,16 @@ namespace bmath {
 		{
 			std::complex<double>* key;
 			void(*func)(std::complex<double>* first, std::complex<double> second);
+		};
+
+		//utility struct to allow range based reverse iteration
+		template <class T>
+		struct backwards
+		{
+			T& container;
+			backwards(T& container_) : container(container_) {}
+			auto begin() { return container.rbegin(); }
+			auto end() { return container.rend(); }
 		};
 
 	} //namespace intern

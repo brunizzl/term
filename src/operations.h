@@ -103,8 +103,7 @@ namespace bmath {
 			const static std::vector<Transformation*> product_transforms;
 
 			friend void delete_pattern(Basic_Term* pattern);
-			friend bool Sum::factoring();
-			friend bool Sum::unpack_minus();
+			friend class Sum;
 
 		public:
 			Product();
@@ -123,7 +122,7 @@ namespace bmath {
 		};
 
 
-		class Exponentiation : public Basic_Term
+		class Power : public Basic_Term
 		{
 		private:
 			Basic_Term* expo;
@@ -132,15 +131,15 @@ namespace bmath {
 
 			friend class bmath::Term;
 			friend void delete_pattern(Basic_Term* pattern);
-			friend bool Product::unpack_division();
+			friend class Product;
 
 		public:
-			Exponentiation();
-			Exponentiation(std::string_view name_, std::size_t op);
-			Exponentiation(Basic_Term* base_, std::complex<double> exponent_);
-			Exponentiation(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& variables);
-			Exponentiation(const Exponentiation& source);
-			~Exponentiation();
+			Power();
+			Power(std::string_view name_, std::size_t op);
+			Power(Basic_Term* base_, std::complex<double> exponent_);
+			Power(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& variables);
+			Power(const Power& source);
+			~Power();
 
 			void to_str(std::string& str, int caller_operator_precedence) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;

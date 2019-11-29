@@ -106,7 +106,17 @@ void Sum::to_str(std::string& str, int caller_operator_precedence) const
 		str.push_back('(');
 	}
 	bool nothing_printed_yet = true;
-	for (const auto it : this->operands) {
+	for (const auto it : backwards(this->operands)) {
+
+		if (type_of(it) == Type::product) {	//beautifies sum to print '-'
+			const Product* const product = static_cast<const Product*>(it);
+			if (complies_with(product->operands.back(), Restriction::negative)) {
+				product->to_str(str, operator_precedence(Type::sum));
+				nothing_printed_yet = false;
+				continue;
+			}
+		}
+
 		if (!std::exchange(nothing_printed_yet, false)) {
 			str.push_back('+');
 		}
@@ -154,7 +164,7 @@ bool bmath::intern::Sum::factoring()
 	for (auto product_it = find_first_of(this->operands, Type::product); product_it != this->operands.end() && type_of(*product_it) == Type::product; ++product_it) {
 		std::list<Basic_Term*>& first_factors = static_cast<Product*>(*product_it)->operands;
 		for (auto first_factor = first_factors.begin(); first_factor != first_factors.end(); ++first_factor) {
-			if (fullfills_restr(*first_factor, Restriction::minus_one)) {	//meaning first_factor == -1.0
+			if (complies_with(*first_factor, Restriction::minus_one)) {	//meaning first_factor == -1.0
 				continue;	//dont want to pack "a-b-c" to "a-(b+c)", as this would make it harder to detect cases like "a-(a+b)" (easier to detect as "a-a-b")
 			}
 			//assume this sum has form "a*b+a*c+d+..."
@@ -197,7 +207,7 @@ bool bmath::intern::Sum::unpack_minus()
 {
 	for (auto product_it = find_first_of(this->operands, Type::product); product_it != this->operands.end() && type_of(*product_it) == Type::product; ++product_it) {
 		std::list<Basic_Term*>& factors = static_cast<Product*>(*product_it)->operands;	//operands is sorted with sums in front of values
-		if (factors.size() == 2 && type_of(factors.front()) == Type::sum && fullfills_restr(factors.back(), Restriction::minus_one)) {
+		if (factors.size() == 2 && type_of(factors.front()) == Type::sum && complies_with(factors.back(), Restriction::minus_one)) {
 			//we now know product_it to be of form "(a+b+...)*(-1)" and want to convert product_it's factors to summands in this: "a*(-1)+b*(-1)..."
 			Sum* negative_sum = static_cast<Sum*>(factors.front());
 			for (auto summand : negative_sum->operands) {
@@ -250,7 +260,7 @@ Product::Product(std::string_view name_, std::size_t op)
 		case '/':
 			new_subterm = build_subterm(subterm_view, value_div);
 			if (new_subterm) {
-				this->operands.push_front(new Exponentiation(new_subterm, { -1, 0 }));
+				this->operands.push_front(new Power(new_subterm, { -1, 0 }));
 			}
 			break;
 		}
@@ -299,7 +309,7 @@ Product::Product(std::string_view name_, std::size_t op, std::list<Pattern_Varia
 		case '/':
 			new_subterm = build_pattern_subterm(subterm_view, variables, value_div);
 			if (new_subterm) {
-				this->operands.push_front(new Exponentiation(new_subterm, { -1, 0 }));
+				this->operands.push_front(new Power(new_subterm, { -1, 0 }));
 			}
 			break;
 		}
@@ -334,11 +344,36 @@ void Product::to_str(std::string& str, int caller_operator_precedence) const
 		str.push_back('(');
 	}
 	bool nothing_printed_yet = true;
-	for (const auto it : this->operands) {
-		if (!std::exchange(nothing_printed_yet, false)) {
-			str.push_back('*');
+	for (const auto it : backwards(this->operands)) {
+
+		if (type_of(it) == Type::power) {	//cancerous part to beautify 
+			const Power* exp_it = static_cast<const Power*>(it);
+			if (complies_with(exp_it->expo, Restriction::negative)) {
+				if (!std::exchange(nothing_printed_yet, false)) {
+					str.push_back('/');
+				}
+				else {
+					str.append("1/");
+				}
+				exp_it->base->to_str(str, operator_precedence(Type::power));
+				if (complies_with(exp_it->expo, Restriction::not_minus_one)) {
+					str.push_back('^');
+					const Value* const exponent_val = static_cast<const Value*>(exp_it->expo);
+					str.append(to_string(exponent_val->val(), operator_precedence(Type::power), true));
+				}
+				continue;
+			}
 		}
-		it->to_str(str, operator_precedence(Type::product));
+
+		if (complies_with(it, Restriction::minus_one) && this->operands.size() > 1) {
+			str.push_back('-');
+		}
+		else {
+			if (!std::exchange(nothing_printed_yet, false)) {
+				str.push_back('*');
+			}
+			it->to_str(str, operator_precedence(Type::product));
+		}
 	}
 	if (pars) {
 		str.push_back(')');
@@ -378,16 +413,16 @@ bool bmath::intern::Product::transform(Basic_Term *& storage_key)
 
 bool bmath::intern::Product::unpack_division()
 {
-	for (auto exp_it = find_first_of(this->operands, Type::exponentiation); exp_it != this->operands.end() && type_of(*exp_it) == Type::exponentiation; ++exp_it) {
-		Exponentiation* const exponentiation = static_cast<Exponentiation*>(*exp_it);
-		if (fullfills_restr(exponentiation->expo, Restriction::minus_one) && type_of(exponentiation->base) == Type::product) {
+	for (auto exp_it = find_first_of(this->operands, Type::power); exp_it != this->operands.end() && type_of(*exp_it) == Type::power; ++exp_it) {
+		Power* const power = static_cast<Power*>(*exp_it);
+		if (complies_with(power->expo, Restriction::minus_one) && type_of(power->base) == Type::product) {
 			//we now know exp_it to be of form "(a*b*...)^(-1)" and want to convert exp_it's base to factors in this: "a^(-1)*b^(-1)..."
-			Product* const base_product = static_cast<Product*>(exponentiation->base);
+			Product* const base_product = static_cast<Product*>(power->base);
 			for (auto factor : base_product->operands) {
-				this->operands.push_back(new Exponentiation(factor, -1.0));
+				this->operands.push_back(new Power(factor, -1.0));
 			}
 			base_product->operands.clear();
-			delete exponentiation;
+			delete power;
 			this->operands.erase(exp_it);
 			return true;
 		}
@@ -399,16 +434,16 @@ const std::vector<Transformation*> Product::product_transforms = transforms_of(T
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Exponentiation\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//Power\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-Exponentiation::Exponentiation()
+Power::Power()
 	:base(nullptr), expo(nullptr)
 {
 }
 
-Exponentiation::Exponentiation(std::string_view name_, std::size_t op)
+Power::Power(std::string_view name_, std::size_t op)
 {
 	std::string_view subterm_view;
 	subterm_view = name_.substr(op + 1);
@@ -417,12 +452,12 @@ Exponentiation::Exponentiation(std::string_view name_, std::size_t op)
 	this->base = build_subterm(name_);
 }
 
-Exponentiation::Exponentiation(Basic_Term* base_, std::complex<double> exponent_) 
+Power::Power(Basic_Term* base_, std::complex<double> exponent_) 
 	:expo(new Value(exponent_)), base(base_)
 {
 }
 
-Exponentiation::Exponentiation(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& variables)
+Power::Power(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& variables)
 {
 	std::string_view subterm_view;
 	subterm_view = name_.substr(op + 1);
@@ -431,35 +466,48 @@ Exponentiation::Exponentiation(std::string_view name_, std::size_t op, std::list
 	this->base = build_pattern_subterm(name_, variables);
 }
 
-Exponentiation::Exponentiation(const Exponentiation& source)
+Power::Power(const Power& source)
 	:base(copy_subterm(source.base)), expo(copy_subterm(source.expo))
 {
 }
 
-Exponentiation::~Exponentiation()
+Power::~Power()
 {
 	delete expo;
 	delete base;
 }
 
-void Exponentiation::to_str(std::string& str, int caller_operator_precedence) const
+void Power::to_str(std::string& str, int caller_operator_precedence) const
 {
-	const bool pars = caller_operator_precedence >= operator_precedence(Type::exponentiation);
+	const bool pars = caller_operator_precedence >= operator_precedence(Type::power);
 	if (pars) {
 		str.push_back('(');
 	}
-	this->base->to_str(str, operator_precedence(Type::exponentiation));
-	str.push_back('^');
-	this->expo->to_str(str, operator_precedence(Type::exponentiation));
+
+	if (complies_with(this->expo, Restriction::negative)) {	//beautifies negative exponents
+		str.append("1/");
+		this->base->to_str(str, operator_precedence(Type::power));
+		if (complies_with(this->expo, Restriction::not_minus_one)) {
+			str.push_back('^');
+			const Value* const exponent_val = static_cast<const Value*>(this->expo);
+			str.append(to_string(exponent_val->val(), operator_precedence(Type::power), true));
+		}
+	}
+	else {
+		this->base->to_str(str, operator_precedence(Type::power));
+		str.push_back('^');
+		this->expo->to_str(str, operator_precedence(Type::power));
+	}
+	
 	if (pars) {
 		str.push_back(')');
 	}
 }
 
-void Exponentiation::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
+void Power::to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const
 {
 	std::string new_line(dist_root * 5, ' ');	//building string with spaces matching dept of this
-	new_line.append("exponentiation");
+	new_line.append("power");
 	tree_lines.push_back(std::move(new_line));
 	append_last_line(tree_lines, line_prefix);
 
@@ -467,12 +515,12 @@ void Exponentiation::to_tree_str(std::vector<std::string>& tree_lines, unsigned 
 	this->expo->to_tree_str(tree_lines, dist_root + 1, '^');
 }
 
-Type Exponentiation::type() const
+Type Power::type() const
 {
-	return Type::exponentiation;
+	return Type::power;
 }
 
-void Exponentiation::combine_layers(Basic_Term*& storage_key)
+void Power::combine_layers(Basic_Term*& storage_key)
 {
 	this->base->combine_layers(this->base);
 	this->expo->combine_layers(this->expo);
@@ -506,7 +554,7 @@ void Exponentiation::combine_layers(Basic_Term*& storage_key)
 	}
 }
 
-Vals_Combined Exponentiation::combine_values()
+Vals_Combined Power::combine_values()
 {
 	const Vals_Combined base_ = this->base->combine_values();
 	const Vals_Combined exponent_ = this->expo->combine_values();
@@ -531,27 +579,27 @@ Vals_Combined Exponentiation::combine_values()
 	return { false, 0 };
 }
 
-std::complex<double> Exponentiation::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
+std::complex<double> Power::evaluate(const std::list<bmath::Known_Variable>& known_variables) const
 {
 	const std::complex<double> base_ = this->base->evaluate(known_variables);
 	const std::complex<double> exponent_ = this->expo->evaluate(known_variables);
 	return std::pow(base_, exponent_);
 }
 
-void Exponentiation::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
+void Power::search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key)
 {
 	this->base->search_and_replace(name_, value_, this->base);
 	this->expo->search_and_replace(name_, value_, this->expo);
 }
 
-void bmath::intern::Exponentiation::for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func)
+void bmath::intern::Power::for_each(std::function<void(Basic_Term* this_ptr, Type this_type)> func)
 {
 	this->base->for_each(func);
 	this->expo->for_each(func);
-	func(this, Type::exponentiation);
+	func(this, Type::power);
 }
 
-bool bmath::intern::Exponentiation::transform(Basic_Term *& storage_key)
+bool bmath::intern::Power::transform(Basic_Term *& storage_key)
 {
 	if (this->base->transform(this->base)) {
 		return true;
@@ -570,11 +618,11 @@ bool bmath::intern::Exponentiation::transform(Basic_Term *& storage_key)
 	return false;
 }
 
-bool bmath::intern::Exponentiation::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term *& storage_key)
+bool bmath::intern::Power::equal_to_pattern(Basic_Term* pattern, Basic_Term* patterns_parent, Basic_Term *& storage_key)
 {
 	const Type pattern_type = type_of(pattern);
-	if (pattern_type == Type::exponentiation) {
-		const Exponentiation* pattern_exp = static_cast<const Exponentiation*>(pattern);
+	if (pattern_type == Type::power) {
+		const Power* pattern_exp = static_cast<const Power*>(pattern);
 		if (!this->base->equal_to_pattern(pattern_exp->base, pattern, this->base)) {
 			return false;
 		}
@@ -592,19 +640,19 @@ bool bmath::intern::Exponentiation::equal_to_pattern(Basic_Term* pattern, Basic_
 	}
 }
 
-void bmath::intern::Exponentiation::reset_own_matches(Basic_Term* parent)
+void bmath::intern::Power::reset_own_matches(Basic_Term* parent)
 {
 	this->expo->reset_own_matches(this);
 	this->base->reset_own_matches(this);
 }
 
-bool Exponentiation::operator<(const Basic_Term& other) const
+bool Power::operator<(const Basic_Term& other) const
 {
-	if (Type::exponentiation != type_of(other)) {
-		return Type::exponentiation < type_of(other);
+	if (Type::power != type_of(other)) {
+		return Type::power < type_of(other);
 	}
 	else {
-		const Exponentiation* other_exp = static_cast<const Exponentiation*>(&other);
+		const Power* other_exp = static_cast<const Power*>(&other);
 		if (*(this->base) < *(other_exp->base)) {
 			return true;
 		}
@@ -615,10 +663,10 @@ bool Exponentiation::operator<(const Basic_Term& other) const
 	}
 }
 
-bool Exponentiation::operator==(const Basic_Term& other) const
+bool Power::operator==(const Basic_Term& other) const
 {
-	if (type_of(other) == Type::exponentiation) {
-		const Exponentiation* other_exp = static_cast<const Exponentiation*>(&other);
+	if (type_of(other) == Type::power) {
+		const Power* other_exp = static_cast<const Power*>(&other);
 		if (*(this->base) != *(other_exp->base)) {
 			return false;
 		}
@@ -627,7 +675,7 @@ bool Exponentiation::operator==(const Basic_Term& other) const
 	return false;
 }
 
-const std::vector<Transformation*> Exponentiation::exp_transforms = transforms_of(Type::exponentiation);
+const std::vector<Transformation*> Power::exp_transforms = transforms_of(Type::power);
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

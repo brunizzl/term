@@ -74,7 +74,7 @@ namespace bmath {
 		std::list<Basic_Term*>::iterator find_first_of(std::list<Basic_Term*>& search, Type type);
 
 		//returns whether term complies with restr
-		bool fullfills_restr(const Basic_Term*  term, Restriction restr);
+		bool complies_with(const Basic_Term*  term, Restriction restr);
 
 		//translates val to a string
 		//parent_operator_precedence is needed to determine, wheather to put parenteses around the string

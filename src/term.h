@@ -94,7 +94,7 @@ namespace bmath {
 	private:
 		intern::Basic_Term* term_ptr;		//start of actual term tree
 
-		void combine_values();
+		bool combine_values();
 		
 	public:
 		Term();

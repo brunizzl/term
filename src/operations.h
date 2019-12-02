@@ -67,7 +67,8 @@ namespace bmath {
 
 			//returns, whether test_ops has a match for every element in pattern_ops (pattern is owner of pattern_ops)
 			//returns {} if no match was found, returns matched operands of test_ops if match was found
-			static std::optional<std::list<Basic_Term*>> operands_contain_pattern(std::list<Basic_Term*>& test_ops, std::list<Basic_Term*>& pattern_ops, Basic_Term* pattern);
+			static std::optional<std::list<Basic_Term*>> 
+				operands_contain_pattern(std::list<Basic_Term*>& test_ops, std::list<Basic_Term*>& pattern_ops, Basic_Term* pattern);
 		};
 
 		class Sum : public Variadic_Operator<add, Type::sum, 0>
@@ -532,6 +533,9 @@ namespace bmath {
 					else {	//cleanup
 						test_ops.splice(test_ops.end(), matched_operands);
 						test_ops.sort([](Basic_Term* a, Basic_Term* b) { return *a < *b; });
+						for (auto& operand : test_ops) {
+							operand->combine_layers(operand);
+						}
 						return {};
 					}
 				}

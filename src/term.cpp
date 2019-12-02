@@ -131,7 +131,7 @@ std::list<std::string> bmath::Term::get_var_names() const
 	return names;
 }
 
-void bmath::Term::combine_values()
+bool bmath::Term::combine_values()
 {
 	if (type_of(this->term_ptr) != Type::value) {
 		auto [is_val, val] = this->term_ptr->combine_values();
@@ -139,7 +139,9 @@ void bmath::Term::combine_values()
 			delete this->term_ptr;
 			this->term_ptr = new Value(val);
 		}
+		return is_val;
 	}
+	return false;
 }
 
 std::complex<double> bmath::Term::evaluate(const std::string& name_, std::complex<double> value_) const

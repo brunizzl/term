@@ -59,6 +59,9 @@ namespace bmath {
 			//wrapper for std::list sort()
 			inline void sort_operands() { this->operands.sort([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; }); }
 
+			//clears list
+			void clear_operands();
+
 			//constructor wrapper
 			static Basic_Term* new_instance(std::list<Basic_Term*> && operands);
 
@@ -132,11 +135,13 @@ namespace bmath {
 			friend class bmath::Term;
 			friend void delete_pattern(Basic_Term* pattern);
 			friend class Product;
+			friend class Monom;
 
 		public:
 			Power();
 			Power(std::string_view name_, std::size_t op);
 			Power(Basic_Term* base_, std::complex<double> exponent_);
+			Power(Basic_Term* base_, Basic_Term* expo_);
 			Power(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& variables);
 			Power(const Power& source);
 			~Power();
@@ -186,6 +191,24 @@ namespace bmath {
 			void reset_own_matches(Basic_Term* parent) override;
 			bool operator<(const Basic_Term& other) const override;
 			bool operator==(const Basic_Term& other) const override;
+		};
+
+
+		class Monom	//pattern to identify monoms (monom beeing summand of polynom (a*x^n)) to test if sum is polynom
+		{
+		private:
+			Pattern_Variable a;	//all suberms of monom are held here directly, as we need to acess them directly anyway.
+			Pattern_Variable n;
+			Pattern_Variable x;
+			Power x_n;		//x^n
+			Product monom;	//a*x^n
+
+		public:
+			Monom();
+			~Monom();
+
+			bool matching(Basic_Term* test, Basic_Term*& storage_key);
+			void reset();
 		};
 
 
@@ -430,6 +453,12 @@ namespace bmath {
 		inline void Variadic_Operator<operate, this_type, neutral_val>::push_back(Basic_Term* const term_ptr)
 		{
 			this->operands.push_back(term_ptr);
+		}
+
+		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
+		inline void Variadic_Operator<operate, this_type, neutral_val>::clear_operands()
+		{
+			this->operands.clear();
 		}
 
 		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>

@@ -290,9 +290,7 @@ void bmath::intern::delete_pattern(Basic_Term* pattern)
 {
 	//due to the fact, that Pattern_Term breaks the Tree structure (one pattern_variable might be owned by multiple parents) -
 	//we can not use the destructor of Basic_Term
-	std::list<Basic_Term*> subterms;
-	pattern->for_each([&subterms](Basic_Term* this_ptr, Type this_type) {
-		if (this_type != Type::pattern_variable) subterms.push_back(this_ptr);	//pattern_variables are not deleted by this destructor (but by owner of Pattern_Term)
+	pattern->for_each([](Basic_Term* this_ptr, Type this_type) {
 
 		switch (this_type) {
 		case Type::par_operator:
@@ -308,11 +306,18 @@ void bmath::intern::delete_pattern(Basic_Term* pattern)
 		case Type::product:
 			static_cast<Product*>(this_ptr)->operands.clear();
 			break;
+		case Type::value:				//no dynamic allocation
+		case Type::variable:			//no dynamic allocation
+		case Type::pattern_variable:	//is cleaned up elsewhere
+			break;
+		default:
+			assert(false);
+		}
+
+		if (this_type != Type::pattern_variable) {
+			delete this_ptr;	//pattern_variables are not deleted by this destructor (but by owner of Pattern_Term)
 		}
 		});
-	for (auto subterm : subterms) {
-		delete subterm;
-	}
 }
 
 std::vector<Transformation*> bmath::intern::transforms_of(Type requested_type)
@@ -415,7 +420,7 @@ void bmath::intern::append_last_line(std::vector<std::string>& tree_lines, char 
 void bmath::intern::reset_all_pattern_vars(std::list<Pattern_Variable*>& var_adresses)
 {
 	for (auto pattern_var : var_adresses) {
-		pattern_var->matched_term = nullptr;
+		pattern_var->reset();
 	}
 }
 

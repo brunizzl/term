@@ -180,6 +180,13 @@ bool bmath::intern::Pattern_Variable::is_unmatched() const
 	return matched_term == nullptr;
 }
 
+void bmath::intern::Pattern_Variable::reset()
+{
+	this->matched_term = nullptr;
+	this->matched_storage_key = nullptr;
+	this->responsible_parent = nullptr;
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Transformation\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\

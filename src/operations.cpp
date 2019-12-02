@@ -461,6 +461,11 @@ Power::Power(Basic_Term* base_, std::complex<double> exponent_)
 {
 }
 
+bmath::intern::Power::Power(Basic_Term* base_, Basic_Term* expo_)
+	:base(base_), expo(expo_)
+{
+}
+
 Power::Power(std::string_view name_, std::size_t op, std::list<Pattern_Variable*>& variables)
 {
 	std::string_view subterm_view;
@@ -836,3 +841,34 @@ bool Par_Operator::operator==(const Basic_Term& other) const
 }
 
 const std::vector<Transformation*> Par_Operator::parop_transforms = transforms_of(Type::par_operator);
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Monom\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bmath::intern::Monom::Monom()
+	:a("a", Restriction::value), n("n", Restriction::natural), x("x", Restriction::none), x_n(&x, &n), monom({ &a, &x_n })
+{
+}
+
+bmath::intern::Monom::~Monom()
+{
+	x_n.expo = nullptr;
+	x_n.base = nullptr;
+	monom.clear_operands();
+}
+
+bool bmath::intern::Monom::matching(Basic_Term* test, Basic_Term*& storage_key)
+{
+	return test->equal_to_pattern(&this->monom, nullptr, storage_key)
+		|| test->equal_to_pattern(&this->x_n, nullptr, storage_key);
+}
+
+void bmath::intern::Monom::reset()
+{
+	this->a.reset();
+	this->n.reset();
+	this->x.reset();
+}
+

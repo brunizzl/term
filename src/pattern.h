@@ -23,8 +23,8 @@ namespace bmath {
 			void* responsible_parent;			//parent unter which matched_term is set, and which is responsible for resetting matched_term
 			Restriction restriction;			//unrestricted if == Restriction::none
 
-			friend void reset_all_pattern_vars(std::list<Pattern_Variable*>& var_adresses);
 			friend Basic_Term* build_pattern_subterm(std::string_view subtermstr, std::list<Pattern_Variable*>& variables, Value_Manipulator manipulator);
+			friend class Monom;
 
 			Pattern_Variable(std::string_view name_, Restriction restriction_);
 
@@ -56,6 +56,7 @@ namespace bmath {
 
 			bool is_unmatched() const;
 			void set_parent(Basic_Term* new_parent); //only one use in Variadic_Operator function operands_contain_pattern()
+			void reset();
 		};	
 
 

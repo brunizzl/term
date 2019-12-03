@@ -323,12 +323,25 @@ void bmath::intern::delete_pattern(Basic_Term* pattern)
 std::vector<Transformation*> bmath::intern::transforms_of(Type requested_type)
 {
 	static std::vector<Transformation*> transformations = {	//////////////////all transformations should be declared here///////////////////////////
-		new Transformation("ln(a!real)+ln(b!real)", "ln(a*b)"),
-		new Transformation("ln(a!real)-ln(b!real)", "ln(a/b)"),
 		new Transformation("sin(x)^2+cos(x)^2", "1"),
+
+		new Transformation("sqrt(a)", "a^(1/2)"),	//"sqrt(a)" gives slightly different results than "pow(a,0.5)", but this programm is primarily
+		new Transformation("exp(x)", "e^x"),		//a transformation tool, not a tool for stable computations. "exp(x)" and "e^x" produce the exact same output.
+
+		new Transformation("sin(a!negative*x)", "-sin(abs(a)*x)"),		//odd functions
+		new Transformation("tan(a!negative*x)", "-sin(abs(a)*x)"),
+		new Transformation("asin(a!negative*x)", "-asin(abs(a)*x)"),
+		new Transformation("asinh(a!negative*x)", "-asinh(abs(a)*x)"),
+		new Transformation("atanh(a!negative*x)", "-atanh(abs(a)*x)"),
+		new Transformation("cos(a!negative*x)", "cos(abs(a)*x)"),		//even functions
+		new Transformation("abs(a!value*x)", "abs(a)*abs(x)"),
 
 		new Transformation("(a^b)^c", "a^(b*c)"),
 		new Transformation("a^x!not_minus_one*b^x", "(a*b)^x"),
+		new Transformation("a^0", "1"),
+		new Transformation("a^1", "a"),
+		new Transformation("1^x", "1"),
+		new Transformation("0^x", "0"),
 
 		new Transformation("a+a", "2*a"),
 		new Transformation("a*0", "0"),

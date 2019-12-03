@@ -303,11 +303,6 @@ namespace bmath {
 				}
 			}
 			if (!only_known && value != static_cast<double>(neutral_val)) {	//if only_known, this would be deleted anyway.
-				if constexpr (this_type == Type::product) {
-					if (value == 0.0) {
-						return { true, 0 };
-					}
-				}
 				this->operands.push_back(new Value(value));
 			}
 			return { only_known, value };

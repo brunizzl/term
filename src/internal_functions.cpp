@@ -329,7 +329,7 @@ std::vector<Transformation*> bmath::intern::transforms_of(Type requested_type)
 		new Transformation("exp(x)", "e^x"),		//a transformation tool, not a tool for stable computations. "exp(x)" and "e^x" produce the exact same output.
 
 		new Transformation("sin(a!negative*x)", "-sin(abs(a)*x)"),		//odd functions
-		new Transformation("tan(a!negative*x)", "-sin(abs(a)*x)"),
+		new Transformation("tan(a!negative*x)", "-tan(abs(a)*x)"),
 		new Transformation("asin(a!negative*x)", "-asin(abs(a)*x)"),
 		new Transformation("asinh(a!negative*x)", "-asinh(abs(a)*x)"),
 		new Transformation("atanh(a!negative*x)", "-atanh(abs(a)*x)"),

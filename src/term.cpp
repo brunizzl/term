@@ -168,12 +168,14 @@ void bmath::Term::search_and_replace(const std::string& name_, const bmath::Term
 
 void bmath::Term::simplify()
 {
+	bool changed;
 	do {
-		this->term_ptr->combine_layers(this->term_ptr);
-		this->combine_values();
+		changed = false;
+		changed |= this->term_ptr->combine_layers(this->term_ptr);
+		changed |= this->combine_values();
 		this->term_ptr->sort();
-	} while (this->term_ptr->transform(this->term_ptr));
-	this->term_ptr->combine_layers(this->term_ptr);
+		changed |= this->term_ptr->transform(this->term_ptr);
+	} while (changed);
 }
 
 void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)

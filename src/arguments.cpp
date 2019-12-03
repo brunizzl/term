@@ -45,9 +45,10 @@ Type Value::type() const
 	return Type::value;
 }
 
-void bmath::intern::Value::combine_layers(Basic_Term*& storage_key)
+bool bmath::intern::Value::combine_layers(Basic_Term*& storage_key)
 {
 	//nothing to combine layerwise here
+	return false;
 }
 
 Vals_Combined Value::combine_values()
@@ -168,9 +169,10 @@ Type Variable::type() const
 	return Type::variable;
 }
 
-void bmath::intern::Variable::combine_layers(Basic_Term*& storage_key)
+bool bmath::intern::Variable::combine_layers(Basic_Term*& storage_key)
 {
 	//nothing to combine layerwise.
+	return false;
 }
 
 Vals_Combined Variable::combine_values()

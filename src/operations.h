@@ -35,7 +35,7 @@ namespace bmath {
 
 		public:
 			Type type() const override;
-			void combine_layers(Basic_Term*& storage_key) override;
+			bool combine_layers(Basic_Term*& storage_key) override;
 			Vals_Combined combine_values() override;
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
@@ -150,7 +150,7 @@ namespace bmath {
 			void to_str(std::string& str, int caller_operator_precedence) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			Type type() const override;
-			void combine_layers(Basic_Term*& storage_key) override;
+			bool combine_layers(Basic_Term*& storage_key) override;
 			Vals_Combined combine_values() override;
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
@@ -182,7 +182,7 @@ namespace bmath {
 			void to_str(std::string& str, int caller_operator_precedence) const override;
 			void to_tree_str(std::vector<std::string>& tree_lines, unsigned int dist_root, char line_prefix) const override;
 			Type type() const override;
-			void combine_layers(Basic_Term*& storage_key) override;
+			bool combine_layers(Basic_Term*& storage_key) override;
 			Vals_Combined combine_values() override;
 			std::complex<double> evaluate(const std::list<Known_Variable>& known_variables) const override;
 			void search_and_replace(const std::string& name_, const Basic_Term* value_, Basic_Term*& storage_key) override;
@@ -254,15 +254,17 @@ namespace bmath {
 		}
 
 		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
-		inline void Variadic_Operator<operate, this_type, neutral_val>::combine_layers(Basic_Term*& storage_key)
+		inline bool Variadic_Operator<operate, this_type, neutral_val>::combine_layers(Basic_Term*& storage_key)
 		{
+			bool changed = false;
 			for (auto& it = this->operands.begin(); it != this->operands.end();) {	//reference is needed in next line
-				(*it)->combine_layers(*it);
+				changed |= (*it)->combine_layers(*it);
 				if (type_of(*it) == this_type) {
 					Variadic_Operator<operate, this_type, neutral_val>* redundant = static_cast<Variadic_Operator<operate, this_type, neutral_val>*>(*it);
 					this->operands.splice(this->operands.end(), redundant->operands);
 					delete redundant;
 					it = this->operands.erase(it);
+					changed = true;
 				}
 				else {
 					++it;
@@ -271,12 +273,15 @@ namespace bmath {
 			auto val = find_first_of(this->operands, Type::value);
 			if (val != this->operands.end() && static_cast<Value*>(*val)->val() == static_cast<double>(neutral_val)) {
 				this->operands.erase(val);
+				changed = true;
 			}
 			if (this->operands.size() == 1) {	//this only consists of one operand -> this layer is not needed and removed
 				storage_key = *(this->operands.begin());
 				this->operands.clear();
 				delete this;
+				changed = true;
 			}
+			return changed;
 		}
 
 		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>

@@ -529,22 +529,23 @@ Type Power::type() const
 	return Type::power;
 }
 
-void Power::combine_layers(Basic_Term*& storage_key)
+bool Power::combine_layers(Basic_Term*& storage_key)
 {
-	this->base->combine_layers(this->base);
-	this->expo->combine_layers(this->expo);
+	bool changed = false;
+	changed |= this->base->combine_layers(this->base);
+	changed |= this->expo->combine_layers(this->expo);
 	if (type_of(this->expo) == Type::value) {
 		Value* const val_exp = static_cast<Value*>(this->expo);
 		if (val_exp->val() == 1.0) {
 			storage_key = this->base;
 			this->base = nullptr;	//otherwise the term now owned by parent of this, formerly this base, would be destroyed
 			delete this;
-			return;
+			return true;
 		}
 		if (val_exp->val() == 0.0) {
 			storage_key = new Value({ 1.0, 0.0 });
 			delete this;
-			return;
+			return true;
 		}
 	}
 	if (type_of(this->base) == Type::value) {
@@ -553,14 +554,15 @@ void Power::combine_layers(Basic_Term*& storage_key)
 			storage_key = val_base;
 			this->base = nullptr;
 			delete this;
-			return;
+			return true;
 		}
 		if (val_base->val() == 0.0) {
 			storage_key = new Value({ 0.0, 0.0 });
 			delete this;
-			return;
+			return true;
 		}
 	}
+	return changed;
 }
 
 Vals_Combined Power::combine_values()
@@ -746,9 +748,9 @@ Type Par_Operator::type() const
 	return Type::par_operator;
 }
 
-void Par_Operator::combine_layers(Basic_Term*& storage_key)
+bool Par_Operator::combine_layers(Basic_Term*& storage_key)
 {
-	this->argument->combine_layers(this->argument);
+	return this->argument->combine_layers(this->argument);
 }
 
 Vals_Combined Par_Operator::combine_values()

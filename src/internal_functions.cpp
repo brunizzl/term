@@ -331,6 +331,7 @@ std::vector<Transformation*> bmath::intern::transforms_of(Type requested_type)
 		new Transformation("a^x!not_minus_one*b^x", "(a*b)^x"),
 
 		new Transformation("a+a", "2*a"),
+		new Transformation("a*0", "0"),
 		
 		new Transformation("a^b*a^c", "a^(b+c)"),
 		new Transformation("a^b*a", "a^(b+1)"),
@@ -360,7 +361,7 @@ int bmath::intern::operator_precedence(Type operator_type)
 	case Type::value:				return 3;	//complex number in carthesian coordinates itself is sum -> we don't want parenthesis around a sum of complex numbers
 	case Type::variable:			return 3;	
 	case Type::product:				return 4;
-	case Type::power:		return 5;
+	case Type::power:				return 5;
 	case Type::pattern_variable:	return 0;	//brings its own curly braces in to_str() -> lowest precedence
 	default:						return 0;
 	}

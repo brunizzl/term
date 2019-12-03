@@ -56,9 +56,10 @@ Type Pattern_Variable::type() const
 	return Type::pattern_variable;
 }
 
-void bmath::intern::Pattern_Variable::combine_layers(Basic_Term*& storage_key)
+bool bmath::intern::Pattern_Variable::combine_layers(Basic_Term*& storage_key)
 {
 	//nothing to combine layerwise.
+	return false;
 }
 
 Vals_Combined Pattern_Variable::combine_values()

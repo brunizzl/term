@@ -42,9 +42,9 @@ namespace bmath {
 			none,
 		};
 
-		static const Restriction all_restrictions[] = { Restriction::natural, Restriction::integer, Restriction::real, Restriction::value, 
-														Restriction::not_minus_one, Restriction::minus_one, Restriction::negative, 
-														Restriction::none };
+		static const Restriction all_restrictions[] = { Restriction::natural, Restriction::integer, Restriction::real, 
+														Restriction::value, Restriction::not_minus_one, Restriction::minus_one, 
+														Restriction::negative, Restriction::none };
 
 		//used in Par_Operator class to specify whitch operator is actually used 
 		//(comments are corresponding std::complex functions)

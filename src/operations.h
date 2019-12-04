@@ -204,12 +204,20 @@ namespace bmath {
 			Power x_n;		//x^n
 			Product monom;	//a*x^n
 
+			Product a_x;	//this is not part of the same tree as the others, but builds (from same a and x) the tree a*x
+
 		public:
 			Monom();
 			~Monom();
 
+			//determines if test is a monom or not
 			bool matching(Basic_Term* test, Basic_Term*& storage_key);
-			void reset();
+
+			void full_reset();					//resets a, n and x
+			void partial_reset();				//only resets a and n
+			std::complex<double> factor() const;
+			int exponent() const;
+			Basic_Term* base() const;
 		};
 
 

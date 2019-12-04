@@ -1,4 +1,7 @@
 
+
+#include <algorithm>
+
 #include "operations.h"
 #include "internal_functions.h"
 
@@ -156,7 +159,7 @@ bool bmath::intern::Sum::transform(Basic_Term *& storage_key)
 		}
 	}
 
-	return this->factoring() || this->unpack_minus();
+	return this->factoring() || this->unpack_minus() || this->factor_polinomial(&storage_key);
 }
 
 bool bmath::intern::Sum::factoring()
@@ -224,10 +227,43 @@ bool bmath::intern::Sum::unpack_minus()
 
 bool bmath::intern::Sum::factor_polinomial(Basic_Term** storage_key)
 {
-	//static Pattern monom("a!value*x^n!value");
-	//jetzt irgendwie auch direkten zugriff auf nur x und nur x^n erlauben
-	//idee: habe nicht pattern, sondern pattern_term und manage a, x und x^n direkt.
-	return false;
+	static Monom monom;	//Pattern to match summands with
+	monom.full_reset();
+
+	using Monom_Storage = std::pair<std::complex<double>, int>;	//first is factor a, second exponent n in a*x^n
+	std::vector<Monom_Storage> polynom;
+	polynom.reserve(this->operands.size());
+
+	for (auto summand : this->operands) {
+		monom.partial_reset();
+		if (!monom.matching(summand, *storage_key)) {
+			return false;
+		}
+		else {
+			polynom.push_back(std::make_pair(monom.factor(), monom.exponent()));
+		}
+	}
+
+	//biggest exponent of all monoms
+	int max_exp = std::max_element(polynom.begin(), polynom.end(), [](const Monom_Storage& a, const Monom_Storage& b) {return a.second < b.second; })->second;
+
+	bool first = true;
+	for (auto mon : polynom) {
+		if (first) {
+			first = false;
+		}
+		else {
+			std::cout << '+';
+		}
+		std::cout << mon.first << "*x^" << mon.second;
+	}
+	std::cout << std::endl;
+	//baue vector mit faktoren sortiert nach exponenten (x^3+4) -> {4, 0, 0, 1} 
+	//gebe vector an funktion die nullstellen findet
+	//baue produkt aus nullstellen
+	//speichere produkt statt this in storage key
+
+	return true;
 }
 
 const std::vector<Transformation*> Sum::sum_transforms = transforms_of(Type::sum);
@@ -822,7 +858,8 @@ const std::vector<Transformation*> Par_Operator::parop_transforms = transforms_o
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 bmath::intern::Monom::Monom()
-	:a("a", Restriction::value), n("n", Restriction::natural), x("x", Restriction::none), x_n(&x, &n), monom({ &a, &x_n })
+	:a("a", Restriction::value), n("n", Restriction::natural), x("x", Restriction::none), 
+	x_n(&x, &n), monom({ &a, &x_n }), a_x({&a, &x})
 {
 }
 
@@ -831,18 +868,62 @@ bmath::intern::Monom::~Monom()
 	x_n.expo = nullptr;
 	x_n.base = nullptr;
 	monom.clear_operands();
+	a_x.clear_operands();
 }
 
 bool bmath::intern::Monom::matching(Basic_Term* test, Basic_Term*& storage_key)
 {
-	return test->equal_to_pattern(&this->monom, nullptr, storage_key)
-		|| test->equal_to_pattern(&this->x_n, nullptr, storage_key);
+	static Value zero({ 0.0, 0.0 });
+	static Value one({ 1.0, 0.0 });
+
+	if (test->equal_to_pattern(&this->monom, nullptr, storage_key)) {	//check whole monom
+		return true;
+	}
+	if (test->equal_to_pattern(&this->x_n, nullptr, storage_key)) {		//check for x^n
+		a.matched_term = &one;
+		return true;
+	}
+	if (test->equal_to_pattern(&this->a_x, nullptr, storage_key)) {		//check for a*x
+		n.matched_term = &one;
+		return true;
+	}
+	if (test->equal_to_pattern(&this->a, nullptr, storage_key)) {		//check for a
+		n.matched_term = &zero;
+		return true;
+	}
+	if (!x.is_unmatched() && test->equal_to_pattern(&this->x, nullptr, storage_key)) {	//check for x
+		a.matched_term = &one;
+		n.matched_term = &one;
+		return true;
+	}
+	return false;
 }
 
-void bmath::intern::Monom::reset()
+void bmath::intern::Monom::full_reset()
 {
 	this->a.reset();
 	this->n.reset();
 	this->x.reset();
+}
+
+void bmath::intern::Monom::partial_reset()
+{
+	this->a.reset();
+	this->n.reset();
+}
+
+std::complex<double> bmath::intern::Monom::factor() const
+{
+	return this->a.matched_value();
+}
+
+int bmath::intern::Monom::exponent() const
+{
+	return static_cast<int>(this->n.matched_value().real());
+}
+
+Basic_Term* bmath::intern::Monom::base() const
+{
+	return this->x.matched_term;
 }
 

@@ -57,6 +57,8 @@ namespace bmath {
 			bool is_unmatched() const;
 			void set_parent(Basic_Term* new_parent); //only one use in Variadic_Operator function operands_contain_pattern()
 			void reset();
+
+			std::complex<double> matched_value() const;
 		};	
 
 

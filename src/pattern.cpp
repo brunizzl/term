@@ -188,6 +188,13 @@ void bmath::intern::Pattern_Variable::reset()
 	this->responsible_parent = nullptr;
 }
 
+std::complex<double> bmath::intern::Pattern_Variable::matched_value() const
+{
+	assert(type_of(this->matched_term) == Type::value);
+	const Value* const value = static_cast<const Value*>(this->matched_term);
+	return value->val();
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Transformation\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -223,10 +230,10 @@ std::string Transformation::print() const
 	str.append(" -> ");
 	this->output->to_str(str, operator_precedence(Type::undefined));
 	return str;
+	//return ptr_to_tree(this->input, 5) + "\n -> \n" + ptr_to_tree(this->output, 5);
 }
 
 Basic_Term* bmath::intern::Transformation::copy()
 {
 	return copy_subterm(this->output);
 }
-

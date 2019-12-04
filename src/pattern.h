@@ -54,7 +54,7 @@ namespace bmath {
 			//to not cause any confusion, the functionality of try_matching() is not implemented in equal_to_pattern()
 			bool try_matching(Basic_Term* other, Basic_Term* patterns_parent, Basic_Term *& other_storage_key);
 
-			bool is_unmatched() const;
+			bool is_matched() const;
 			void set_parent(Basic_Term* new_parent); //only one use in Variadic_Operator function operands_contain_pattern()
 			void reset();
 

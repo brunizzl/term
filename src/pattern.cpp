@@ -176,9 +176,9 @@ bool bmath::intern::Pattern_Variable::try_matching(Basic_Term* other, Basic_Term
 	}
 }
 
-bool bmath::intern::Pattern_Variable::is_unmatched() const
+bool bmath::intern::Pattern_Variable::is_matched() const
 {
-	return matched_term == nullptr;
+	return matched_term != nullptr;
 }
 
 void bmath::intern::Pattern_Variable::reset()

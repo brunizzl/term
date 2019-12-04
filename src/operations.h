@@ -57,7 +57,7 @@ namespace bmath {
 			void push_back(Basic_Term* const term_ptr);
 
 			//wrapper for std::list sort()
-			inline void sort_operands() { this->operands.sort([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; }); }
+			inline void sort_operands() { this->operands.sort(compare_ptrs); }
 
 			//clears list
 			void clear_operands();
@@ -487,8 +487,8 @@ namespace bmath {
 		template<void(*operate)(std::complex<double>* const first, const std::complex<double>second), Type this_type, int neutral_val>
 		inline std::optional<std::list<Basic_Term*>> Variadic_Operator<operate, this_type, neutral_val>::operands_contain_pattern(std::list<Basic_Term*>& test_ops, std::list<Basic_Term*>& pattern_ops, Basic_Term* pattern)
 		{
-			assert(std::is_sorted(test_ops.begin(), test_ops.end(), [](Basic_Term* a, Basic_Term* b) { return *a < *b; }));
-			pattern_ops.sort([](Basic_Term*& a, Basic_Term*& b) -> bool {return *a < *b; }); //due to the possibility of pattern variables beeing matched by other functions called by match_intern, this step is neccessary.
+			assert(std::is_sorted(test_ops.begin(), test_ops.end(), compare_ptrs));
+			pattern_ops.sort(compare_ptrs); //due to the possibility of pattern variables beeing matched by other functions called by match_intern, this step is neccessary.
 
 			std::list<Basic_Term*> matched_operands;	//to not be matched multiple times, already matched operands need to be moved here.
 			std::vector<std::list<Basic_Term*>::iterator> match_positions;	//remembers position of each matched_operand
@@ -503,12 +503,12 @@ namespace bmath {
 				//once we start to compare to pattern_variables, we need to make sure, already matched ones are compared first. (hence we sort)
 				if (!already_matching_pattern_vars && type_of(*pattern_it) == Type::pattern_variable) {
 					already_matching_pattern_vars = true;
-					pattern_ops.sort([](Basic_Term* a, Basic_Term* b) {return *a < *b; });
+					pattern_ops.sort(compare_ptrs);
 					pattern_it = find_first_of(pattern_ops, Type::pattern_variable);
 				}
 
 				//if we reached the last pattern_var and this last pattern_var has not been matched yet, it now matches the whole rest of test_ops, as the rest is packaged into one single operand.
-				if (already_matching_pattern_vars && static_cast<Pattern_Variable*>(*pattern_it)->is_unmatched() && std::next(pattern_it) == pattern_ops.end() && test_ops.size() > 1) {
+				if (already_matching_pattern_vars && !static_cast<Pattern_Variable*>(*pattern_it)->is_matched() && std::next(pattern_it) == pattern_ops.end() && test_ops.size() > 1) {
 					test_ops.push_back(new_instance(std::move(test_ops)));
 					next_search_begin = test_ops.begin();
 				}
@@ -540,10 +540,10 @@ namespace bmath {
 					}
 					else {	//cleanup
 						test_ops.splice(test_ops.end(), matched_operands);
-						test_ops.sort([](Basic_Term* a, Basic_Term* b) { return *a < *b; });
 						for (auto& operand : test_ops) {
 							operand->combine_layers(operand);
 						}
+						test_ops.sort(compare_ptrs);
 						return {};
 					}
 				}

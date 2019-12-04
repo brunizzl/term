@@ -96,6 +96,9 @@ namespace bmath {
 		//returns type written out as string_view
 		std::string_view name_of(Restriction restr);
 
+		//helper function used to sort lists of Basic_Term* 
+		inline bool compare_ptrs(const Basic_Term* a, const Basic_Term* b) { return *a < *b; }
+
 		//functions used to complete template arguments of Variadic_Operator<> and to use as (*func) in struct Value_Manipulator
 		inline void add(std::complex<double>* const first, std::complex<double> second) { *first += second; }
 		inline void sub(std::complex<double>* const first, std::complex<double> second) { *first -= second; }

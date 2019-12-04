@@ -227,6 +227,9 @@ bool bmath::intern::Sum::unpack_minus()
 
 bool bmath::intern::Sum::factor_polinomial(Basic_Term** storage_key)
 {
+	if (this->operands.size() < 3) {	//linear functions are already (nearly) factorisations of roots
+		return false;
+	}
 	static Monom monom;	//Pattern to match summands with
 	monom.full_reset();
 
@@ -234,13 +237,13 @@ bool bmath::intern::Sum::factor_polinomial(Basic_Term** storage_key)
 	std::vector<Monom_Storage> polynom;
 	polynom.reserve(this->operands.size());
 
-	for (auto summand : this->operands) {
+	for (auto& summand : this->operands) {
 		monom.partial_reset();
-		if (!monom.matching(summand, *storage_key)) {
-			return false;
+		if (monom.matching(summand, summand)) {
+			polynom.push_back(std::make_pair(monom.factor(), monom.exponent()));
 		}
 		else {
-			polynom.push_back(std::make_pair(monom.factor(), monom.exponent()));
+			return false;			
 		}
 	}
 
@@ -255,7 +258,7 @@ bool bmath::intern::Sum::factor_polinomial(Basic_Term** storage_key)
 		else {
 			std::cout << '+';
 		}
-		std::cout << mon.first << "*x^" << mon.second;
+		std::cout << mon.first << '*' << monom.base()->debug_print() << '^' << mon.second;
 	}
 	std::cout << std::endl;
 	//baue vector mit faktoren sortiert nach exponenten (x^3+4) -> {4, 0, 0, 1} 
@@ -263,7 +266,7 @@ bool bmath::intern::Sum::factor_polinomial(Basic_Term** storage_key)
 	//baue produkt aus nullstellen
 	//speichere produkt statt this in storage key
 
-	return true;
+	return false;
 }
 
 const std::vector<Transformation*> Sum::sum_transforms = transforms_of(Type::sum);
@@ -891,7 +894,7 @@ bool bmath::intern::Monom::matching(Basic_Term* test, Basic_Term*& storage_key)
 		n.matched_term = &zero;
 		return true;
 	}
-	if (!x.is_unmatched() && test->equal_to_pattern(&this->x, nullptr, storage_key)) {	//check for x
+	if (x.is_matched() && test->equal_to_pattern(&this->x, nullptr, storage_key)) {	//check for x
 		a.matched_term = &one;
 		n.matched_term = &one;
 		return true;

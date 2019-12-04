@@ -40,6 +40,7 @@ void baue_teststrs(const std::vector<std::string>& teststrs)
 void test_strings() 
 {
 	const std::vector<std::string> teststrs = {
+		"a+ln(b^2)+ln(c)+2-b^2-c*a",
 		"c*d+g*f+g",
 		"12*herbert+herbert+4",
 		"(3*x-2*y)/5",
@@ -47,7 +48,6 @@ void test_strings()
 		"(10/5)^3",
 		"5+pi+7/(5-a+ln[2])^3",
 		"auto^herbert*3+auto^(-32*a)-4",
-		"a+ln(b^2)+ln(c)+2-b^2-c*a",
 		"3*(sin(a+b+c)^2+cos(a+b+c)^2+4)+i",
 		"(3^(x^2))^(x)",
 		"sin(-a*b)",

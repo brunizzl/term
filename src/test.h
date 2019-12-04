@@ -66,10 +66,10 @@ void test_rechner()
 		std::cin >> name;
 		try {
 			bmath::Term test(name); 
-			std::cout << "roh:" << test.to_tree(7).erase(0, 4) << '\n';
+			//std::cout << "roh:" << test.to_tree(7).erase(0, 4) << '\n';
 			test.simplify();
 			test.cut_rounding_error();
-			std::cout << "erg:" << test.to_tree(7).erase(0, 4) << '\n';
+			//std::cout << "erg:" << test.to_tree(7).erase(0, 4) << '\n';
 			std::cout << "= " << test << '\n';
 			std::cout << '\n';
 		}

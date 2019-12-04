@@ -152,6 +152,9 @@ Type bmath::intern::type_subterm(const std::string_view name, std::size_t& op, P
 	if (name.front() == '(' && name.back() == ')') {	
 		return Type::undefined;
 	}
+	if (name.find_first_of("()") != std::string::npos) {
+		throw XTermConstructionError("string contains parentheses but no operators");
+	}
 	if (name.length()) {
 		return Type::variable;
 	}
@@ -324,8 +327,15 @@ std::vector<Transformation*> bmath::intern::transforms_of(Type requested_type)
 {
 	static std::vector<Transformation*> transformations = {	//////////////////all transformations should be declared here///////////////////////////
 		new Transformation("sin(x)^2+cos(x)^2", "1"),
+		new Transformation("e^ln(x)", "x"),
+		new Transformation("ln(e^x)", "x"),
+		new Transformation("10^log10(x)", "x"),
+		new Transformation("log10(10^x)", "x"),
+		new Transformation("ln(x^a!real)", "a*ln(x)"),
+		new Transformation("log10(x^a!real)", "a*log10(x)"),
+		new Transformation("sin(x)/cos(x)", "tan(x)"),
 
-		new Transformation("sqrt(a)", "a^(1/2)"),	//"sqrt(a)" gives slightly different results than "pow(a,0.5)", but this programm is primarily
+		new Transformation("sqrt(a)", "a^(1/2)"),	//"sqrt(a)" gives slightly different results than "pow(a,0.5)", but this program is primarily
 		new Transformation("exp(x)", "e^x"),		//a transformation tool, not a tool for stable computations. "exp(x)" and "e^x" produce the exact same output.
 
 		new Transformation("sin(a!negative*x)", "-sin(abs(a)*x)"),		//odd functions
@@ -350,6 +360,7 @@ std::vector<Transformation*> bmath::intern::transforms_of(Type requested_type)
 		new Transformation("a^b*a", "a^(b+1)"),
 		new Transformation("a*a", "a^2"),
 	};
+
 	std::vector<Transformation*> requested_transforms;
 	for (auto trans : transformations) {
 		if (type_of(trans->input) == requested_type) {
@@ -610,10 +621,10 @@ constexpr std::complex<double> bmath::intern::value_of(Math_Constant constant)
 std::string_view bmath::intern::name_of(Restriction restr)
 {
 	switch (restr) {
-	case Restriction::value:			return { "value" };
-	case Restriction::real:				return { "real" };
-	case Restriction::integer:			return { "integer" };
 	case Restriction::natural:			return { "natural" };
+	case Restriction::integer:			return { "integer" };
+	case Restriction::real:				return { "real" };
+	case Restriction::value:			return { "value" };
 	case Restriction::not_minus_one:	return { "not_minus_one" };
 	case Restriction::minus_one:		return { "minus_one" };
 	case Restriction::negative:			return { "negative" };

@@ -227,9 +227,6 @@ bool bmath::intern::Sum::unpack_minus()
 
 bool bmath::intern::Sum::factor_polinomial(Basic_Term** storage_key)
 {
-	if (this->operands.size() < 3) {	//linear functions are already (nearly) factorisations of roots
-		return false;
-	}
 	static Monom monom;	//Pattern to match summands with
 	monom.full_reset();
 

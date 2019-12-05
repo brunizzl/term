@@ -227,43 +227,51 @@ bool bmath::intern::Sum::unpack_minus()
 
 bool bmath::intern::Sum::factor_polinomial(Basic_Term** storage_key)
 {
-	static Monom monom;	//Pattern to match summands with
-	monom.full_reset();
+	static Monom monom_pattern;	//Pattern to match summands with
+	monom_pattern.full_reset();
 
 	using Monom_Storage = std::pair<std::complex<double>, int>;	//first is factor a, second exponent n in a*x^n
-	std::vector<Monom_Storage> polynom;
-	polynom.reserve(this->operands.size());
+	std::vector<Monom_Storage> monoms;
+	monoms.reserve(this->operands.size());
 
 	for (auto& summand : this->operands) {
-		monom.partial_reset();
-		if (monom.matching(summand, summand)) {
-			polynom.push_back(std::make_pair(monom.factor(), monom.exponent()));
+		monom_pattern.partial_reset();
+		if (monom_pattern.matching(summand, summand)) {
+			monoms.push_back(std::make_pair(monom_pattern.factor(), monom_pattern.exponent()));
 		}
 		else {
-			return false;			
+			return false;
 		}
 	}
 
-	//biggest exponent of all monoms
-	int max_exp = std::max_element(polynom.begin(), polynom.end(), [](const Monom_Storage& a, const Monom_Storage& b) {return a.second < b.second; })->second;
-
-	bool first = true;
-	for (auto mon : polynom) {
-		if (first) {
-			first = false;
-		}
-		else {
-			std::cout << '+';
-		}
-		std::cout << mon.first << '*' << monom.base()->debug_print() << '^' << mon.second;
+	//monom with biggest exponent in polynom
+	auto [max_monom_fac, max_monom_exp] = *std::max_element(monoms.begin(), monoms.end(), [](const Monom_Storage& a, const Monom_Storage& b) {return a.second < b.second; });
+	if (max_monom_exp < 2) {
+		return false;
 	}
-	std::cout << std::endl;
-	//baue vector mit faktoren sortiert nach exponenten (x^3+4) -> {4, 0, 0, 1} 
-	//gebe vector an funktion die nullstellen findet
-	//baue produkt aus nullstellen
-	//speichere produkt statt this in storage key
-
-	return false;
+	else {
+		std::vector<std::complex<double>> polynom;	//at polynom[n] the factor in front of x^n is stored.
+		polynom.reserve(max_monom_exp);
+		for (int i = 0; i < max_monom_exp; i++) {
+			polynom.push_back({ 0.0, 0.0 });
+		}
+		for (auto [monom_fac, monom_exp] : monoms) {
+			if (monom_exp != max_monom_exp) {
+				polynom[monom_exp] = monom_fac / max_monom_fac;
+			}
+		}
+		find_roots(polynom);	//now polynom vector stores roots
+		std::list<Basic_Term*> product;	//operands list of future product
+		if (max_monom_fac != 1.0) {
+			product.push_back(new Value(max_monom_fac));
+		}
+		for (auto root : polynom) {
+			product.push_back(new Sum({ monom_pattern.copy_base(), new Value(-root) }));
+		}
+		delete this;
+		*storage_key = new Product(std::move(product));
+		return true;
+	}
 }
 
 const std::vector<Transformation*> Sum::sum_transforms = transforms_of(Type::sum);
@@ -922,8 +930,8 @@ int bmath::intern::Monom::exponent() const
 	return static_cast<int>(this->n.matched_value().real());
 }
 
-Basic_Term* bmath::intern::Monom::base() const
+Basic_Term* bmath::intern::Monom::copy_base() const
 {
-	return this->x.matched_term;
+	return this->x.copy_matched_term();
 }
 

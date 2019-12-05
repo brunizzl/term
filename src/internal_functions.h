@@ -99,6 +99,12 @@ namespace bmath {
 		//helper function used to sort lists of Basic_Term* 
 		inline bool compare_ptrs(const Basic_Term* a, const Basic_Term* b) { return *a < *b; }
 
+		//finds the roots in a polinomial first given as factors of powers (factor belongs to x^index), 
+		//the input has an implicit highest element of "1*x^(polinomial.length()).
+		//the polinomial therefore is assumed to have a factor one on the (not included) highest power of x.
+		//the roots are stored in the same vector.
+		void find_roots(std::vector<std::complex<double>>& polinomial);
+
 		//functions used to complete template arguments of Variadic_Operator<> and to use as (*func) in struct Value_Manipulator
 		inline void add(std::complex<double>* const first, std::complex<double> second) { *first += second; }
 		inline void sub(std::complex<double>* const first, std::complex<double> second) { *first -= second; }

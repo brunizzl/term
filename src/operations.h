@@ -217,7 +217,7 @@ namespace bmath {
 			void partial_reset();				//only resets a and n
 			std::complex<double> factor() const;
 			int exponent() const;
-			Basic_Term* base() const;
+			Basic_Term* copy_base() const;
 		};
 
 

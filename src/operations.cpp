@@ -109,7 +109,7 @@ void Sum::to_str(std::string& str, int caller_operator_precedence) const
 		str.push_back('(');
 	}
 	bool nothing_printed_yet = true;
-	for (const auto it : backwards(this->operands)) {
+	for (const auto it : this->operands) {
 
 		if (type_of(it) == Type::product) {	//beautifies sum to print '-'
 			const Product* const product = static_cast<const Product*>(it);

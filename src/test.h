@@ -54,6 +54,7 @@ void test_strings()
 		"sin(x)*b+3*b",
 		"a*d+a*b*c",
 		"a/(a*b)",
+		"4*a+9*(a^2)",
 	};
 	baue_teststrs(teststrs);
 }
@@ -66,10 +67,10 @@ void test_rechner()
 		std::cin >> name;
 		try {
 			bmath::Term test(name); 
-			//std::cout << "roh:" << test.to_tree(7).erase(0, 4) << '\n';
+			std::cout << "roh:" << test.to_tree(7).erase(0, 4) << '\n';
 			test.simplify();
 			test.cut_rounding_error();
-			//std::cout << "erg:" << test.to_tree(7).erase(0, 4) << '\n';
+			std::cout << "erg:" << test.to_tree(7).erase(0, 4) << '\n';
 			std::cout << "= " << test << '\n';
 			std::cout << '\n';
 		}

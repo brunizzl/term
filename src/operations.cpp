@@ -159,7 +159,7 @@ bool bmath::intern::Sum::transform(Basic_Term *& storage_key)
 		}
 	}
 
-	return this->factoring() || this->unpack_minus() || this->factor_polinomial(&storage_key);
+	return this->factoring() || this->unpack_minus() /*|| this->factor_polinomial(&storage_key)*/;
 }
 
 bool bmath::intern::Sum::factoring()

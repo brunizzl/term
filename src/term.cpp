@@ -176,6 +176,7 @@ void bmath::Term::simplify()
 		this->term_ptr->sort();
 		changed |= this->term_ptr->transform(this->term_ptr);
 	} while (changed);
+	this->term_ptr->sort();
 }
 
 void bmath::Term::cut_rounding_error(int pow_of_10_diff_to_set_0)

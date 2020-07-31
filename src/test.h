@@ -5,6 +5,7 @@
 #include <iostream>
 #include <chrono>
 #include "term.h"
+#include <unordered_map>
 
 #include "internal_functions.h"
 #include "operations.h"
@@ -78,6 +79,51 @@ void test_rechner()
 			std::cout << "faulty construction string: " << err.what() << std::endl;
 		}
 		std::cin.get();
+	}
+}
+
+void rechner()
+{
+	const auto cut_whitespace = [](std::string& str) {
+		for (std::size_t i = 0; i < str.length(); i++) {	//deleting whitespace and counting parentheses
+			switch (str[i]) {
+			case '\t':
+			case '\n':
+			case ' ':
+				str.erase(i--, 1);	//erase this char -> set i one back, as string got shorter
+				break;
+			}
+		}
+	};
+
+	std::unordered_map<std::string, bmath::Term> variables;
+	while (true) {
+		std::string input;
+		std::string name;
+		std::cout << "> ";
+		std::getline(std::cin, input);
+		if (std::size_t eq = input.find('='); eq != std::string::npos) {
+			name = input.substr(0, eq);
+			cut_whitespace(name);
+			input.erase(0, eq + 1);
+		}
+		try {
+			bmath::Term term(input);
+			for (auto [name, val] : variables) {
+				term.search_and_replace(name, val);
+			}
+			term.simplify();
+			term.cut_rounding_error();
+			if (name.size()) {
+				variables.insert_or_assign(name, std::move(term));
+			}
+			else {
+				std::cout << term << std::endl;
+			}
+		}
+		catch (bmath::XTermConstructionError& err) {
+			std::cout << "faulty construction string: " << err.what() << std::endl;
+		}
 	}
 }
 

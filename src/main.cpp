@@ -10,5 +10,6 @@ using namespace bmath::intern;
 int main()
 {
 	//test_strings();
-	test_rechner();
+	//test_rechner();
+	rechner();
 }

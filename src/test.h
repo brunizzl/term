@@ -113,7 +113,6 @@ void rechner()
 				term.search_and_replace(name, val);
 			}
 			term.simplify();
-			term.cut_rounding_error();
 			if (name.size()) {
 				variables.insert_or_assign(name, std::move(term));
 			}

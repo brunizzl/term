@@ -265,7 +265,7 @@ bool bmath::intern::Sum::factor_polinomial(Basic_Term** storage_key)
 		if (max_monom_fac != 1.0) {
 			product.push_back(new Value(max_monom_fac));
 		}
-		for (auto root : polynom) {
+		for (auto& root : polynom) {
 			product.push_back(new Sum({ monom_pattern.copy_base(), new Value(-root) }));
 		}
 		delete this;
@@ -587,8 +587,20 @@ Vals_Combined Power::combine_values()
 	const Vals_Combined exponent_ = this->expo->combine_values();
 
 	if (base_.known && exponent_.known) {
-		const std::complex<double> result = std::pow(base_.val, exponent_.val);
-		return { true, result };
+		const bool real_base = base_.val.imag() == 0.0;
+		const bool real_expo = exponent_.val.imag() == 0.0;
+		if (real_base && real_expo) {
+			return { true, std::pow(base_.val.real(), exponent_.val.real()) };
+		}
+		else if (real_base) {
+			return { true, std::pow(base_.val.real(), exponent_.val) };
+		}
+		else if (real_expo) {
+			return { true, std::pow(base_.val, exponent_.val.real()) };
+		}
+		else {
+			return { true, std::pow(base_.val, exponent_.val) };
+		}
 	}
 	else if (base_.known && !exponent_.known) {
 		if (type_of(this->base) != Type::value) {

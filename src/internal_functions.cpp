@@ -2,6 +2,7 @@
 #include <charconv>
 #include <cassert>
 #include <algorithm>
+#include <cmath>
 
 #include "internal_functions.h"
 #include "arguments.h"
@@ -43,13 +44,14 @@ void bmath::intern::preprocess_str(std::string& str)
 		case '+':
 		case '*':
 		case '/':
-		case '^':
+		case '^': 
 			if (i == 0 || i == str.length() - 1) {
 				throw XTermConstructionError("found binary operator (+ * / ^) at beginning or end of string");
 			}
 			else if (str[i - 1] == '(' || str[i + 1] == ')') {
 				throw XTermConstructionError("found binary operator (+ * / ^) next to enclosing bracket or parenthesis");
 			}
+			[[fallthrough]];
 		case '-':
 			if (last_operator == i - 1) {
 				throw XTermConstructionError("found two operators (+ - * / ^) in direct succession");
@@ -241,6 +243,9 @@ Basic_Term* bmath::intern::build_pattern_subterm(std::string_view subterm, std::
 							break;
 						}
 					}
+					if (restriction == Restriction::none) {
+						__debugbreak();
+					}
 					subterm.remove_suffix(subterm.size() - bang);	//"name!type -> "name"
 				}
 				for (auto& variable : variables) {
@@ -334,6 +339,7 @@ std::vector<Transformation*> bmath::intern::transforms_of(Type requested_type)
 		new Transformation("ln(x^a!real)", "a*ln(x)"),
 		new Transformation("log10(x^a!real)", "a*log10(x)"),
 		new Transformation("sin(x)/cos(x)", "tan(x)"),
+		new Transformation("(a!value*x)^n!value", "a^n*x^n"),
 
 		new Transformation("sqrt(a)", "a^(1/2)"),	//"sqrt(a)" gives slightly different results than "pow(a,0.5)", but this program is primarily
 		new Transformation("exp(x)", "e^x"),		//a transformation tool, not a tool for stable computations. "exp(x)" and "e^x" produce the exact same output.
@@ -461,14 +467,15 @@ std::list<Basic_Term*>::iterator bmath::intern::find_first_of(std::list<Basic_Te
 
 bool bmath::intern::complies_with(const Basic_Term* term, Restriction restr)
 {
-	const std::complex<double> val = type_of(term) == Type::value ? static_cast<const Value*>(term)->val() : 0.0;
-	bool meets_restr = true;	//natural is also integer, integer also real, real also value -> testing all together 
+	const bool is_value = type_of(term) == Type::value;
+	const std::complex<double> val = is_value ? static_cast<const Value*>(term)->val() : 0.0;
 
-	switch (restr) {
-	case Restriction::natural:			meets_restr &= val.real() > 0.0;
-	case Restriction::integer:			meets_restr &= val.real() - static_cast<int>(val.real()) == 0.0;
-	case Restriction::real:				meets_restr &= val.imag() == 0.0;
-	case Restriction::value:			meets_restr &= type_of(term) == Type::value;
+	bool meets_restr = true;	//natural is also integer, integer also real, real also value -> testing all together 
+	switch (restr) {																					   [[fallthrough]];
+	case Restriction::natural:			meets_restr &= val.real() > 0.0;								   [[fallthrough]];
+	case Restriction::integer:			meets_restr &= val.real() - static_cast<int>(val.real()) == 0.0;   [[fallthrough]];
+	case Restriction::real:				meets_restr &= val.imag() == 0.0;								   [[fallthrough]];
+	case Restriction::value:			meets_restr &= is_value;										   
 		return meets_restr;
 
 	case Restriction::not_minus_one:	return val != -1.0;
@@ -570,27 +577,54 @@ constexpr std::string_view bmath::intern::name_of(Par_Op_Type op_type)
 
 constexpr std::complex<double> bmath::intern::value_of(std::complex<double> argument, Par_Op_Type op_type)
 {
-	switch (op_type) {
-	case Par_Op_Type::log10:	return std::log10(argument);
-	case Par_Op_Type::asinh:	return std::asinh(argument);
-	case Par_Op_Type::acosh:	return std::acosh(argument);
-	case Par_Op_Type::atanh:	return std::atanh(argument);
-	case Par_Op_Type::asin:		return std::asin(argument);
-	case Par_Op_Type::acos:		return std::acos(argument);
-	case Par_Op_Type::atan:		return std::atan(argument);
-	case Par_Op_Type::sinh:		return std::sinh(argument);
-	case Par_Op_Type::cosh:		return std::cosh(argument);
-	case Par_Op_Type::tanh:		return std::tanh(argument);
-	case Par_Op_Type::sqrt:		return std::sqrt(argument);
-	case Par_Op_Type::exp:		return std::exp(argument);
-	case Par_Op_Type::sin:		return std::sin(argument);
-	case Par_Op_Type::cos:		return std::cos(argument);
-	case Par_Op_Type::tan:		return std::tan(argument);
-	case Par_Op_Type::abs:		return std::abs(argument);
-	case Par_Op_Type::arg:		return std::arg(argument);
-	case Par_Op_Type::ln:		return std::log(argument);
-	case Par_Op_Type::re:		return std::real(argument);
-	case Par_Op_Type::im:		return std::imag(argument);
+	if (argument.imag() == 0.0) {
+		const double real_argument = argument.real();
+		switch (op_type) {
+		case Par_Op_Type::log10:	return std::log10(real_argument);
+		case Par_Op_Type::asinh:	return std::asinh(real_argument);
+		case Par_Op_Type::acosh:	return std::acosh(real_argument);
+		case Par_Op_Type::atanh:	return std::atanh(real_argument);
+		case Par_Op_Type::asin:		return std::asin (real_argument);
+		case Par_Op_Type::acos:		return std::acos (real_argument);
+		case Par_Op_Type::atan:		return std::atan (real_argument);
+		case Par_Op_Type::sinh:		return std::sinh (real_argument);
+		case Par_Op_Type::cosh:		return std::cosh (real_argument);
+		case Par_Op_Type::tanh:		return std::tanh (real_argument);
+		case Par_Op_Type::sqrt:		return std::sqrt (real_argument);
+		case Par_Op_Type::exp:		return std::exp  (real_argument);
+		case Par_Op_Type::sin:		return std::sin  (real_argument);
+		case Par_Op_Type::cos:		return std::cos  (real_argument);
+		case Par_Op_Type::tan:		return std::tan  (real_argument);
+		case Par_Op_Type::abs:		return std::abs  (real_argument);
+		case Par_Op_Type::arg:		return std::arg  (real_argument);
+		case Par_Op_Type::ln:		return std::log  (real_argument);
+		case Par_Op_Type::re:		return std::real (real_argument);
+		case Par_Op_Type::im:		return std::imag (real_argument);
+		}
+	}
+	else {
+		switch (op_type) {
+		case Par_Op_Type::log10:	return std::log10(argument);
+		case Par_Op_Type::asinh:	return std::asinh(argument);
+		case Par_Op_Type::acosh:	return std::acosh(argument);
+		case Par_Op_Type::atanh:	return std::atanh(argument);
+		case Par_Op_Type::asin:		return std::asin (argument);
+		case Par_Op_Type::acos:		return std::acos (argument);
+		case Par_Op_Type::atan:		return std::atan (argument);
+		case Par_Op_Type::sinh:		return std::sinh (argument);
+		case Par_Op_Type::cosh:		return std::cosh (argument);
+		case Par_Op_Type::tanh:		return std::tanh (argument);
+		case Par_Op_Type::sqrt:		return std::sqrt (argument);
+		case Par_Op_Type::exp:		return std::exp  (argument);
+		case Par_Op_Type::sin:		return std::sin  (argument);
+		case Par_Op_Type::cos:		return std::cos  (argument);
+		case Par_Op_Type::tan:		return std::tan  (argument);
+		case Par_Op_Type::abs:		return std::abs  (argument);
+		case Par_Op_Type::arg:		return std::arg  (argument);
+		case Par_Op_Type::ln:		return std::log  (argument);
+		case Par_Op_Type::re:		return std::real (argument);
+		case Par_Op_Type::im:		return std::imag (argument);
+		}
 	}
 	assert(false);
 	return {};

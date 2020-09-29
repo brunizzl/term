@@ -459,12 +459,13 @@ void bmath::intern::reset_all_pattern_vars(std::list<Pattern_Variable*>& var_adr
 
 std::list<Basic_Term*>::iterator bmath::intern::find_first_of(std::list<Basic_Term*>& search, Type type)
 {
-	for (auto it = search.begin(); it != search.end(); ++it) {
+	auto it = search.begin();
+	for (; it != search.end(); ++it) {
 		if (type_of(*it) == type) {
-			return it;
+			break;
 		}
 	}
-	return search.end();
+	return it;
 }
 
 bool bmath::intern::complies_with(const Basic_Term* term, Restriction restr)

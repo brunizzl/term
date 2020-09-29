@@ -109,7 +109,7 @@ void rechner()
 		}
 		try {
 			bmath::Term term(input);
-			for (auto [name, val] : variables) {
+			for (auto& [name, val] : variables) {
 				term.search_and_replace(name, val);
 			}
 			term.simplify();
@@ -118,6 +118,7 @@ void rechner()
 			}
 			else {
 				std::cout << term << std::endl;
+				std::cout << "tree:" << term.to_tree(8).erase(0, 5) << '\n';
 			}
 		}
 		catch (bmath::XTermConstructionError& err) {

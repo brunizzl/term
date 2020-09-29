@@ -332,6 +332,8 @@ std::vector<Transformation*> bmath::intern::transforms_of(Type requested_type)
 {
 	static std::vector<Transformation*> transformations = {	//////////////////all transformations should be declared here///////////////////////////
 		new Transformation("sin(x)^2+cos(x)^2", "1"),
+		new Transformation("a^2+2*a*b+b^2", "(a+b)^2"),
+		new Transformation("a^2-2*a*b+b^2", "(a-b)^2"),
 		new Transformation("e^ln(x)", "x"),
 		new Transformation("ln(e^x)", "x"),
 		new Transformation("10^log10(x)", "x"),
